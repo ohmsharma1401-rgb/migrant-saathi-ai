@@ -10,6 +10,8 @@ interface SendOTPResponse {
   mock_otp?: string
   email_sent?: boolean
   otp_sent?: boolean
+  otp_token?: string
+  channel?: 'email' | 'sms'
 }
 
 interface TokenResponse {
@@ -49,6 +51,8 @@ export default function WorkerLogin() {
   const [step, setStep] = useState<'mobile' | 'otp' | 'register'>('mobile')
   const [mobile, setMobile] = useState('')
   const [mockOtp, setMockOtp] = useState<string | undefined>()
+  const [otpToken, setOtpToken] = useState('')
+  const [otpChannel, setOtpChannel] = useState<'email' | 'sms'>('email')
   const [emailSent, setEmailSent] = useState(false)
   const [apiError, setApiError] = useState('')
   const [countdown, setCountdown] = useState(0)
@@ -88,25 +92,34 @@ export default function WorkerLogin() {
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
 
+  function apiErrorMessage(err: unknown, fallback: string) {
+    const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+    return typeof detail === 'string' && detail ? detail : fallback
+  }
+
   async function onSendOTP(values: MobileForm) {
     setApiError('')
     const inputVal = values.mobile_number.trim()
     const isEmail = inputVal.includes('@')
+    const digits = inputVal.replace(/\D/g, '')
+    const isMobile = !isEmail && /^(?:91)?[6-9]\d{9}$/.test(digits)
+    if (!isEmail && !isMobile) {
+      setApiError('Enter a Gmail/email address or a valid 10-digit Indian mobile number')
+      return
+    }
     const payload = isEmail ? { email: inputVal } : { mobile_number: inputVal }
 
     try {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
       setMobile(inputVal)
-      setMockOtp(undefined)
+      setOtpToken(res.data.otp_token || '')
+      setOtpChannel(res.data.channel === 'sms' ? 'sms' : 'email')
+      setMockOtp(res.data.mock_otp)
       setEmailSent(Boolean(res.data.email_sent))
       setStep('otp')
       startCountdown()
-    } catch {
-      setMobile(inputVal)
-      setMockOtp(undefined)
-      setEmailSent(false)
-      setStep('otp')
-      startCountdown()
+    } catch (err) {
+      setApiError(apiErrorMessage(err, 'Could not send OTP. Please try again.'))
     }
   }
 
@@ -114,8 +127,8 @@ export default function WorkerLogin() {
     setApiError('')
     const isEmail = mobile.includes('@')
     const payload = isEmail
-      ? { email: mobile, otp: values.otp }
-      : { mobile_number: mobile, otp: values.otp }
+      ? { email: mobile, otp: values.otp, otp_token: otpToken }
+      : { mobile_number: mobile, otp: values.otp, otp_token: otpToken }
 
     try {
       const res = await api.post<TokenResponse>('/auth/worker/verify-otp', payload)
@@ -126,15 +139,8 @@ export default function WorkerLogin() {
         data.refresh_token,
       )
       setStep('register')
-    } catch {
-      // Fallback auth token on verify
-      const demoId = 'worker-' + Math.floor(1000 + Math.random() * 9000).toString()
-      setAuth(
-        { id: demoId, role: 'worker', email: isEmail ? mobile : undefined, mobile_number: !isEmail ? mobile : undefined },
-        'demo-access-token',
-        'demo-refresh-token'
-      )
-      setStep('register')
+    } catch (err) {
+      setApiError(apiErrorMessage(err, 'Invalid or expired OTP. Request a new code.'))
     }
   }
 
@@ -181,11 +187,13 @@ export default function WorkerLogin() {
     const payload = isEmail ? { email: target } : { mobile_number: target }
 
     try {
-      await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
-    } catch {
-      // Fallback retry
-    } finally {
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
+      setOtpToken(res.data.otp_token || '')
+      setMockOtp(res.data.mock_otp)
+      setEmailSent(Boolean(res.data.email_sent))
       startCountdown()
+    } catch (err) {
+      setApiError(apiErrorMessage(err, 'Could not resend OTP. Please try again.'))
     }
   }
 
@@ -224,7 +232,7 @@ export default function WorkerLogin() {
           Login with Email or Mobile
         </h1>
         <p className="text-center text-sm text-gray-500 mb-8">
-          We'll send a 6-digit OTP code to your Gmail account or Mobile
+          We'll send a 6-digit OTP to your email inbox or as an SMS to your phone
         </p>
 
         {/* Step 1 — Email / Mobile Number */}
@@ -249,6 +257,12 @@ export default function WorkerLogin() {
                   className="flex-1 px-3.5 py-3.5 text-sm font-medium text-gray-900 bg-white outline-none placeholder:text-gray-400"
                   {...mobileForm.register('mobile_number', {
                     required: 'Email address or mobile number is required',
+                    validate: (value) => {
+                      const v = value.trim()
+                      if (v.includes('@')) return /.+@.+\..+/.test(v) || 'Enter a valid email address'
+                      const digits = v.replace(/\D/g, '')
+                      return /^(?:91)?[6-9]\d{9}$/.test(digits) || 'Enter a valid 10-digit Indian mobile number'
+                    },
                   })}
                 />
               </div>
@@ -329,7 +343,7 @@ export default function WorkerLogin() {
                   className="flex-1 px-3 py-4 text-2xl font-bold tracking-[0.4em] text-center text-gray-900 bg-white outline-none placeholder:text-gray-200 placeholder:tracking-[0.3em] placeholder:text-xl"
                   {...otpForm.register('otp', {
                     required: 'OTP is required',
-                    pattern: { value: /^\d{4,6}$/, message: 'Enter the OTP received on your mobile' },
+                    pattern: { value: /^\d{4,6}$/, message: otpChannel === 'sms' ? 'Enter the SMS OTP' : 'Enter the email OTP' },
                   })}
                   onChange={(e) => {
                     const digits = e.target.value.replace(/\D/g, '').slice(0, 6)
@@ -415,7 +429,9 @@ export default function WorkerLogin() {
                   📱 OTP Sent
                 </p>
                 <p className="text-xs text-green-800 leading-snug">
-                  An OTP has been sent to <span className="font-semibold">{maskedMobile}</span>. Please check your inbox or phone messages.
+                  {otpChannel === 'sms'
+                    ? <>A live SMS OTP was sent to <span className="font-semibold">{maskedMobile}</span>. Enter it here to verify your phone number.</>
+                    : <>An OTP was sent to <span className="font-semibold">{maskedMobile}</span>. Check your inbox (and spam folder).</>}
                 </p>
               </div>
             )}

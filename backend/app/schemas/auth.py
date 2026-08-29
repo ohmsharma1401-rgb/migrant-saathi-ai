@@ -11,6 +11,7 @@ class VerifyOTPRequest(BaseModel):
     email: Optional[str] = None
     mobile_number: Optional[str] = None
     otp: str
+    otp_token: Optional[str] = None
 
 
 class OfficialLoginRequest(BaseModel):

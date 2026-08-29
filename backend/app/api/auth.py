@@ -23,7 +23,16 @@ from app.schemas.auth import (
     TokenResponse,
     VerifyOTPRequest,
 )
-from app.utils.otp import generate_otp, hash_otp, verify_otp_hash, send_sms_via_fast2sms
+from app.utils.otp import (
+    create_otp_token,
+    generate_otp,
+    hash_otp,
+    normalize_indian_mobile,
+    send_email_otp,
+    send_sms_otp,
+    verify_otp_hash,
+    verify_otp_token,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,78 +42,111 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 @router.post("/worker/send-otp")
 async def send_otp(payload: SendOTPRequest, db: AsyncSession = Depends(get_db)):
     """Generate and send a 6-digit OTP to the worker's email or mobile number."""
-    identifier = (payload.email or payload.mobile_number or "").strip()
-    if not identifier:
+    email = (payload.email or "").strip()
+    mobile_raw = (payload.mobile_number or "").strip()
+    mobile = normalize_indian_mobile(mobile_raw) if mobile_raw and "@" not in mobile_raw else ""
+
+    if email and "@" not in email:
+        raise HTTPException(status_code=400, detail="Enter a valid email address")
+    if mobile_raw and not email and not mobile:
+        raise HTTPException(status_code=400, detail="Enter a valid 10-digit Indian mobile number")
+    if not email and not mobile:
         raise HTTPException(status_code=400, detail="Email or mobile number is required")
 
     otp = generate_otp()
+    channel = "email" if email else "sms"
+    identifier = email.lower() if email else mobile
+    delivered = False
+    mock_otp = None
+
+    if email:
+        delivered = await send_email_otp(email, otp)
+        if not delivered and not settings.OTP_MOCK_MODE:
+            raise HTTPException(
+                status_code=502,
+                detail="Could not deliver OTP to that email. Check SMTP settings and try again.",
+            )
+    else:
+        delivered = await send_sms_otp(mobile, otp)
+        if not delivered and not settings.OTP_MOCK_MODE:
+            raise HTTPException(
+                status_code=502,
+                detail="Could not send SMS OTP. Configure Twilio or Fast2SMS (FAST2SMS_API_KEY / TWILIO_*).",
+            )
+
+    if not delivered and settings.OTP_MOCK_MODE:
+        logger.info("[MOCK OTP] target=%s otp=%s", identifier, otp)
+        mock_otp = otp
+
     otp_hash = hash_otp(otp)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.OTP_EXPIRE_MINUTES)
-
     session = OTPSession(
-        email=payload.email,
-        mobile_number=payload.mobile_number or payload.email or "N/A",
+        email=email or None,
+        mobile_number=mobile or email or "N/A",
         otp_hash=otp_hash,
         expires_at=expires_at,
     )
     db.add(session)
     await db.commit()
 
-    from app.utils.otp import send_sms_via_twilio, send_email_otp
-
-    # 1. Attempt real email delivery if email is provided
-    if payload.email:
-        email_sent = await send_email_otp(payload.email, otp)
-        if email_sent:
-            return {"message": f"Verification OTP code sent to your Gmail account: {payload.email}", "email_sent": True}
-
-    # 2. Attempt real SMS delivery if mobile number is provided
-    if not settings.OTP_MOCK_MODE and payload.mobile_number:
-        if settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN:
-            sent = await send_sms_via_twilio(payload.mobile_number, otp)
-            if sent:
-                return {"message": "OTP sent via Twilio SMS to your mobile number", "otp_sent": True}
-
-        if settings.FAST2SMS_API_KEY:
-            sent = await send_sms_via_fast2sms(payload.mobile_number, otp)
-            if sent:
-                return {"message": "OTP sent via Fast2SMS to your mobile number", "otp_sent": True}
-
-    logger.info(f"[MOCK OTP] target={identifier} otp={otp}")
-    return {"message": f"OTP generated for {identifier}", "mock_otp": otp}
+    ttl = settings.OTP_EXPIRE_MINUTES * 60
+    otp_token = create_otp_token(identifier, otp, channel, ttl_seconds=ttl)
+    response = {
+        "message": (
+            f"Verification OTP sent to {email}"
+            if email
+            else f"Verification OTP sent by SMS to +91 {mobile[:2]}XXXX{mobile[-4:]}"
+        ),
+        "email_sent": bool(email and delivered),
+        "otp_sent": delivered,
+        "channel": channel,
+        "otp_token": otp_token,
+    }
+    if mock_otp:
+        response["mock_otp"] = mock_otp
+    return response
 
 
 @router.post("/worker/verify-otp", response_model=TokenResponse)
 async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     """Verify OTP and issue tokens; create user account on first login."""
-    identifier = (payload.email or payload.mobile_number or "").strip()
+    email = (payload.email or "").strip()
+    mobile = normalize_indian_mobile(payload.mobile_number or "") if payload.mobile_number else ""
+    identifier = email.lower() if email else (mobile or (payload.mobile_number or "").strip())
     if not identifier:
         raise HTTPException(status_code=400, detail="Email or mobile number is required")
 
+    token_ok = bool(payload.otp_token) and verify_otp_token(payload.otp_token or "", identifier, payload.otp)
+
     query = select(OTPSession).where(OTPSession.used == False)  # noqa: E712
-    if payload.email:
+    if email:
         query = query.where(
-            (OTPSession.email == payload.email) | (OTPSession.mobile_number == payload.email)
+            (OTPSession.email == email) | (OTPSession.email == email.lower()) | (OTPSession.mobile_number == email)
         )
     else:
-        query = query.where(OTPSession.mobile_number == payload.mobile_number)
+        query = query.where(
+            (OTPSession.mobile_number == mobile) | (OTPSession.mobile_number == (payload.mobile_number or "").strip())
+        )
 
     query = query.order_by(OTPSession.created_at.desc())
     result = await db.execute(query)
     session = result.scalars().first()
 
-    if session is None:
-        raise HTTPException(status_code=400, detail="OTP session not found. Please request a new OTP.")
+    session_ok = False
+    if session is not None:
+        expires_at = session.expires_at if session.expires_at.tzinfo else session.expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) <= expires_at and verify_otp_hash(payload.otp.strip(), session.otp_hash):
+            session_ok = True
+            session.used = True
+            await db.flush()
 
-    expires_at = session.expires_at if session.expires_at.tzinfo else session.expires_at.replace(tzinfo=timezone.utc)
-    if datetime.now(timezone.utc) > expires_at:
-        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new OTP.")
-    if not verify_otp_hash(payload.otp.strip(), session.otp_hash):
+    if not token_ok and not session_ok:
+        if session is None:
+            raise HTTPException(status_code=400, detail="OTP session not found. Please request a new OTP.")
+        expires_at = session.expires_at if session.expires_at.tzinfo else session.expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > expires_at:
+            raise HTTPException(status_code=400, detail="OTP has expired. Please request a new OTP.")
         raise HTTPException(status_code=400, detail="Invalid OTP")
-
-    # Mark session as used
-    session.used = True
-    await db.flush()
 
     # Find or create worker role
     role_result = await db.execute(select(Role).where(Role.name == "worker"))
@@ -115,18 +157,18 @@ async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_d
         await db.flush()
 
     # Find or create user by email or mobile
-    if payload.email:
-        user_result = await db.execute(select(User).where(User.email == payload.email))
+    if email:
+        user_result = await db.execute(select(User).where(User.email == email))
         user = user_result.scalar_one_or_none()
         if user is None:
-            user = User(email=payload.email, role_id=role.id, is_active=True)
+            user = User(email=email.lower(), role_id=role.id, is_active=True)
             db.add(user)
             await db.flush()
     else:
-        user_result = await db.execute(select(User).where(User.mobile_number == payload.mobile_number))
+        user_result = await db.execute(select(User).where(User.mobile_number == mobile))
         user = user_result.scalar_one_or_none()
         if user is None:
-            user = User(mobile_number=payload.mobile_number, role_id=role.id, is_active=True)
+            user = User(mobile_number=mobile, role_id=role.id, is_active=True)
             db.add(user)
             await db.flush()
 
