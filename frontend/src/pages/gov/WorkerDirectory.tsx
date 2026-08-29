@@ -37,19 +37,56 @@ const SECTOR_BADGE: Record<string, string> = {
 
 export default function WorkerDirectory() {
   const [search, setSearch]       = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
   const [district, setDistrict]   = useState('All Districts')
+  const [appliedDistrict, setAppliedDistrict] = useState('All Districts')
   const [sector, setSector]       = useState('All Sectors')
+  const [appliedSector, setAppliedSector]     = useState('All Sectors')
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null)
   const [currentPage]             = useState(1)
 
-  const filtered = DEMO_WORKERS.filter((w) => {
-    const q = search.toLowerCase()
+  // Read newly registered worker from localStorage
+  const getWorkersList = (): Worker[] => {
+    try {
+      const customStr = localStorage.getItem('saathi-custom-worker')
+      if (customStr) {
+        const c = JSON.parse(customStr)
+        const customWorker: Worker = {
+          id: c.id || 'W-9999',
+          name: c.full_name || 'Registered Worker',
+          occupation: c.occupation || 'Mason',
+          sector: c.sector || 'Construction',
+          location: c.current_district || 'Ahmedabad',
+          originState: c.origin_state || 'Bihar',
+          skills: [c.occupation || 'Mason', 'Certified'],
+          registered: 'Just Now (Live)',
+        }
+        return [customWorker, ...DEMO_WORKERS]
+      }
+    } catch {
+      // Fallback
+    }
+    return DEMO_WORKERS
+  }
+
+  const allWorkers = getWorkersList()
+
+  const handleApplyFilter = () => {
+    setAppliedSearch(search)
+    setAppliedDistrict(district)
+    setAppliedSector(sector)
+  }
+
+  const filtered = allWorkers.filter((w) => {
+    const q = (appliedSearch || search).toLowerCase()
     const matchSearch =
       !q ||
       w.name.toLowerCase().includes(q) ||
       w.occupation.toLowerCase().includes(q) ||
-      w.location.toLowerCase().includes(q)
-    const matchDistrict = district === 'All Districts' || w.location === district
-    const matchSector   = sector   === 'All Sectors'  || w.sector   === sector
+      w.location.toLowerCase().includes(q) ||
+      w.originState.toLowerCase().includes(q)
+    const matchDistrict = appliedDistrict === 'All Districts' || w.location === appliedDistrict
+    const matchSector   = appliedSector   === 'All Sectors'  || w.sector   === appliedSector
     return matchSearch && matchDistrict && matchSector
   })
 
@@ -109,8 +146,11 @@ export default function WorkerDirectory() {
             </select>
           </div>
 
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-            Search
+          <button
+            onClick={handleApplyFilter}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            Apply Filters & Search
           </button>
         </div>
 
@@ -172,7 +212,10 @@ export default function WorkerDirectory() {
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{w.registered}</td>
                   <td className="px-4 py-3 text-center">
-                    <button className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors">
+                    <button
+                      onClick={() => setSelectedWorker(w)}
+                      className="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors"
+                    >
                       <Eye className="h-3.5 w-3.5" />
                       View
                     </button>

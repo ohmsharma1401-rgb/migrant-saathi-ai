@@ -4,6 +4,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
   en: {
     // Nav & Common
     app_title: 'Migrant Saathi AI',
+    app_name: 'Migrant Saathi AI',
     nav_dashboard: 'Dashboard',
     nav_profile: 'My Profile',
     nav_skills: 'My Skills',
@@ -56,6 +57,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
   hi: {
     // Nav & Common
     app_title: 'माइग्रेंट साथी एआई',
+    app_name: 'माइग्रेंट साथी एआई',
     nav_dashboard: 'डैशबोर्ड',
     nav_profile: 'मेरी प्रोफाइल',
     nav_skills: 'मेरे कौशल',
@@ -108,6 +110,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
   gu: {
     // Nav & Common
     app_title: 'માઇગ્રન્ટ સાથી એઆઇ',
+    app_name: 'માઇગ્રન્ટ સાથી એઆઇ',
     nav_dashboard: 'ડેશબોર્ડ',
     nav_profile: 'મારી પ્રોફાઇલ',
     nav_skills: 'મારા કૌશલ્યો',

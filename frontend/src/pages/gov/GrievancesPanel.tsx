@@ -136,13 +136,39 @@ const STATUS_HISTORY: Record<string, { date: string; action: string; by: string 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function GrievancesPanel() {
+  const [grievanceList, setGrievanceList] = useState<Grievance[]>(ALL_GRIEVANCES)
   const [search, setSearch]       = useState('')
   const [statusFilter, setStatus] = useState('All')
   const [catFilter, setCat]       = useState('All')
   const [priFilter, setPri]       = useState('All')
   const [selected, setSelected]   = useState<Grievance | null>(null)
+  const [assigningGrievance, setAssigningGrievance] = useState<Grievance | null>(null)
+  const [selectedInspector, setSelectedInspector] = useState('Insp. Arjun Patel')
+  const [toastMessage, setToastMessage] = useState('')
 
-  const filtered = ALL_GRIEVANCES.filter((g) => {
+  const INSPECTORS = [
+    'Insp. Arjun Patel (Ahmedabad)',
+    'Insp. Vikram Sharma (Surat)',
+    'Insp. Sunita Verma (Vadodara)',
+    'Insp. Rajesh Joshi (Rajkot)'
+  ]
+
+  const handleAssignSubmit = (gId: string) => {
+    const inspName = selectedInspector.split(' (')[0]
+    setGrievanceList((prev) =>
+      prev.map((g) =>
+        g.id === gId ? { ...g, inspector: inspName, status: 'Under Review' } : g
+      )
+    )
+    if (selected && selected.id === gId) {
+      setSelected((prev) => prev ? { ...prev, inspector: inspName, status: 'Under Review' } : null)
+    }
+    setToastMessage(`Grievance ${gId} assigned to ${inspName}`)
+    setAssigningGrievance(null)
+    setTimeout(() => setToastMessage(''), 3000)
+  }
+
+  const filtered = grievanceList.filter((g) => {
     const q = search.toLowerCase()
     const matchSearch = !q || g.worker.toLowerCase().includes(q) || g.id.toLowerCase().includes(q) || g.description.toLowerCase().includes(q)
     const matchStatus = statusFilter === 'All' || g.status === statusFilter
@@ -151,10 +177,10 @@ export default function GrievancesPanel() {
     return matchSearch && matchStatus && matchCat && matchPri
   })
 
-  const total    = ALL_GRIEVANCES.length
-  const open     = ALL_GRIEVANCES.filter(g => g.status === 'Open').length
-  const review   = ALL_GRIEVANCES.filter(g => g.status === 'Under Review').length
-  const resolved = ALL_GRIEVANCES.filter(g => g.status === 'Resolved').length
+  const total    = grievanceList.length
+  const open     = grievanceList.filter(g => g.status === 'Open').length
+  const review   = grievanceList.filter(g => g.status === 'Under Review').length
+  const resolved = grievanceList.filter(g => g.status === 'Resolved').length
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 space-y-6">
@@ -265,7 +291,10 @@ export default function GrievancesPanel() {
                   <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{g.created}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5 justify-center">
-                      <button className="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-2 py-1 rounded transition-colors whitespace-nowrap">
+                      <button
+                        onClick={() => setAssigningGrievance(g)}
+                        className="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-2 py-1 rounded transition-colors whitespace-nowrap"
+                      >
                         Assign
                       </button>
                       <button
@@ -282,6 +311,57 @@ export default function GrievancesPanel() {
           </table>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-green-800 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2">
+          <CheckCircle className="h-4 w-4 text-green-300" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Assign Inspector Modal */}
+      {assigningGrievance && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="text-lg font-bold text-gray-900">Assign Labour Inspector</h3>
+              <button onClick={() => setAssigningGrievance(null)} className="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+            </div>
+            <div className="space-y-3">
+              <p className="text-xs text-gray-500">
+                Assigning inspector for case <span className="font-mono font-bold text-gray-800">{assigningGrievance.id}</span> ({assigningGrievance.category} Issue in {assigningGrievance.location}).
+              </p>
+              <div>
+                <label className="text-xs font-semibold text-gray-700 block mb-1">Select Field Inspector</label>
+                <select
+                  value={selectedInspector}
+                  onChange={(e) => setSelectedInspector(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                >
+                  {INSPECTORS.map((insp) => (
+                    <option key={insp} value={insp}>{insp}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setAssigningGrievance(null)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs py-2.5 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleAssignSubmit(assigningGrievance.id)}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-xl transition-colors shadow-sm"
+              >
+                Confirm Assignment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Detail Panel / Modal */}
       {selected && (

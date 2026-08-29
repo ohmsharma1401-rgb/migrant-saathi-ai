@@ -3,6 +3,8 @@ import { Map, Info } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import LanguageSelector from '@/components/LanguageSelector'
+import { useTranslation } from '@/utils/translations'
 
 // Fix leaflet default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -75,20 +77,37 @@ const SECTOR_BADGE: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function WorkerMap() {
+  const { t } = useTranslation()
   const [district, setDistrict] = useState('All Districts')
   const [sector, setSector] = useState('All')
+  const [appliedDistrict, setAppliedDistrict] = useState('All Districts')
+  const [appliedSector, setAppliedSector] = useState('All')
+
+  const handleApplyFilter = () => {
+    setAppliedDistrict(district)
+    setAppliedSector(sector)
+  }
+
+  const filteredLocations = WORKER_LOCATIONS.filter((loc) => {
+    const matchDistrict = appliedDistrict === 'All Districts' || loc.city === appliedDistrict
+    const matchSector = appliedSector === 'All' || loc.topSector.includes(appliedSector)
+    return matchDistrict && matchSector
+  })
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Map className="h-6 w-6 text-indigo-600" />
-          Worker Distribution Map
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Geographic distribution of registered migrant workers across Gujarat
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Map className="h-6 w-6 text-indigo-600" />
+            {t('nav_map')}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Geographic distribution of registered migrant workers across Gujarat
+          </p>
+        </div>
+        <LanguageSelector />
       </div>
 
       {/* Filter Bar */}
@@ -119,7 +138,10 @@ export default function WorkerMap() {
           </select>
         </div>
 
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+        <button
+          onClick={handleApplyFilter}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+        >
           Apply Filters
         </button>
       </div>
@@ -138,7 +160,7 @@ export default function WorkerMap() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              {WORKER_LOCATIONS.map((loc) => (
+              {filteredLocations.map((loc) => (
                 <CircleMarker
                   key={loc.city}
                   center={loc.coords}

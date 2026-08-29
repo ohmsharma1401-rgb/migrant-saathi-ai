@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { BrainCircuit, ChevronDown, ChevronUp, RefreshCw, CheckCircle, Sparkles } from 'lucide-react'
+import LanguageSelector from '@/components/LanguageSelector'
+import { useTranslation } from '@/utils/translations'
 
 // ─── DEMO DATA ──────────────────────────────────────────────────────────────
 
@@ -163,6 +165,7 @@ interface ToastState {
 }
 
 export default function AIInsights() {
+  const { t } = useTranslation()
   const [generating, setGenerating] = useState(false)
   const [toast, setToast] = useState<ToastState>({ visible: false, message: '' })
 
@@ -194,7 +197,7 @@ export default function AIInsights() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <BrainCircuit className="h-6 w-6 text-indigo-600" />
-            AI-Generated Insights
+            {t('nav_insights')}
           </h1>
           <div className="flex items-center gap-2 mt-1.5">
             <span className="inline-flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-3 py-1 font-medium">
@@ -204,8 +207,9 @@ export default function AIInsights() {
           </div>
         </div>
 
-        {/* Date range / filter controls (demo — non-functional) */}
+        {/* Language selector & controls */}
         <div className="flex flex-wrap items-center gap-2">
+          <LanguageSelector />
           <select className="text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 cursor-pointer">
             <option>Last 30 Days</option>
             <option>Last 7 Days</option>
