@@ -4,13 +4,20 @@ import en from './locales/en.json'
 import hi from './locales/hi.json'
 import gu from './locales/gu.json'
 
+let initialLang = 'en'
+try {
+  initialLang = localStorage.getItem('saathi-lang') || 'en'
+} catch {
+  initialLang = 'en'
+}
+
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
     hi: { translation: hi },
     gu: { translation: gu },
   },
-  lng: localStorage.getItem('saathi-lang') ?? 'en',
+  lng: initialLang,
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })
