@@ -1,0 +1,33 @@
+{
+  "app_name": "Migrant Saathi AI",
+  "tagline": "Your Rights. Your Welfare. Your Voice.",
+  "login": {
+    "worker": "Migrant Worker",
+    "official": "Government Official"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "profile": "My Profile",
+    "skills": "My Skills",
+    "welfare": "Welfare Benefits",
+    "wages": "Wage Check",
+    "report": "Report Issue",
+    "grievances": "My Grievances",
+    "ai": "AI Assistant"
+  },
+  "dashboard": {
+    "greeting": "Hello",
+    "profile_summary": "Profile Summary"
+  },
+  "common": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "potentially_eligible": "Potentially Eligible",
+    "needs_verification": "Needs Verification",
+    "potential_discrepancy": "Potential Discrepancy",
+    "review_recommended": "Review Recommended"
+  }
+}

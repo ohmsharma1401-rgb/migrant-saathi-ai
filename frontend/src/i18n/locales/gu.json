@@ -1,0 +1,33 @@
+{
+  "app_name": "માઇગ્રન્ટ સાથી AI",
+  "tagline": "તમારા હક. તમારું કલ્યાણ. તમારો અવાજ.",
+  "login": {
+    "worker": "સ્થળાંતર મજૂર",
+    "official": "સરકારી અધિકારી"
+  },
+  "nav": {
+    "dashboard": "ડેશબોર્ડ",
+    "profile": "મારી પ્રોફાઇલ",
+    "skills": "મારી કુશળતા",
+    "welfare": "કલ્યાણ લાભ",
+    "wages": "વેતન તપાસ",
+    "report": "સમસ્યા નોંધો",
+    "grievances": "મારી ફરિયાદો",
+    "ai": "AI સહાયક"
+  },
+  "dashboard": {
+    "greeting": "નમસ્તે",
+    "profile_summary": "પ્રોફાઇલ સારાંશ"
+  },
+  "common": {
+    "submit": "સબમિટ",
+    "cancel": "રદ કરો",
+    "save": "સાચવો",
+    "loading": "લોડ થઈ રહ્યું છે...",
+    "error": "કઈ ગડબડ થઈ",
+    "potentially_eligible": "સંભવિત રૂપે પાત્ર",
+    "needs_verification": "ચકાસણીની જરૂર",
+    "potential_discrepancy": "સંભવિત વિસંગતતા",
+    "review_recommended": "સમીક્ષા ભલામણ"
+  }
+}

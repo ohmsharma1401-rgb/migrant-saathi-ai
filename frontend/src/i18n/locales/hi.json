@@ -1,0 +1,33 @@
+{
+  "app_name": "माइग्रेंट साथी AI",
+  "tagline": "आपके अधिकार। आपका कल्याण। आपकी आवाज़।",
+  "login": {
+    "worker": "प्रवासी मजदूर",
+    "official": "सरकारी अधिकारी"
+  },
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "profile": "मेरी प्रोफ़ाइल",
+    "skills": "मेरे कौशल",
+    "welfare": "कल्याण लाभ",
+    "wages": "वेतन जाँच",
+    "report": "समस्या रिपोर्ट करें",
+    "grievances": "मेरी शिकायतें",
+    "ai": "AI सहायक"
+  },
+  "dashboard": {
+    "greeting": "नमस्ते",
+    "profile_summary": "प्रोफ़ाइल सारांश"
+  },
+  "common": {
+    "submit": "जमा करें",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "loading": "लोड हो रहा है...",
+    "error": "कुछ गलत हो गया",
+    "potentially_eligible": "संभावित रूप से पात्र",
+    "needs_verification": "सत्यापन की आवश्यकता",
+    "potential_discrepancy": "संभावित विसंगति",
+    "review_recommended": "समीक्षा अनुशंसित"
+  }
+}
