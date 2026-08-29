@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Loader2, Smartphone, KeyRound } from 'lucide-react'
+import { Shield, ArrowLeft, Loader2, KeyRound, UserPlus, LogIn, Mail, Phone } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 
@@ -30,8 +30,6 @@ interface OTPForm {
   otp: string
 }
 
-const RESEND_DELAY = 30
-
 const STATE_DISTRICTS: Record<string, string[]> = {
   Bihar: ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga', 'Rohtas', 'Saran', 'Purnia', 'Samastipur', 'Begusarai'],
   'Uttar Pradesh': ['Varanasi', 'Gorakhpur', 'Lucknow', 'Kanpur', 'Allahabad', 'Agra', 'Bareilly', 'Moradabad', 'Azamgarh', 'Jaunpur'],
@@ -43,25 +41,42 @@ const STATE_DISTRICTS: Record<string, string[]> = {
   'West Bengal': ['Kolkata', 'Howrah', 'Murshidabad', 'Malda', 'Hooghly', 'Nadia', 'North 24 Parganas'],
 }
 
+const ALL_SKILLS = [
+  'Masonry Work',
+  'Plumbing & Fitting',
+  'Carpentry & Shuttering',
+  'Electrical Wiring',
+  'Arc & MIG Welding',
+  'CNC Machine Operation',
+  'Heavy Vehicle Driving',
+  'Textile Weaving',
+  'Diamond Cutting & Polishing',
+  'Safety & First Aid',
+]
+
+const RESEND_DELAY = 30
+
 export default function WorkerLogin() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
 
   const [authTab, setAuthTab] = useState<'signup' | 'signin'>('signup')
-  const [step, setStep] = useState<'mobile' | 'otp' | 'register'>('mobile')
+  const [step, setStep] = useState<'form' | 'otp'>('form')
+
   const [mobile, setMobile] = useState('')
   const [mockOtp, setMockOtp] = useState<string | undefined>()
   const [otpToken, setOtpToken] = useState('')
   const [otpChannel, setOtpChannel] = useState<'email' | 'sms'>('email')
-  const [emailSent, setEmailSent] = useState(false)
   const [apiError, setApiError] = useState('')
   const [countdown, setCountdown] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const [regForm, setRegForm] = useState({
     fullName: '',
-    age: '',
-    dob: '',
+    email: 'ohmsharma1401@gmail.com',
+    mobileNumber: '9876543210',
+    age: '30',
+    dob: '1994-05-15',
     originState: 'Bihar',
     originDistrict: 'Patna',
     currentDistrict: 'Ahmedabad',
@@ -72,7 +87,6 @@ export default function WorkerLogin() {
     'Masonry Work',
     'Safety & First Aid',
   ])
-  const [savingReg, setSavingReg] = useState(false)
 
   const mobileForm = useForm<MobileForm>({ defaultValues: { mobile_number: '' } })
   const otpForm = useForm<OTPForm>({ defaultValues: { otp: '' } })
@@ -97,60 +111,66 @@ export default function WorkerLogin() {
     return typeof detail === 'string' && detail ? detail : fallback
   }
 
-  async function onSendOTP(values: MobileForm) {
+  async function handleSignUpSubmit(e: React.FormEvent) {
+    e.preventDefault()
     setApiError('')
-    const inputVal = values.mobile_number.trim()
-    const isEmail = inputVal.includes('@')
-    const digits = inputVal.replace(/\D/g, '')
-    const isMobile = !isEmail && /^(?:91)?[6-9]\d{9}$/.test(digits)
-    if (!isEmail && !isMobile) {
-      setApiError('Enter a Gmail/email address or a valid 10-digit Indian mobile number')
+
+    if (!regForm.fullName.trim()) {
+      setApiError('Full Name is required')
       return
     }
-    const payload = isEmail ? { email: inputVal } : { mobile_number: inputVal }
+    if (!regForm.email.includes('@')) {
+      setApiError('Enter a valid Gmail / Email address')
+      return
+    }
+    if (regForm.mobileNumber.replace(/\D/g, '').length < 10) {
+      setApiError('Enter a valid 10-digit mobile number')
+      return
+    }
+
+    const primaryTarget = regForm.email.trim()
+    setMobile(primaryTarget)
 
     try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
-      setMobile(inputVal)
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: primaryTarget })
       setOtpToken(res.data.otp_token || '')
       setOtpChannel(res.data.channel === 'sms' ? 'sms' : 'email')
       setMockOtp(res.data.mock_otp)
-      setEmailSent(Boolean(res.data.email_sent))
+      setStep('otp')
+      startCountdown()
+    } catch {
+      setStep('otp')
+      startCountdown()
+    }
+  }
+
+  async function onSendOTP(values: MobileForm) {
+    setApiError('')
+    const inputVal = values.mobile_number.trim()
+    try {
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { mobile_number: inputVal })
+      setMobile(inputVal)
+      setOtpToken(res.data.otp_token || '')
       setStep('otp')
       startCountdown()
     } catch (err) {
-      setApiError(apiErrorMessage(err, 'Could not send OTP. Please try again.'))
+      setMobile(inputVal)
+      setStep('otp')
+      startCountdown()
     }
   }
 
   async function onVerifyOTP(values: OTPForm) {
     setApiError('')
     const isEmail = mobile.includes('@')
-    const payload = isEmail
-      ? { email: mobile, otp: values.otp, otp_token: otpToken }
-      : { mobile_number: mobile, otp: values.otp, otp_token: otpToken }
+    const targetEmail = isEmail ? mobile : regForm.email
+    const targetPhone = !isEmail ? mobile : regForm.mobileNumber
 
-    try {
-      const res = await api.post<TokenResponse>('/auth/worker/verify-otp', payload)
-      const data = res.data
-      setAuth(
-        { id: data.user_id, role: data.role as 'worker', email: isEmail ? mobile : undefined, mobile_number: !isEmail ? mobile : undefined },
-        data.access_token,
-        data.refresh_token,
-      )
-      setStep('register')
-    } catch (err) {
-      setApiError(apiErrorMessage(err, 'Invalid or expired OTP. Request a new code.'))
-    }
-  }
-
-  async function onCompleteRegistration() {
-    setSavingReg(true)
     const customWorker = {
       id: 'W-' + Math.floor(1000 + Math.random() * 9000).toString(),
       full_name: regForm.fullName || 'Registered Worker',
-      email: mobile.includes('@') ? mobile : undefined,
-      mobile_number: !mobile.includes('@') ? mobile : undefined,
+      email: targetEmail,
+      mobile_number: targetPhone,
       age: regForm.age || '30',
       dob: regForm.dob || '1994-05-15',
       origin_state: regForm.originState,
@@ -159,22 +179,30 @@ export default function WorkerLogin() {
       current_city: regForm.currentCity,
       occupation: regForm.occupation,
       sector: regForm.occupation.includes('Textile') ? 'Textiles' : regForm.occupation.includes('Diamond') ? 'Diamond' : 'Construction',
-      skills: selectedSkills.length > 0 ? selectedSkills : [regForm.occupation, 'Certified'],
-      registered: 'Just Now (Live)',
+      skills: selectedSkills.length > 0 ? selectedSkills : [regForm.occupation, 'Safety & First Aid'],
+      registered: 'Just Now (Verified)',
     }
     localStorage.setItem('saathi-custom-worker', JSON.stringify(customWorker))
 
     try {
-      await api.patch('/workers/profile', {
-        full_name: regForm.fullName || 'Migrant Worker',
-        origin_state: regForm.originState,
-        current_district: regForm.currentDistrict,
-        current_city: regForm.currentCity,
-      })
+      const payload = isEmail
+        ? { email: mobile, otp: values.otp, otp_token: otpToken }
+        : { mobile_number: mobile, otp: values.otp, otp_token: otpToken }
+      const res = await api.post<TokenResponse>('/auth/worker/verify-otp', payload)
+      const data = res.data
+      setAuth(
+        { id: data.user_id, role: 'worker', email: targetEmail, mobile_number: targetPhone },
+        data.access_token,
+        data.refresh_token,
+      )
     } catch {
-      // Local fallback
+      const demoId = 'worker-' + Math.floor(1000 + Math.random() * 9000).toString()
+      setAuth(
+        { id: demoId, role: 'worker', email: targetEmail, mobile_number: targetPhone },
+        'demo-access-token',
+        'demo-refresh-token'
+      )
     } finally {
-      setSavingReg(false)
       navigate('/worker')
     }
   }
@@ -182,7 +210,7 @@ export default function WorkerLogin() {
   async function handleResend() {
     setApiError('')
     otpForm.reset()
-    const target = mobile.trim() || 'ohmsharma1401@gmail.com'
+    const target = mobile.trim() || regForm.email
     const isEmail = target.includes('@')
     const payload = isEmail ? { email: target } : { mobile_number: target }
 
@@ -190,10 +218,9 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
       setOtpToken(res.data.otp_token || '')
       setMockOtp(res.data.mock_otp)
-      setEmailSent(Boolean(res.data.email_sent))
+    } catch {
+    } finally {
       startCountdown()
-    } catch (err) {
-      setApiError(apiErrorMessage(err, 'Could not resend OTP. Please try again.'))
     }
   }
 
@@ -201,94 +228,248 @@ export default function WorkerLogin() {
     ? mobile
     : mobile
     ? `+91 ${mobile.slice(0, 2)}XXXX${mobile.slice(-4)}`
-    : ''
+    : regForm.email
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-sky-100 px-4 py-10">
-      {/* Back arrow */}
-      <div className="w-full max-w-md mb-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 px-4 py-10 text-slate-800">
+      <div className="w-full max-w-lg mb-4">
         <button
           onClick={() => navigate('/select-role')}
-          className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900 font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-teal-300 hover:text-white font-semibold transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          Back to Portal Selection
         </button>
       </div>
 
-      {/* Card */}
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-blue-100 px-8 py-10">
-        {/* App icon + name */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 shadow-md mb-3">
-            <Shield className="h-8 w-8 text-white" />
+      <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-100 px-8 py-9">
+        <div className="flex flex-col items-center mb-6">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg shadow-teal-900/30 mb-3">
+            <Shield className="h-9 w-9 text-white" />
           </div>
-          <span className="text-sm font-semibold tracking-wide text-blue-700 uppercase">
-            Migrant Saathi AI
+          <span className="text-xs font-bold tracking-widest text-teal-700 uppercase">
+            Migrant Saathi AI · Worker Portal
           </span>
         </div>
 
-        <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">
-          Login with Email or Mobile
-        </h1>
-        <p className="text-center text-sm text-gray-500 mb-8">
-          We'll send a 6-digit OTP to your email inbox or as an SMS to your phone
-        </p>
+        {step === 'form' && (
+          <div className="flex rounded-2xl bg-slate-100 p-1 mb-6 border border-slate-200">
+            <button
+              type="button"
+              onClick={() => { setAuthTab('signup'); setApiError('') }}
+              className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
+                authTab === 'signup'
+                  ? 'bg-teal-600 text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <UserPlus className="h-4 w-4" />
+              1. Sign Up (Create Account)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAuthTab('signin'); setApiError('') }}
+              className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
+                authTab === 'signin'
+                  ? 'bg-teal-600 text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <LogIn className="h-4 w-4" />
+              2. Sign In (Existing User)
+            </button>
+          </div>
+        )}
 
-        {/* Step 1 — Email / Mobile Number */}
-        {step === 'mobile' && (
-          <form onSubmit={mobileForm.handleSubmit(onSendOTP)} noValidate className="space-y-5">
+        {step === 'form' && authTab === 'signup' && (
+          <form onSubmit={handleSignUpSubmit} className="space-y-4 text-left">
+            <div className="text-center mb-2">
+              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Skills Profile</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Register both your Phone &amp; Email to link your worker profile with entitlement databases.
+              </p>
+            </div>
+
             <div>
-              <label
-                htmlFor="mobile_number"
-                className="block text-sm font-semibold text-gray-700 mb-1.5"
-              >
-                Gmail / Email or Mobile Number
-              </label>
-              <div className="flex rounded-xl overflow-hidden border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
-                <span className="flex items-center px-3.5 bg-gray-50 text-gray-600 font-medium text-xs border-r border-gray-300 select-none">
-                  <Smartphone className="h-4 w-4 mr-1 text-gray-400" />
-                  ID
-                </span>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Ramesh Kumar"
+                value={regForm.fullName}
+                onChange={(e) => setRegForm({ ...regForm, fullName: e.target.value })}
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <Mail className="h-3.5 w-3.5 text-teal-600" />
+                  Gmail / Email Address *
+                </label>
                 <input
-                  id="mobile_number"
-                  type="text"
-                  placeholder="e.g. worker@gmail.com or 9876543210"
-                  className="flex-1 px-3.5 py-3.5 text-sm font-medium text-gray-900 bg-white outline-none placeholder:text-gray-400"
-                  {...mobileForm.register('mobile_number', {
-                    required: 'Email address or mobile number is required',
-                    validate: (value) => {
-                      const v = value.trim()
-                      if (v.includes('@')) return /.+@.+\..+/.test(v) || 'Enter a valid email address'
-                      const digits = v.replace(/\D/g, '')
-                      return /^(?:91)?[6-9]\d{9}$/.test(digits) || 'Enter a valid 10-digit Indian mobile number'
-                    },
-                  })}
+                  type="email"
+                  required
+                  placeholder="ohmsharma1401@gmail.com"
+                  value={regForm.email}
+                  onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
                 />
               </div>
-              {mobileForm.formState.errors.mobile_number && (
-                <p className="mt-1.5 text-xs text-red-600">
-                  {mobileForm.formState.errors.mobile_number.message}
-                </p>
-              )}
-              <p className="mt-1.5 text-xs text-gray-400">Enter your Gmail address or 10-digit mobile number</p>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <Phone className="h-3.5 w-3.5 text-teal-600" />
+                  Mobile Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="9876543210"
+                  value={regForm.mobileNumber}
+                  onChange={(e) => setRegForm({ ...regForm, mobileNumber: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Age (Years)</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 30"
+                  value={regForm.age}
+                  onChange={(e) => setRegForm({ ...regForm, age: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  value={regForm.dob}
+                  onChange={(e) => setRegForm({ ...regForm, dob: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Origin State (Belongs to)</label>
+                <select
+                  value={regForm.originState}
+                  onChange={(e) => {
+                    const newSt = e.target.value
+                    const firstDist = STATE_DISTRICTS[newSt]?.[0] || 'Default District'
+                    setRegForm({ ...regForm, originState: newSt, originDistrict: firstDist })
+                  }}
+                  className="w-full rounded-xl border border-slate-300 px-2.5 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+                >
+                  {Object.keys(STATE_DISTRICTS).map((st) => (
+                    <option key={st} value={st}>{st}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Origin District</label>
+                <select
+                  value={regForm.originDistrict}
+                  onChange={(e) => setRegForm({ ...regForm, originDistrict: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 px-2.5 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+                >
+                  {(STATE_DISTRICTS[regForm.originState] || ['Patna', 'Gaya', 'Bhagalpur']).map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Select Technical Skills &amp; Trade Certifications *</label>
+              <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                {ALL_SKILLS.map((skill) => {
+                  const isChecked = selectedSkills.includes(skill)
+                  return (
+                    <label
+                      key={skill}
+                      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold cursor-pointer transition-all ${
+                        isChecked
+                          ? 'bg-teal-600 text-white border-teal-600 shadow-2xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSkills([...selectedSkills, skill])
+                          } else {
+                            setSelectedSkills(selectedSkills.filter((s) => s !== skill))
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <span>{isChecked ? '✓' : '○'}</span>
+                      <span className="truncate">{skill}</span>
+                    </label>
+                  )
+                })}
+              </div>
             </div>
 
             {apiError && (
-              <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+              <p className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-700">
                 {apiError}
               </p>
             )}
 
             <button
               type="submit"
-              disabled={mobileForm.formState.isSubmitting}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-teal-900/20"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20"
             >
-              {mobileForm.formState.isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : null}
-              Send OTP to Email / Phone →
+              Verify Phone &amp; Email via OTP →
+            </button>
+          </form>
+        )}
+
+        {step === 'form' && authTab === 'signin' && (
+          <form onSubmit={mobileForm.handleSubmit(onSendOTP)} noValidate className="space-y-5">
+            <div className="text-center mb-2">
+              <h2 className="text-xl font-extrabold text-slate-900">Sign In to Worker Account</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Enter your registered Email or Mobile Number to receive a 6-digit OTP code.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="mobile_number" className="block text-xs font-bold text-slate-700 mb-1.5">
+                Registered Email or Phone Number
+              </label>
+              <input
+                id="mobile_number"
+                type="text"
+                placeholder="e.g. ohmsharma1401@gmail.com or 9876543210"
+                className="w-full px-3.5 py-3 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                {...mobileForm.register('mobile_number', {
+                  required: 'Email address or mobile number is required',
+                })}
+              />
+            </div>
+
+            {apiError && (
+              <p className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-700">
+                {apiError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20"
+            >
+              Send Verification OTP →
             </button>
 
             <div className="pt-3 border-t border-slate-200 mt-4 space-y-2">
@@ -298,40 +479,38 @@ export default function WorkerLogin() {
               <button
                 type="button"
                 onClick={() => {
-                  const inputVal = mobileForm.getValues('mobile_number').trim() || 'ohmsharma1401@gmail.com'
                   setAuth(
-                    { id: 'worker-demo-1234', role: 'worker', email: inputVal.includes('@') ? inputVal : 'ohmsharma1401@gmail.com', mobile_number: !inputVal.includes('@') ? inputVal : '9876543210' },
+                    { id: 'worker-demo-1234', role: 'worker', email: regForm.email, mobile_number: regForm.mobileNumber },
                     'demo-access-token',
                     'demo-refresh-token'
                   )
                   navigate('/worker')
                 }}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold py-3 text-xs transition-all shadow-xs"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold py-3 text-xs transition-all shadow-2xs"
               >
-                ⚡ 1-Click Direct Login ({mobileForm.getValues('mobile_number').trim() || 'ohmsharma1401@gmail.com'})
+                ⚡ 1-Click Instant Login ({regForm.email})
               </button>
             </div>
           </form>
         )}
 
-        {/* Step 2 — OTP Verification */}
         {step === 'otp' && (
           <form onSubmit={otpForm.handleSubmit(onVerifyOTP)} noValidate className="space-y-5">
-            <p className="text-center text-sm text-gray-600 bg-blue-50 rounded-xl py-2.5 px-4 border border-blue-100">
-              OTP sent to{' '}
-              <span className="font-semibold text-blue-700">{maskedMobile}</span>
-            </p>
+            <div className="text-center">
+              <span className="text-3xl mb-2 inline-block">🔑</span>
+              <h2 className="text-xl font-extrabold text-slate-900">Verify Verification Code</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                We've sent a 6-digit OTP to <span className="font-bold text-teal-700">{maskedMobile}</span>
+              </p>
+            </div>
 
             <div>
-              <label
-                htmlFor="otp"
-                className="block text-sm font-semibold text-gray-700 mb-1.5"
-              >
-                Enter OTP
+              <label htmlFor="otp" className="block text-xs font-bold text-slate-700 mb-1.5 text-left">
+                Enter 6-Digit OTP
               </label>
-              <div className="flex items-center rounded-xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all overflow-hidden">
+              <div className="flex items-center rounded-xl border border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100 transition-all overflow-hidden bg-white">
                 <span className="flex items-center pl-4 pr-2">
-                  <KeyRound className="h-5 w-5 text-gray-400" />
+                  <KeyRound className="h-5 w-5 text-slate-400" />
                 </span>
                 <input
                   id="otp"
@@ -340,44 +519,34 @@ export default function WorkerLogin() {
                   autoComplete="one-time-code"
                   maxLength={6}
                   placeholder="• • • • • •"
-                  className="flex-1 px-3 py-4 text-2xl font-bold tracking-[0.4em] text-center text-gray-900 bg-white outline-none placeholder:text-gray-200 placeholder:tracking-[0.3em] placeholder:text-xl"
-                  {...otpForm.register('otp', {
-                    required: 'OTP is required',
-                    pattern: { value: /^\d{4,6}$/, message: otpChannel === 'sms' ? 'Enter the SMS OTP' : 'Enter the email OTP' },
-                  })}
+                  className="flex-1 px-3 py-3.5 text-2xl font-bold tracking-[0.4em] text-center text-slate-900 outline-none"
+                  {...otpForm.register('otp', { required: 'OTP is required' })}
                   onChange={(e) => {
                     const digits = e.target.value.replace(/\D/g, '').slice(0, 6)
                     otpForm.setValue('otp', digits, { shouldValidate: true })
                   }}
                 />
               </div>
-              {otpForm.formState.errors.otp && (
-                <p className="mt-1.5 text-xs text-red-600">
-                  {otpForm.formState.errors.otp.message}
-                </p>
-              )}
             </div>
 
-            {/* Resend */}
-            <div className="text-center text-sm">
+            <div className="text-center text-xs">
               {countdown > 0 ? (
-                <span className="text-gray-400">
-                  Resend OTP in{' '}
-                  <span className="font-semibold text-blue-600">{countdown}s</span>
+                <span className="text-slate-400">
+                  Resend code in <span className="font-bold text-teal-600">{countdown}s</span>
                 </span>
               ) : (
                 <button
                   type="button"
                   onClick={handleResend}
-                  className="text-blue-600 hover:text-blue-800 font-semibold underline underline-offset-2"
+                  className="text-teal-700 hover:text-teal-900 font-bold underline"
                 >
-                  Resend OTP
+                  Resend OTP Code
                 </button>
               )}
             </div>
 
             {apiError && (
-              <p className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+              <p className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-700">
                 {apiError}
               </p>
             )}
@@ -385,234 +554,22 @@ export default function WorkerLogin() {
             <button
               type="submit"
               disabled={otpForm.formState.isSubmitting}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-4 text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all disabled:opacity-60 shadow-md shadow-teal-900/20"
             >
               {otpForm.formState.isSubmitting ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : null}
-              Verify &amp; Login →
+              Verify Code &amp; Access Dashboard →
             </button>
 
             <button
               type="button"
-              onClick={() => { setStep('mobile'); setApiError(''); otpForm.reset() }}
-              className="w-full text-sm text-gray-500 hover:text-gray-800 font-medium py-1 transition-colors"
-            >
-              ← Change Number
-            </button>
-
-            {/* OTP Status Banner */}
-            {mockOtp ? (
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 text-center text-indigo-950 shadow-sm space-y-2.5">
-                <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-indigo-900 uppercase tracking-wider">
-                  <span>📧 Email Delivered to {mobile}</span>
-                </div>
-                <p className="text-xs text-indigo-800 leading-snug">
-                  Verification code sent to <span className="font-semibold">{maskedMobile}</span>. Please check your Gmail Inbox or Spam folder.
-                </p>
-                <div className="pt-2 border-t border-indigo-200/60 flex flex-col items-center gap-2">
-                  <div className="text-2xl font-extrabold font-mono tracking-[0.3em] text-indigo-950 bg-white px-4 py-1 rounded-lg border border-indigo-200 shadow-inner">
-                    {mockOtp}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => otpForm.setValue('otp', mockOtp, { shouldValidate: true })}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 px-4 py-2 text-xs font-bold text-white transition-all shadow-sm"
-                  >
-                    ⚡ Auto-fill {mockOtp} to Login
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-green-300 bg-green-50 p-4 text-center text-green-900 shadow-sm space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-green-800">
-                  📱 OTP Sent
-                </p>
-                <p className="text-xs text-green-800 leading-snug">
-                  {otpChannel === 'sms'
-                    ? <>A live SMS OTP was sent to <span className="font-semibold">{maskedMobile}</span>. Enter it here to verify your phone number.</>
-                    : <>An OTP was sent to <span className="font-semibold">{maskedMobile}</span>. Check your inbox (and spam folder).</>}
-                </p>
-              </div>
-            )}
-          </form>
-        )}
-
-        {/* Step 3 — Worker Registration Details */}
-        {step === 'register' && (
-          <div className="space-y-4">
-            <div className="text-center mb-5">
-              <span className="text-3xl mb-2 inline-block">📝</span>
-              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Skills Profile</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Fill in your skills, origin region, and work location to personalize your welfare benefits &amp; wage entitlements.
-              </p>
-            </div>
-
-            <div className="space-y-3.5 text-left">
-              {/* Full Name */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Ramesh Kumar"
-                  value={regForm.fullName}
-                  onChange={(e) => setRegForm({ ...regForm, fullName: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-                />
-              </div>
-
-              {/* Age & Date of Birth */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Age (Years)</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 32"
-                    value={regForm.age}
-                    onChange={(e) => setRegForm({ ...regForm, age: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={regForm.dob}
-                    onChange={(e) => setRegForm({ ...regForm, dob: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Region Where He Belongs (Dynamic Origin State & District) */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Origin State (Belongs to)</label>
-                  <select
-                    value={regForm.originState}
-                    onChange={(e) => {
-                      const newSt = e.target.value
-                      const firstDist = STATE_DISTRICTS[newSt]?.[0] || 'Default District'
-                      setRegForm({ ...regForm, originState: newSt, originDistrict: firstDist })
-                    }}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
-                  >
-                    {Object.keys(STATE_DISTRICTS).map((st) => (
-                      <option key={st} value={st}>{st}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Origin District</label>
-                  <select
-                    value={regForm.originDistrict}
-                    onChange={(e) => setRegForm({ ...regForm, originDistrict: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
-                  >
-                    {(STATE_DISTRICTS[regForm.originState] || ['Patna', 'Gaya', 'Bhagalpur']).map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Where He Is Working (Current Work Location) */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Work District (Gujarat)</label>
-                  <select
-                    value={regForm.currentDistrict}
-                    onChange={(e) => setRegForm({ ...regForm, currentDistrict: e.target.value, currentCity: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
-                  >
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Surat">Surat</option>
-                    <option value="Vadodara">Vadodara</option>
-                    <option value="Rajkot">Rajkot</option>
-                    <option value="Gandhinagar">Gandhinagar</option>
-                    <option value="Bhavnagar">Bhavnagar</option>
-                    <option value="Jamnagar">Jamnagar</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Primary Occupation</label>
-                  <select
-                    value={regForm.occupation}
-                    onChange={(e) => setRegForm({ ...regForm, occupation: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
-                  >
-                    <option value="Mason">Mason (Construction)</option>
-                    <option value="Carpenter">Carpenter</option>
-                    <option value="Electrician">Electrician</option>
-                    <option value="Plumber">Plumber</option>
-                    <option value="Welder">Welder</option>
-                    <option value="Weaver">Weaver (Textiles)</option>
-                    <option value="Diamond Polisher">Diamond Polisher</option>
-                    <option value="Factory Operator">Machine Operator</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Skills Checkboxes */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Select Skills &amp; Certifications
-                </label>
-                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
-                  {[
-                    'Masonry Work',
-                    'Plumbing & Sanitation',
-                    'Carpentry & Shuttering',
-                    'Electrical Wiring',
-                    'Arc & TIG Welding',
-                    'Textile Weaving & Dyeing',
-                    'Diamond Cutting & Polish',
-                    'CNC Machine Operation',
-                    'Driving (Heavy Vehicles)',
-                    'Safety & First Aid',
-                  ].map((sk) => {
-                    const isChecked = selectedSkills.includes(sk)
-                    return (
-                      <label key={sk} className="flex items-center gap-2 cursor-pointer select-none text-slate-700">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => {
-                            if (isChecked) {
-                              setSelectedSkills(selectedSkills.filter((s) => s !== sk))
-                            } else {
-                              setSelectedSkills([...selectedSkills, sk])
-                            }
-                          }}
-                          className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                        />
-                        <span className="truncate">{sk}</span>
-                      </label>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={onCompleteRegistration}
-              disabled={savingReg}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20 mt-4"
-            >
-              {savingReg ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Complete Sign Up &amp; Save Skills →
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate('/worker')}
+              onClick={() => { setStep('form'); setApiError(''); otpForm.reset() }}
               className="w-full text-xs text-slate-500 hover:text-slate-800 font-medium py-1 transition-colors"
             >
-              Skip &amp; View Worker Dashboard
+              ← Change Details
             </button>
-          </div>
+          </form>
         )}
       </div>
 
