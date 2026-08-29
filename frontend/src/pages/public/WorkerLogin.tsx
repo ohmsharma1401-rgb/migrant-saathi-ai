@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2, Building2, MapPin } from 'lucide-react'
+import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2, Building2, MapPin, Briefcase } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 
@@ -105,6 +105,7 @@ export default function WorkerLogin() {
     mobileNumber: '',
     age: '',
     dob: '',
+    yearsExp: '3',
     originState: 'Bihar',
     originDistrict: 'Patna',
     currentDistrict: 'Ahmedabad',
@@ -115,11 +116,15 @@ export default function WorkerLogin() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [savingReg, setSavingReg] = useState(false)
 
-  // Sync Age -> Birthdate
+  // Sync Age -> Birthdate with Strict Bounds (Min 18, Max 70)
   function handleAgeChange(newAgeStr: string) {
-    const parsedAge = parseInt(newAgeStr, 10)
+    let parsedAge = parseInt(newAgeStr, 10)
+    if (!isNaN(parsedAge)) {
+      if (parsedAge > 70) parsedAge = 70
+      newAgeStr = parsedAge.toString()
+    }
     let newDob = regForm.dob
-    if (!isNaN(parsedAge) && parsedAge > 0 && parsedAge < 120) {
+    if (!isNaN(parsedAge) && parsedAge >= 18 && parsedAge <= 70) {
       const currentYear = new Date().getFullYear()
       const birthYear = currentYear - parsedAge
       newDob = `${birthYear}-01-01`
@@ -127,14 +132,21 @@ export default function WorkerLogin() {
     setRegForm((prev) => ({ ...prev, age: newAgeStr, dob: newDob }))
   }
 
-  // Sync Birthdate -> Age
+  // Sync Birthdate -> Age with Minimum 18
   function handleDobChange(newDobStr: string) {
     let newAge = regForm.age
     if (newDobStr) {
       const birthYear = parseInt(newDobStr.split('-')[0], 10)
       if (!isNaN(birthYear)) {
         const currentYear = new Date().getFullYear()
-        newAge = Math.max(16, currentYear - birthYear).toString()
+        const computed = currentYear - birthYear
+        if (computed < 18) {
+          newAge = '18'
+        } else if (computed > 70) {
+          newAge = '70'
+        } else {
+          newAge = computed.toString()
+        }
       }
     }
     setRegForm((prev) => ({ ...prev, dob: newDobStr, age: newAge }))
@@ -233,6 +245,23 @@ export default function WorkerLogin() {
       return
     }
 
+    const ageNum = parseInt(regForm.age, 10)
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 70) {
+      setApiError('Age must be between 18 and 70 years (Minimum working age is 18)')
+      return
+    }
+
+    const expNum = parseInt(regForm.yearsExp, 10) || 0
+    const maxExpAllowed = Math.max(0, ageNum - 18)
+    if (expNum < 0) {
+      setApiError('Years of experience cannot be negative')
+      return
+    }
+    if (expNum > maxExpAllowed) {
+      setApiError(`Years of experience cannot exceed ${maxExpAllowed} years for a worker aged ${ageNum}`)
+      return
+    }
+
     setSavingReg(true)
 
     const customWorker = {
@@ -242,6 +271,7 @@ export default function WorkerLogin() {
       mobile_number: regForm.mobileNumber,
       age: regForm.age || '30',
       dob: regForm.dob || '1996-01-01',
+      years_exp: expNum,
       origin_state: regForm.originState,
       origin_district: regForm.originDistrict,
       current_district: regForm.currentDistrict,
@@ -494,27 +524,54 @@ export default function WorkerLogin() {
               )}
             </div>
 
-            {/* Dynamic Synchronized Age & Date of Birth */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Age (Years) *</label>
-                <input
-                  type="number"
-                  placeholder="Enter Age (e.g. 30)"
-                  value={regForm.age}
-                  onChange={(e) => handleAgeChange(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 font-bold"
-                />
+            {/* Dynamic Bounded Age (18-70 Yrs), Birthdate & Work Experience */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Briefcase className="h-4 w-4 text-teal-600" />
+                Age &amp; Work Experience (Labor Law Bounded) *
+              </label>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Age (18–70 Yrs) *</label>
+                  <input
+                    type="number"
+                    min={18}
+                    max={70}
+                    required
+                    placeholder="18 to 70"
+                    value={regForm.age}
+                    onChange={(e) => handleAgeChange(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 font-bold bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Date of Birth *</label>
+                  <input
+                    type="date"
+                    required
+                    value={regForm.dob}
+                    onChange={(e) => handleDobChange(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-2 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Experience (Yrs) *</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={regForm.age ? Math.max(0, parseInt(regForm.age, 10) - 18) : 50}
+                    required
+                    placeholder="Years"
+                    value={regForm.yearsExp}
+                    onChange={(e) => setRegForm({ ...regForm, yearsExp: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 font-bold bg-white"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth *</label>
-                <input
-                  type="date"
-                  value={regForm.dob}
-                  onChange={(e) => handleDobChange(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-bold"
-                />
-              </div>
+              <p className="text-[10px] text-slate-500 italic">
+                🔒 Bounded by law: Minimum working age is 18 years. Max experience is capped relative to working age.
+              </p>
             </div>
 
             {/* Origin State & District Dropdown */}
