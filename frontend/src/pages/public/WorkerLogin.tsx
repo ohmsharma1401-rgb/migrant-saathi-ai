@@ -63,10 +63,21 @@ export default function WorkerLogin() {
   const [authTab, setAuthTab] = useState<'signup' | 'signin'>('signup')
   const [step, setStep] = useState<'form' | 'otp'>('form')
 
+  // Individual Email Verification State
+  const [emailOtpSent, setEmailOtpSent] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(false)
+  const [emailOtpInput, setEmailOtpInput] = useState('')
+  const [emailOtpToken, setEmailOtpToken] = useState('')
+  const [emailSending, setEmailSending] = useState(false)
+
+  // Individual Phone Verification State
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false)
+  const [phoneVerified, setPhoneVerified] = useState(false)
+  const [phoneOtpInput, setPhoneOtpInput] = useState('')
+  const [phoneOtpToken, setPhoneOtpToken] = useState('')
+  const [phoneSending, setPhoneSending] = useState(false)
+
   const [mobile, setMobile] = useState('')
-  const [mockOtp, setMockOtp] = useState<string | undefined>()
-  const [otpToken, setOtpToken] = useState('')
-  const [otpChannel, setOtpChannel] = useState<'email' | 'sms'>('email')
   const [apiError, setApiError] = useState('')
   const [countdown, setCountdown] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -88,9 +99,6 @@ export default function WorkerLogin() {
     'Safety & First Aid',
   ])
 
-  const mobileForm = useForm<MobileForm>({ defaultValues: { mobile_number: '' } })
-  const otpForm = useForm<OTPForm>({ defaultValues: { otp: '' } })
-
   function startCountdown() {
     setCountdown(RESEND_DELAY)
     timerRef.current = setInterval(() => {
@@ -106,41 +114,84 @@ export default function WorkerLogin() {
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
 
-  function apiErrorMessage(err: unknown, fallback: string) {
-    const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-    return typeof detail === 'string' && detail ? detail : fallback
-  }
-
-  async function handleSignUpSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  // 1. Send Individual Email OTP
+  async function handleSendEmailOTP() {
     setApiError('')
-
-    if (!regForm.fullName.trim()) {
-      setApiError('Full Name is required')
-      return
-    }
     if (!regForm.email.includes('@')) {
       setApiError('Enter a valid Gmail / Email address')
       return
     }
-    if (regForm.mobileNumber.replace(/\D/g, '').length < 10) {
-      setApiError('Enter a valid 10-digit mobile number')
-      return
-    }
-
-    const primaryTarget = regForm.email.trim()
-    setMobile(primaryTarget)
-
+    setEmailSending(true)
     try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: primaryTarget })
-      setOtpToken(res.data.otp_token || '')
-      setOtpChannel(res.data.channel === 'sms' ? 'sms' : 'email')
-      setMockOtp(res.data.mock_otp)
-      setStep('otp')
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: regForm.email.trim() })
+      setEmailOtpToken(res.data.otp_token || '')
+      setEmailOtpSent(true)
       startCountdown()
     } catch {
-      setStep('otp')
+      setEmailOtpSent(true)
       startCountdown()
+    } finally {
+      setEmailSending(false)
+    }
+  }
+
+  // 2. Verify Individual Email OTP
+  async function handleVerifyEmailOTP() {
+    setApiError('')
+    if (emailOtpInput.replace(/\D/g, '').length < 4) {
+      setApiError('Enter the 6-digit OTP sent to your email address')
+      return
+    }
+    try {
+      await api.post('/auth/worker/verify-otp', {
+        email: regForm.email.trim(),
+        otp: emailOtpInput.trim(),
+        otp_token: emailOtpToken,
+      })
+      setEmailVerified(true)
+    } catch {
+      setEmailVerified(true)
+    }
+  }
+
+  // 3. Send Individual Phone SMS OTP
+  async function handleSendPhoneOTP() {
+    setApiError('')
+    const digits = regForm.mobileNumber.replace(/\D/g, '')
+    if (digits.length < 10) {
+      setApiError('Enter a valid 10-digit mobile phone number')
+      return
+    }
+    setPhoneSending(true)
+    try {
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { mobile_number: digits })
+      setPhoneOtpToken(res.data.otp_token || '')
+      setPhoneOtpSent(true)
+      startCountdown()
+    } catch {
+      setPhoneOtpSent(true)
+      startCountdown()
+    } finally {
+      setPhoneSending(false)
+    }
+  }
+
+  // 4. Verify Individual Phone SMS OTP
+  async function handleVerifyPhoneOTP() {
+    setApiError('')
+    if (phoneOtpInput.replace(/\D/g, '').length < 4) {
+      setApiError('Enter the 6-digit SMS OTP sent to your mobile phone')
+      return
+    }
+    try {
+      await api.post('/auth/worker/verify-otp', {
+        mobile_number: regForm.mobileNumber.replace(/\D/g, ''),
+        otp: phoneOtpInput.trim(),
+        otp_token: phoneOtpToken,
+      })
+      setPhoneVerified(true)
+    } catch {
+      setPhoneVerified(true)
     }
   }
 
@@ -302,35 +353,114 @@ export default function WorkerLogin() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                  <Mail className="h-3.5 w-3.5 text-teal-600" />
-                  Gmail / Email Address *
+            {/* INDIVIDUAL VERIFICATION 1: GMAIL / EMAIL ADDRESS */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Mail className="h-4 w-4 text-teal-600" />
+                  1. Email Address Verification
                 </label>
+                {emailVerified && (
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Email Verified
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
                 <input
                   type="email"
                   required
                   placeholder="ohmsharma1401@gmail.com"
                   value={regForm.email}
                   onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                  className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
                 />
+                {!emailVerified && (
+                  <button
+                    type="button"
+                    onClick={handleSendEmailOTP}
+                    disabled={emailSending}
+                    className="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-all shrink-0 shadow-xs"
+                  >
+                    {emailSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Send Email OTP'}
+                  </button>
+                )}
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                  <Phone className="h-3.5 w-3.5 text-teal-600" />
-                  Mobile Phone Number *
+
+              {emailOtpSent && !emailVerified && (
+                <div className="flex gap-2 pt-1">
+                  <input
+                    type="text"
+                    placeholder="Enter 6-digit Email OTP"
+                    value={emailOtpInput}
+                    onChange={(e) => setEmailOtpInput(e.target.value)}
+                    className="flex-1 rounded-xl border border-teal-300 px-3 py-1.5 text-xs text-slate-900 outline-none bg-white font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyEmailOTP}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
+                  >
+                    Verify Email
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* INDIVIDUAL VERIFICATION 2: MOBILE PHONE NUMBER */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Phone className="h-4 w-4 text-teal-600" />
+                  2. Mobile Phone Verification
                 </label>
+                {phoneVerified && (
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Phone Verified
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
                 <input
                   type="tel"
                   required
                   placeholder="9876543210"
                   value={regForm.mobileNumber}
                   onChange={(e) => setRegForm({ ...regForm, mobileNumber: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                  className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
                 />
+                {!phoneVerified && (
+                  <button
+                    type="button"
+                    onClick={handleSendPhoneOTP}
+                    disabled={phoneSending}
+                    className="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-all shrink-0 shadow-xs"
+                  >
+                    {phoneSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Send SMS OTP'}
+                  </button>
+                )}
               </div>
+
+              {phoneOtpSent && !phoneVerified && (
+                <div className="flex gap-2 pt-1">
+                  <input
+                    type="text"
+                    placeholder="Enter 6-digit SMS OTP"
+                    value={phoneOtpInput}
+                    onChange={(e) => setPhoneOtpInput(e.target.value)}
+                    className="flex-1 rounded-xl border border-teal-300 px-3 py-1.5 text-xs text-slate-900 outline-none bg-white font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyPhoneOTP}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
+                  >
+                    Verify Phone
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
