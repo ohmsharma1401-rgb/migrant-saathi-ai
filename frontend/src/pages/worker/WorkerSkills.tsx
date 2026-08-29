@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Wrench,
@@ -59,6 +59,28 @@ export default function WorkerSkills() {
   useTranslation()
 
   const [skills, setSkills] = useState<DemoSkill[]>(INITIAL_SKILLS)
+
+  useEffect(() => {
+    try {
+      const customStr = localStorage.getItem('saathi-custom-worker')
+      if (customStr) {
+        const c = JSON.parse(customStr)
+        if (Array.isArray(c.skills) && c.skills.length > 0) {
+          const loadedSkills: DemoSkill[] = c.skills.map((skName: string, idx: number) => ({
+            id: 'sk-' + idx,
+            name: skName,
+            sector: c.sector || 'Construction',
+            years: 3 + idx,
+            level: idx === 0 ? 'Skilled' : 'Semi-skilled',
+            primary: idx === 0,
+          }))
+          setSkills(loadedSkills)
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  }, [])
 
   // AI extract state
   const [aiText, setAiText] = useState('')

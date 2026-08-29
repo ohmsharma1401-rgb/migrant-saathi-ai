@@ -30,10 +30,22 @@ interface OTPForm {
 
 const RESEND_DELAY = 30
 
+const STATE_DISTRICTS: Record<string, string[]> = {
+  Bihar: ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga', 'Rohtas', 'Saran', 'Purnia', 'Samastipur', 'Begusarai'],
+  'Uttar Pradesh': ['Varanasi', 'Gorakhpur', 'Lucknow', 'Kanpur', 'Allahabad', 'Agra', 'Bareilly', 'Moradabad', 'Azamgarh', 'Jaunpur'],
+  Rajasthan: ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer', 'Bikaner', 'Bhilwara', 'Alwar', 'Sikar', 'Churu'],
+  'Madhya Pradesh': ['Indore', 'Bhopal', 'Gwalior', 'Jabalpur', 'Ujjain', 'Sagar', 'Rewa', 'Satna'],
+  Gujarat: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar', 'Junagadh', 'Anand', 'Mehsana', 'Bharuch', 'Kheda', 'Kutch'],
+  Odisha: ['Bhubaneswar', 'Cuttack', 'Ganjam', 'Puri', 'Balasore', 'Bhadrak', 'Mayurbhanj'],
+  Jharkhand: ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Hazaribagh', 'Giridih'],
+  'West Bengal': ['Kolkata', 'Howrah', 'Murshidabad', 'Malda', 'Hooghly', 'Nadia', 'North 24 Parganas'],
+}
+
 export default function WorkerLogin() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
 
+  const [authTab, setAuthTab] = useState<'signup' | 'signin'>('signup')
   const [step, setStep] = useState<'mobile' | 'otp' | 'register'>('mobile')
   const [mobile, setMobile] = useState('')
   const [mockOtp, setMockOtp] = useState<string | undefined>()
@@ -45,12 +57,17 @@ export default function WorkerLogin() {
   const [regForm, setRegForm] = useState({
     fullName: '',
     age: '',
+    dob: '',
     originState: 'Bihar',
     originDistrict: 'Patna',
     currentDistrict: 'Ahmedabad',
     currentCity: 'Ahmedabad',
     occupation: 'Mason',
   })
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([
+    'Masonry Work',
+    'Safety & First Aid',
+  ])
   const [savingReg, setSavingReg] = useState(false)
 
   const mobileForm = useForm<MobileForm>({ defaultValues: { mobile_number: '' } })
@@ -125,6 +142,24 @@ export default function WorkerLogin() {
 
   async function onCompleteRegistration() {
     setSavingReg(true)
+    const customWorker = {
+      id: 'W-' + Math.floor(1000 + Math.random() * 9000).toString(),
+      full_name: regForm.fullName || 'Registered Worker',
+      email: mobile.includes('@') ? mobile : undefined,
+      mobile_number: !mobile.includes('@') ? mobile : undefined,
+      age: regForm.age || '30',
+      dob: regForm.dob || '1994-05-15',
+      origin_state: regForm.originState,
+      origin_district: regForm.originDistrict,
+      current_district: regForm.currentDistrict,
+      current_city: regForm.currentCity,
+      occupation: regForm.occupation,
+      sector: regForm.occupation.includes('Textile') ? 'Textiles' : regForm.occupation.includes('Diamond') ? 'Diamond' : 'Construction',
+      skills: selectedSkills.length > 0 ? selectedSkills : [regForm.occupation, 'Certified'],
+      registered: 'Just Now (Live)',
+    }
+    localStorage.setItem('saathi-custom-worker', JSON.stringify(customWorker))
+
     try {
       await api.patch('/workers/profile', {
         full_name: regForm.fullName || 'Migrant Worker',
@@ -369,90 +404,106 @@ export default function WorkerLogin() {
         {/* Step 3 — Worker Registration Details */}
         {step === 'register' && (
           <div className="space-y-4">
-            <div className="text-center space-y-1 mb-2">
-              <h2 className="text-xl font-bold text-gray-900">Worker Registration</h2>
-              <p className="text-xs text-gray-500">
-                Please provide your details to personalize your welfare &amp; wage entitlements.
+            <div className="text-center mb-5">
+              <span className="text-3xl mb-2 inline-block">📝</span>
+              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Skills Profile</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Fill in your skills, origin region, and work location to personalize your welfare benefits &amp; wage entitlements.
               </p>
             </div>
 
-            <div className="space-y-3 text-left">
+            <div className="space-y-3.5 text-left">
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
                 <input
                   type="text"
                   placeholder="e.g. Ramesh Kumar"
                   value={regForm.fullName}
                   onChange={(e) => setRegForm({ ...regForm, fullName: e.target.value })}
-                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
                 />
               </div>
 
-              {/* Age */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Age (Years)</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 32"
-                  value={regForm.age}
-                  onChange={(e) => setRegForm({ ...regForm, age: e.target.value })}
-                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-100"
-                />
-              </div>
-
-              {/* Region Where He Belongs (Origin State & District) */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Age & Date of Birth */}
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Origin State (Belongs to)</label>
-                  <select
-                    value={regForm.originState}
-                    onChange={(e) => setRegForm({ ...regForm, originState: e.target.value })}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs text-gray-900 outline-none focus:border-green-600 bg-white"
-                  >
-                    <option value="Bihar">Bihar</option>
-                    <option value="Uttar Pradesh">Uttar Pradesh</option>
-                    <option value="Odisha">Odisha</option>
-                    <option value="Jharkhand">Jharkhand</option>
-                    <option value="West Bengal">West Bengal</option>
-                    <option value="Rajasthan">Rajasthan</option>
-                    <option value="Madhya Pradesh">Madhya Pradesh</option>
-                  </select>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Age (Years)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 32"
+                    value={regForm.age}
+                    onChange={(e) => setRegForm({ ...regForm, age: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Origin District</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth</label>
                   <input
-                    type="text"
-                    placeholder="e.g. Patna / Gaya"
-                    value={regForm.originDistrict}
-                    onChange={(e) => setRegForm({ ...regForm, originDistrict: e.target.value })}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs text-gray-900 outline-none focus:border-green-600"
+                    type="date"
+                    value={regForm.dob}
+                    onChange={(e) => setRegForm({ ...regForm, dob: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100 bg-white"
                   />
                 </div>
               </div>
 
-              {/* Where He Is Working (Current District & City) */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Region Where He Belongs (Dynamic Origin State & District) */}
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Current District (Working)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Origin State (Belongs to)</label>
+                  <select
+                    value={regForm.originState}
+                    onChange={(e) => {
+                      const newSt = e.target.value
+                      const firstDist = STATE_DISTRICTS[newSt]?.[0] || 'Default District'
+                      setRegForm({ ...regForm, originState: newSt, originDistrict: firstDist })
+                    }}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+                  >
+                    {Object.keys(STATE_DISTRICTS).map((st) => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Origin District</label>
+                  <select
+                    value={regForm.originDistrict}
+                    onChange={(e) => setRegForm({ ...regForm, originDistrict: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+                  >
+                    {(STATE_DISTRICTS[regForm.originState] || ['Patna', 'Gaya', 'Bhagalpur']).map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Where He Is Working (Current Work Location) */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Work District (Gujarat)</label>
                   <select
                     value={regForm.currentDistrict}
                     onChange={(e) => setRegForm({ ...regForm, currentDistrict: e.target.value, currentCity: e.target.value })}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs text-gray-900 outline-none focus:border-green-600 bg-white"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
                   >
                     <option value="Ahmedabad">Ahmedabad</option>
                     <option value="Surat">Surat</option>
                     <option value="Vadodara">Vadodara</option>
                     <option value="Rajkot">Rajkot</option>
                     <option value="Gandhinagar">Gandhinagar</option>
+                    <option value="Bhavnagar">Bhavnagar</option>
+                    <option value="Jamnagar">Jamnagar</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Occupation / Work</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Primary Occupation</label>
                   <select
                     value={regForm.occupation}
                     onChange={(e) => setRegForm({ ...regForm, occupation: e.target.value })}
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs text-gray-900 outline-none focus:border-green-600 bg-white"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
                   >
                     <option value="Mason">Mason (Construction)</option>
                     <option value="Carpenter">Carpenter</option>
@@ -461,8 +512,48 @@ export default function WorkerLogin() {
                     <option value="Welder">Welder</option>
                     <option value="Weaver">Weaver (Textiles)</option>
                     <option value="Diamond Polisher">Diamond Polisher</option>
-                    <option value="Factory Operator">Factory Machine Operator</option>
+                    <option value="Factory Operator">Machine Operator</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Skills Checkboxes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Select Skills &amp; Certifications
+                </label>
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                  {[
+                    'Masonry Work',
+                    'Plumbing & Sanitation',
+                    'Carpentry & Shuttering',
+                    'Electrical Wiring',
+                    'Arc & TIG Welding',
+                    'Textile Weaving & Dyeing',
+                    'Diamond Cutting & Polish',
+                    'CNC Machine Operation',
+                    'Driving (Heavy Vehicles)',
+                    'Safety & First Aid',
+                  ].map((sk) => {
+                    const isChecked = selectedSkills.includes(sk)
+                    return (
+                      <label key={sk} className="flex items-center gap-2 cursor-pointer select-none text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setSelectedSkills(selectedSkills.filter((s) => s !== sk))
+                            } else {
+                              setSelectedSkills([...selectedSkills, sk])
+                            }
+                          }}
+                          className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                        />
+                        <span className="truncate">{sk}</span>
+                      </label>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -471,18 +562,18 @@ export default function WorkerLogin() {
               type="button"
               onClick={onCompleteRegistration}
               disabled={savingReg}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3.5 text-sm transition-colors shadow-sm mt-3"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20 mt-4"
             >
               {savingReg ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Save Registration &amp; Proceed →
+              Complete Sign Up &amp; Save Skills →
             </button>
 
             <button
               type="button"
               onClick={() => navigate('/worker')}
-              className="w-full text-xs text-gray-500 hover:text-gray-800 font-medium py-1 transition-colors"
+              className="w-full text-xs text-slate-500 hover:text-slate-800 font-medium py-1 transition-colors"
             >
-              Skip &amp; Complete Profile Later
+              Skip &amp; View Worker Dashboard
             </button>
           </div>
         )}

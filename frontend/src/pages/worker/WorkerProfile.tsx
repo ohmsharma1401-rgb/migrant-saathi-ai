@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -94,6 +94,27 @@ export default function WorkerProfile() {
   const [form, setForm] = useState(DEFAULT_FORM)
   const [saving, setSaving] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
+
+  useEffect(() => {
+    try {
+      const customStr = localStorage.getItem('saathi-custom-worker')
+      if (customStr) {
+        const c = JSON.parse(customStr)
+        setForm((f) => ({
+          ...f,
+          fullName: c.full_name || f.fullName,
+          dateOfBirth: c.dob || f.dateOfBirth,
+          originState: c.origin_state || f.originState,
+          currentDistrict: c.current_district || f.currentDistrict,
+          currentCity: c.current_city || f.currentCity,
+          occupation: c.occupation || f.occupation,
+          sector: c.sector || f.sector,
+        }))
+      }
+    } catch {
+      // Fallback
+    }
+  }, [])
 
   const { pct, complete } = calcCompletion(form)
 
