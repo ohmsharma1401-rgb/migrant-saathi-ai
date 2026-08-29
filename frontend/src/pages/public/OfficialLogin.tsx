@@ -266,7 +266,12 @@ export default function OfficialLogin() {
               <button
                 type="button"
                 onClick={() => {
-                  onSubmit({ email: 'official@gujarat.gov.in', password: 'Demo@1234' })
+                  setAuth(
+                    { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
+                    'demo-access-token',
+                    'demo-refresh-token'
+                  )
+                  navigate('/gov')
                 }}
                 className="flex items-center justify-between rounded-lg bg-white border border-indigo-200 px-3 py-2 text-xs hover:bg-indigo-600 hover:text-white transition-all text-left shadow-sm group"
               >
@@ -274,13 +279,18 @@ export default function OfficialLogin() {
                   <span className="font-bold block text-slate-800 group-hover:text-white">🏛️ Government Official</span>
                   <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 font-mono">official@gujarat.gov.in</span>
                 </div>
-                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Login →</span>
+                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Open Dashboard →</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  onSubmit({ email: 'inspector@gujarat.gov.in', password: 'Demo@1234' })
+                  setAuth(
+                    { id: 'demo-inspector-id', role: 'inspector', email: 'inspector@gujarat.gov.in' },
+                    'demo-access-token',
+                    'demo-refresh-token'
+                  )
+                  navigate('/gov')
                 }}
                 className="flex items-center justify-between rounded-lg bg-white border border-indigo-200 px-3 py-2 text-xs hover:bg-indigo-600 hover:text-white transition-all text-left shadow-sm group"
               >
@@ -288,13 +298,18 @@ export default function OfficialLogin() {
                   <span className="font-bold block text-slate-800 group-hover:text-white">🔍 Labour Inspector</span>
                   <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 font-mono">inspector@gujarat.gov.in</span>
                 </div>
-                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Login →</span>
+                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Open Dashboard →</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  onSubmit({ email: 'admin@saathi.ai', password: 'Admin@1234' })
+                  setAuth(
+                    { id: 'demo-admin-id', role: 'admin', email: 'admin@saathi.ai' },
+                    'demo-access-token',
+                    'demo-refresh-token'
+                  )
+                  navigate('/admin')
                 }}
                 className="flex items-center justify-between rounded-lg bg-white border border-indigo-200 px-3 py-2 text-xs hover:bg-indigo-600 hover:text-white transition-all text-left shadow-sm group"
               >
@@ -302,7 +317,7 @@ export default function OfficialLogin() {
                   <span className="font-bold block text-slate-800 group-hover:text-white">⚙️ System Administrator</span>
                   <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 font-mono">admin@saathi.ai</span>
                 </div>
-                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Login →</span>
+                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Open Dashboard →</span>
               </button>
             </div>
           </div>
