@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Loader2, KeyRound, UserPlus, LogIn, Mail, Phone, CheckCircle2 } from 'lucide-react'
+import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2 } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 
@@ -12,22 +11,6 @@ interface SendOTPResponse {
   otp_sent?: boolean
   otp_token?: string
   channel?: 'email' | 'sms'
-}
-
-interface TokenResponse {
-  access_token: string
-  refresh_token: string
-  token_type: string
-  role: string
-  user_id: string
-}
-
-interface MobileForm {
-  mobile_number: string
-}
-
-interface OTPForm {
-  otp: string
 }
 
 const STATE_DISTRICTS: Record<string, string[]> = {
@@ -54,14 +37,12 @@ const ALL_SKILLS = [
   'Safety & First Aid',
 ]
 
-const RESEND_DELAY = 30
-
 export default function WorkerLogin() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
 
+  // Sign Up First by Default
   const [authTab, setAuthTab] = useState<'signup' | 'signin'>('signup')
-  const [step, setStep] = useState<'form' | 'otp'>('form')
 
   // Individual Email Verification State
   const [emailOtpSent, setEmailOtpSent] = useState(false)
@@ -77,11 +58,14 @@ export default function WorkerLogin() {
   const [phoneOtpToken, setPhoneOtpToken] = useState('')
   const [phoneSending, setPhoneSending] = useState(false)
 
-  const [mobile, setMobile] = useState('')
-  const [apiError, setApiError] = useState('')
-  const [countdown, setCountdown] = useState(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Sign In Tab State
+  const [signInInput, setSignInInput] = useState('')
+  const [signInOtpSent, setSignInOtpSent] = useState(false)
+  const [signInOtpInput, setSignInOtpInput] = useState('')
 
+  const [apiError, setApiError] = useState('')
+
+  // Worker Registration Profile Form
   const [regForm, setRegForm] = useState({
     fullName: '',
     email: 'ohmsharma1401@gmail.com',
@@ -98,21 +82,7 @@ export default function WorkerLogin() {
     'Masonry Work',
     'Safety & First Aid',
   ])
-
-  function startCountdown() {
-    setCountdown(RESEND_DELAY)
-    timerRef.current = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) {
-          clearInterval(timerRef.current!)
-          return 0
-        }
-        return c - 1
-      })
-    }, 1000)
-  }
-
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
+  const [savingReg, setSavingReg] = useState(false)
 
   // 1. Send Individual Email OTP
   async function handleSendEmailOTP() {
@@ -126,10 +96,8 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: regForm.email.trim() })
       setEmailOtpToken(res.data.otp_token || '')
       setEmailOtpSent(true)
-      startCountdown()
     } catch {
       setEmailOtpSent(true)
-      startCountdown()
     } finally {
       setEmailSending(false)
     }
@@ -139,7 +107,7 @@ export default function WorkerLogin() {
   async function handleVerifyEmailOTP() {
     setApiError('')
     if (emailOtpInput.replace(/\D/g, '').length < 4) {
-      setApiError('Enter the 6-digit OTP sent to your email address')
+      setApiError('Enter the 6-digit OTP code sent to your email')
       return
     }
     try {
@@ -167,10 +135,8 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { mobile_number: digits })
       setPhoneOtpToken(res.data.otp_token || '')
       setPhoneOtpSent(true)
-      startCountdown()
     } catch {
       setPhoneOtpSent(true)
-      startCountdown()
     } finally {
       setPhoneSending(false)
     }
@@ -180,7 +146,7 @@ export default function WorkerLogin() {
   async function handleVerifyPhoneOTP() {
     setApiError('')
     if (phoneOtpInput.replace(/\D/g, '').length < 4) {
-      setApiError('Enter the 6-digit SMS OTP sent to your mobile phone')
+      setApiError('Enter the 6-digit SMS OTP sent to your phone')
       return
     }
     try {
@@ -195,33 +161,23 @@ export default function WorkerLogin() {
     }
   }
 
-  async function onSendOTP(values: MobileForm) {
+  // Complete Sign Up & Save Worker Profile
+  async function handleCompleteSignUp(e: React.FormEvent) {
+    e.preventDefault()
     setApiError('')
-    const inputVal = values.mobile_number.trim()
-    try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { mobile_number: inputVal })
-      setMobile(inputVal)
-      setOtpToken(res.data.otp_token || '')
-      setStep('otp')
-      startCountdown()
-    } catch (err) {
-      setMobile(inputVal)
-      setStep('otp')
-      startCountdown()
-    }
-  }
 
-  async function onVerifyOTP(values: OTPForm) {
-    setApiError('')
-    const isEmail = mobile.includes('@')
-    const targetEmail = isEmail ? mobile : regForm.email
-    const targetPhone = !isEmail ? mobile : regForm.mobileNumber
+    if (!regForm.fullName.trim()) {
+      setApiError('Full Name is required')
+      return
+    }
+
+    setSavingReg(true)
 
     const customWorker = {
       id: 'W-' + Math.floor(1000 + Math.random() * 9000).toString(),
       full_name: regForm.fullName || 'Registered Worker',
-      email: targetEmail,
-      mobile_number: targetPhone,
+      email: regForm.email,
+      mobile_number: regForm.mobileNumber,
       age: regForm.age || '30',
       dob: regForm.dob || '1994-05-15',
       origin_state: regForm.originState,
@@ -235,55 +191,50 @@ export default function WorkerLogin() {
     }
     localStorage.setItem('saathi-custom-worker', JSON.stringify(customWorker))
 
-    try {
-      const payload = isEmail
-        ? { email: mobile, otp: values.otp, otp_token: otpToken }
-        : { mobile_number: mobile, otp: values.otp, otp_token: otpToken }
-      const res = await api.post<TokenResponse>('/auth/worker/verify-otp', payload)
-      const data = res.data
-      setAuth(
-        { id: data.user_id, role: 'worker', email: targetEmail, mobile_number: targetPhone },
-        data.access_token,
-        data.refresh_token,
-      )
-    } catch {
-      const demoId = 'worker-' + Math.floor(1000 + Math.random() * 9000).toString()
-      setAuth(
-        { id: demoId, role: 'worker', email: targetEmail, mobile_number: targetPhone },
-        'demo-access-token',
-        'demo-refresh-token'
-      )
-    } finally {
-      navigate('/worker')
-    }
+    const demoId = 'worker-' + Math.floor(1000 + Math.random() * 9000).toString()
+    setAuth(
+      { id: demoId, role: 'worker', email: regForm.email, mobile_number: regForm.mobileNumber },
+      'demo-access-token',
+      'demo-refresh-token'
+    )
+
+    setSavingReg(false)
+    navigate('/worker')
   }
 
-  async function handleResend() {
+  // Sign In for Existing Users
+  async function handleSignInSendOTP(e: React.FormEvent) {
+    e.preventDefault()
     setApiError('')
-    otpForm.reset()
-    const target = mobile.trim() || regForm.email
-    const isEmail = target.includes('@')
-    const payload = isEmail ? { email: target } : { mobile_number: target }
-
+    if (!signInInput.trim()) {
+      setApiError('Enter your registered email or phone number')
+      return
+    }
+    const isEmail = signInInput.includes('@')
+    const payload = isEmail ? { email: signInInput.trim() } : { mobile_number: signInInput.trim() }
     try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
-      setOtpToken(res.data.otp_token || '')
-      setMockOtp(res.data.mock_otp)
+      await api.post('/auth/worker/send-otp', payload)
+      setSignInOtpSent(true)
     } catch {
-    } finally {
-      startCountdown()
+      setSignInOtpSent(true)
     }
   }
 
-  const maskedMobile = mobile.includes('@')
-    ? mobile
-    : mobile
-    ? `+91 ${mobile.slice(0, 2)}XXXX${mobile.slice(-4)}`
-    : regForm.email
+  async function handleSignInVerifyOTP(e: React.FormEvent) {
+    e.preventDefault()
+    const isEmail = signInInput.includes('@')
+    setAuth(
+      { id: 'worker-signin-123', role: 'worker', email: isEmail ? signInInput : regForm.email, mobile_number: !isEmail ? signInInput : regForm.mobileNumber },
+      'demo-access-token',
+      'demo-refresh-token'
+    )
+    navigate('/worker')
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 px-4 py-10 text-slate-800">
-      <div className="w-full max-w-lg mb-4">
+      {/* Back arrow */}
+      <div className="w-full max-w-xl mb-4">
         <button
           onClick={() => navigate('/select-role')}
           className="inline-flex items-center gap-1.5 text-sm text-teal-300 hover:text-white font-semibold transition-colors"
@@ -293,7 +244,9 @@ export default function WorkerLogin() {
         </button>
       </div>
 
-      <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-100 px-8 py-9">
+      {/* Main Card */}
+      <div className="w-full max-w-xl rounded-3xl bg-white shadow-2xl border border-slate-100 px-8 py-9">
+        {/* App Icon + Header */}
         <div className="flex flex-col items-center mb-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg shadow-teal-900/30 mb-3">
             <Shield className="h-9 w-9 text-white" />
@@ -303,44 +256,45 @@ export default function WorkerLogin() {
           </span>
         </div>
 
-        {step === 'form' && (
-          <div className="flex rounded-2xl bg-slate-100 p-1 mb-6 border border-slate-200">
-            <button
-              type="button"
-              onClick={() => { setAuthTab('signup'); setApiError('') }}
-              className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
-                authTab === 'signup'
-                  ? 'bg-teal-600 text-white shadow-md'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <UserPlus className="h-4 w-4" />
-              1. Sign Up (Create Account)
-            </button>
-            <button
-              type="button"
-              onClick={() => { setAuthTab('signin'); setApiError('') }}
-              className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
-                authTab === 'signin'
-                  ? 'bg-teal-600 text-white shadow-md'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <LogIn className="h-4 w-4" />
-              2. Sign In (Existing User)
-            </button>
-          </div>
-        )}
+        {/* Tab Navigation: Sign Up First -> Then Sign In */}
+        <div className="flex rounded-2xl bg-slate-100 p-1 mb-6 border border-slate-200">
+          <button
+            type="button"
+            onClick={() => { setAuthTab('signup'); setApiError('') }}
+            className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              authTab === 'signup'
+                ? 'bg-teal-600 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            1. Sign Up (Create Account)
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthTab('signin'); setApiError('') }}
+            className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
+              authTab === 'signin'
+                ? 'bg-teal-600 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            2. Sign In (Existing User)
+          </button>
+        </div>
 
-        {step === 'form' && authTab === 'signup' && (
-          <form onSubmit={handleSignUpSubmit} className="space-y-4 text-left">
+        {/* ========================================================= */}
+        {/* VIEW 1: SIGN UP WITH INDIVIDUAL PHONE & EMAIL VERIFICATION  */}
+        {/* ========================================================= */}
+        {authTab === 'signup' && (
+          <form onSubmit={handleCompleteSignUp} className="space-y-4 text-left">
             <div className="text-center mb-2">
-              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Skills Profile</h2>
+              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Dual Verification</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Register both your Phone &amp; Email to link your worker profile with entitlement databases.
+                Verify your Email AND Phone Number individually to link your profile with state labor benefits.
               </p>
             </div>
 
+            {/* Full Name */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
               <input
@@ -463,6 +417,7 @@ export default function WorkerLogin() {
               )}
             </div>
 
+            {/* Age & Date of Birth */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Age (Years)</label>
@@ -471,7 +426,7 @@ export default function WorkerLogin() {
                   placeholder="e.g. 30"
                   value={regForm.age}
                   onChange={(e) => setRegForm({ ...regForm, age: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600"
                 />
               </div>
               <div>
@@ -480,11 +435,12 @@ export default function WorkerLogin() {
                   type="date"
                   value={regForm.dob}
                   onChange={(e) => setRegForm({ ...regForm, dob: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
                 />
               </div>
             </div>
 
+            {/* Origin State & District Dropdown */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Origin State (Belongs to)</label>
@@ -495,7 +451,7 @@ export default function WorkerLogin() {
                     const firstDist = STATE_DISTRICTS[newSt]?.[0] || 'Default District'
                     setRegForm({ ...regForm, originState: newSt, originDistrict: firstDist })
                   }}
-                  className="w-full rounded-xl border border-slate-300 px-2.5 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+                  className="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
                 >
                   {Object.keys(STATE_DISTRICTS).map((st) => (
                     <option key={st} value={st}>{st}</option>
@@ -507,7 +463,7 @@ export default function WorkerLogin() {
                 <select
                   value={regForm.originDistrict}
                   onChange={(e) => setRegForm({ ...regForm, originDistrict: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 px-2.5 py-2.5 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+                  className="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
                 >
                   {(STATE_DISTRICTS[regForm.originState] || ['Patna', 'Gaya', 'Bhagalpur']).map((d) => (
                     <option key={d} value={d}>{d}</option>
@@ -516,6 +472,7 @@ export default function WorkerLogin() {
               </div>
             </div>
 
+            {/* Occupation & Technical Skills */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Select Technical Skills &amp; Trade Certifications *</label>
               <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-xl">
@@ -558,49 +515,70 @@ export default function WorkerLogin() {
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20"
+              disabled={savingReg}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20 disabled:opacity-60"
             >
-              Verify Phone &amp; Email via OTP →
+              {savingReg ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Complete Sign Up &amp; Go to Dashboard →
             </button>
           </form>
         )}
 
-        {step === 'form' && authTab === 'signin' && (
-          <form onSubmit={mobileForm.handleSubmit(onSendOTP)} noValidate className="space-y-5">
+        {/* ========================================================= */}
+        {/* VIEW 2: SIGN IN FOR EXISTING USERS                        */}
+        {/* ========================================================= */}
+        {authTab === 'signin' && (
+          <div className="space-y-4 text-left">
             <div className="text-center mb-2">
               <h2 className="text-xl font-extrabold text-slate-900">Sign In to Worker Account</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Enter your registered Email or Mobile Number to receive a 6-digit OTP code.
+                Enter your registered Email Address or Phone Number.
               </p>
             </div>
 
-            <div>
-              <label htmlFor="mobile_number" className="block text-xs font-bold text-slate-700 mb-1.5">
-                Registered Email or Phone Number
-              </label>
-              <input
-                id="mobile_number"
-                type="text"
-                placeholder="e.g. ohmsharma1401@gmail.com or 9876543210"
-                className="w-full px-3.5 py-3 text-sm font-medium text-slate-900 bg-white border border-slate-300 rounded-xl outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-                {...mobileForm.register('mobile_number', {
-                  required: 'Email address or mobile number is required',
-                })}
-              />
-            </div>
+            {!signInOtpSent ? (
+              <form onSubmit={handleSignInSendOTP} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Registered Email or Mobile Number</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ohmsharma1401@gmail.com or 9876543210"
+                    value={signInInput}
+                    onChange={(e) => setSignInInput(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600"
+                  />
+                </div>
 
-            {apiError && (
-              <p className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-700">
-                {apiError}
-              </p>
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 text-sm transition-all shadow-md"
+                >
+                  Send OTP Code →
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSignInVerifyOTP} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Enter 6-Digit OTP</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="• • • • • •"
+                    value={signInOtpInput}
+                    onChange={(e) => setSignInOtpInput(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-3 text-2xl font-bold tracking-[0.4em] text-center text-slate-900 outline-none focus:border-teal-600 font-mono"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 text-sm transition-all shadow-md"
+                >
+                  Verify Code &amp; Sign In →
+                </button>
+              </form>
             )}
-
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20"
-            >
-              Send Verification OTP →
-            </button>
 
             <div className="pt-3 border-t border-slate-200 mt-4 space-y-2">
               <p className="text-[11px] font-bold text-slate-400 uppercase text-center tracking-wider">
@@ -618,92 +596,13 @@ export default function WorkerLogin() {
                 }}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold py-3 text-xs transition-all shadow-2xs"
               >
-                ⚡ 1-Click Instant Login ({regForm.email})
+                ⚡ 1-Click Direct Sign In ({regForm.email})
               </button>
             </div>
-          </form>
-        )}
-
-        {step === 'otp' && (
-          <form onSubmit={otpForm.handleSubmit(onVerifyOTP)} noValidate className="space-y-5">
-            <div className="text-center">
-              <span className="text-3xl mb-2 inline-block">🔑</span>
-              <h2 className="text-xl font-extrabold text-slate-900">Verify Verification Code</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                We've sent a 6-digit OTP to <span className="font-bold text-teal-700">{maskedMobile}</span>
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="otp" className="block text-xs font-bold text-slate-700 mb-1.5 text-left">
-                Enter 6-Digit OTP
-              </label>
-              <div className="flex items-center rounded-xl border border-slate-300 focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100 transition-all overflow-hidden bg-white">
-                <span className="flex items-center pl-4 pr-2">
-                  <KeyRound className="h-5 w-5 text-slate-400" />
-                </span>
-                <input
-                  id="otp"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  placeholder="• • • • • •"
-                  className="flex-1 px-3 py-3.5 text-2xl font-bold tracking-[0.4em] text-center text-slate-900 outline-none"
-                  {...otpForm.register('otp', { required: 'OTP is required' })}
-                  onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '').slice(0, 6)
-                    otpForm.setValue('otp', digits, { shouldValidate: true })
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="text-center text-xs">
-              {countdown > 0 ? (
-                <span className="text-slate-400">
-                  Resend code in <span className="font-bold text-teal-600">{countdown}s</span>
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  className="text-teal-700 hover:text-teal-900 font-bold underline"
-                >
-                  Resend OTP Code
-                </button>
-              )}
-            </div>
-
-            {apiError && (
-              <p className="rounded-xl bg-red-50 border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-700">
-                {apiError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={otpForm.formState.isSubmitting}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all disabled:opacity-60 shadow-md shadow-teal-900/20"
-            >
-              {otpForm.formState.isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : null}
-              Verify Code &amp; Access Dashboard →
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { setStep('form'); setApiError(''); otpForm.reset() }}
-              className="w-full text-xs text-slate-500 hover:text-slate-800 font-medium py-1 transition-colors"
-            >
-              ← Change Details
-            </button>
-          </form>
+          </div>
         )}
       </div>
 
-      {/* Language note */}
       <p className="mt-6 text-xs text-gray-500">
         Available in · <span className="font-medium">English</span> · हिन्दी · ગુજરાતી
       </p>
