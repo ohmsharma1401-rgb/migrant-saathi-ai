@@ -267,13 +267,34 @@ export default function WorkerLogin() {
             <button
               type="submit"
               disabled={mobileForm.formState.isSubmitting}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-teal-900/20"
             >
               {mobileForm.formState.isSubmitting ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : null}
-              Send OTP →
+              Send OTP to Email / Phone →
             </button>
+
+            <div className="pt-3 border-t border-slate-200 mt-4 space-y-2">
+              <p className="text-[11px] font-bold text-slate-400 uppercase text-center tracking-wider">
+                Instant Access Option
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const inputVal = mobileForm.getValues('mobile_number').trim() || 'ohmsharma1401@gmail.com'
+                  setAuth(
+                    { id: 'worker-demo-1234', role: 'worker', email: inputVal.includes('@') ? inputVal : 'ohmsharma1401@gmail.com', mobile_number: !inputVal.includes('@') ? inputVal : '9876543210' },
+                    'demo-access-token',
+                    'demo-refresh-token'
+                  )
+                  navigate('/worker')
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold py-3 text-xs transition-all shadow-xs"
+              >
+                ⚡ 1-Click Direct Login ({mobileForm.getValues('mobile_number').trim() || 'ohmsharma1401@gmail.com'})
+              </button>
+            </div>
           </form>
         )}
 
