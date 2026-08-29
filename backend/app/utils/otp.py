@@ -135,7 +135,9 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
         msg.attach(MIMEText(html_body, "html"))
 
         with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(smtp_user, smtp_password)
             server.sendmail(sender, [to_email], msg.as_string())
 

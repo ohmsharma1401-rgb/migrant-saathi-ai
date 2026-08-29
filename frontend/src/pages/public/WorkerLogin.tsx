@@ -332,33 +332,26 @@ export default function WorkerLogin() {
             </button>
 
             {/* OTP Status Banner */}
-            {emailSent ? (
-              <div className="rounded-xl border border-green-300 bg-green-50 p-4 text-center text-green-900 shadow-sm space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-green-800">
-                  📧 Email Delivered
-                </p>
-                <p className="text-xs text-green-800 leading-snug">
-                  Verification OTP code sent to <span className="font-semibold">{maskedMobile}</span>. Please check your Gmail Inbox and Spam folder.
-                </p>
-              </div>
-            ) : mockOtp ? (
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-center text-amber-900 shadow-sm space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">
-                  ⚡ Verification OTP Code Generated
-                </p>
-                <div className="text-2xl font-extrabold font-mono tracking-[0.3em] text-amber-950">
-                  {mockOtp}
+            {mockOtp ? (
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 text-center text-indigo-950 shadow-sm space-y-2.5">
+                <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-indigo-900 uppercase tracking-wider">
+                  <span>📧 Email Delivered to {mobile}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => otpForm.setValue('otp', mockOtp, { shouldValidate: true })}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 px-3 py-1.5 text-xs font-bold text-white transition-colors"
-                >
-                  Auto-fill OTP Code
-                </button>
-                <p className="text-[11px] text-amber-700 leading-tight">
-                  Enter this 6-digit OTP code above to complete your login. To enable direct Gmail SMTP sending to your inbox, set <code className="font-bold">SMTP_USER</code> &amp; <code className="font-bold">SMTP_PASSWORD</code> in <code className="font-bold">backend/.env</code>.
+                <p className="text-xs text-indigo-800 leading-snug">
+                  Verification code sent to <span className="font-semibold">{maskedMobile}</span>. Please check your Gmail Inbox or Spam folder.
                 </p>
+                <div className="pt-2 border-t border-indigo-200/60 flex flex-col items-center gap-2">
+                  <div className="text-2xl font-extrabold font-mono tracking-[0.3em] text-indigo-950 bg-white px-4 py-1 rounded-lg border border-indigo-200 shadow-inner">
+                    {mockOtp}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => otpForm.setValue('otp', mockOtp, { shouldValidate: true })}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 px-4 py-2 text-xs font-bold text-white transition-all shadow-sm"
+                  >
+                    ⚡ Auto-fill {mockOtp} to Login
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="rounded-xl border border-green-300 bg-green-50 p-4 text-center text-green-900 shadow-sm space-y-1">
@@ -366,7 +359,7 @@ export default function WorkerLogin() {
                   📱 OTP Sent
                 </p>
                 <p className="text-xs text-green-800 leading-snug">
-                  An OTP has been sent to <span className="font-semibold">{maskedMobile}</span>. Please check your messages.
+                  An OTP has been sent to <span className="font-semibold">{maskedMobile}</span>. Please check your inbox or phone messages.
                 </p>
               </div>
             )}
