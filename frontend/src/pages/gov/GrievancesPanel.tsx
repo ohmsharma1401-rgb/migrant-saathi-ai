@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AlertTriangle, Search, X, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 
 // ─── DEMO DATA ──────────────────────────────────────────────────────────────
@@ -145,6 +145,31 @@ export default function GrievancesPanel() {
   const [assigningGrievance, setAssigningGrievance] = useState<Grievance | null>(null)
   const [selectedInspector, setSelectedInspector] = useState('Insp. Arjun Patel')
   const [toastMessage, setToastMessage] = useState('')
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('saathi-user-grievances')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const mappedCustom: Grievance[] = parsed.map((item: any) => ({
+            id: item.id,
+            category: item.category,
+            description: item.description,
+            worker: item.worker || 'Registered Worker',
+            location: item.location || 'Ahmedabad',
+            priority: item.priority === 'High' ? 'High' : item.priority === 'Critical' ? 'Critical' : 'Medium',
+            status: item.status === 'open' ? 'Open' : item.status === 'under_review' ? 'Under Review' : 'Resolved',
+            inspector: item.inspector || 'Unassigned',
+            created: item.created || 'Today',
+          }))
+          setGrievanceList([...mappedCustom, ...ALL_GRIEVANCES])
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }, [])
 
   const INSPECTORS = [
     'Insp. Arjun Patel (Ahmedabad)',
@@ -400,7 +425,7 @@ export default function GrievancesPanel() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Category</span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_BADGE[selected.category]}`}>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_BADGE[selected.category] ?? 'bg-gray-100 text-gray-700'}`}>
                       {selected.category}
                     </span>
                   </div>

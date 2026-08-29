@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ClipboardList, Plus, ChevronDown, ChevronUp, MapPin, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -95,9 +95,9 @@ const FILTER_TABS: { label: string; value: GrievanceStatus | 'all' }[] = [
 // ─── Individual grievance card ────────────────────────────────────────────────
 function GrievanceCard({ g }: { g: Grievance }) {
   const [expanded, setExpanded] = useState(false)
-  const sc = STATUS_CFG[g.status]
-  const cc = CAT_CFG[g.category]
-  const pc = PRIORITY_CFG[g.priority]
+  const sc = STATUS_CFG[g.status] || STATUS_CFG['open']
+  const cc = CAT_CFG[g.category] || CAT_CFG['Other']
+  const pc = PRIORITY_CFG[g.priority] || PRIORITY_CFG['Medium']
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -133,7 +133,7 @@ function GrievanceCard({ g }: { g: Grievance }) {
         </div>
 
         {/* Latest update snippet */}
-        {g.updates.length > 0 ? (
+        {g.updates && g.updates.length > 0 ? (
           <div className="mt-3 rounded-lg bg-gray-50 border border-gray-100 px-3 py-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">Latest Update</p>
             <p className="text-xs text-gray-700">{g.updates[g.updates.length - 1].text}</p>
@@ -158,7 +158,7 @@ function GrievanceCard({ g }: { g: Grievance }) {
         {expanded && (
           <div className="px-4 pb-4 space-y-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Updates Timeline</p>
-            {g.updates.length === 0 ? (
+            {!g.updates || g.updates.length === 0 ? (
               <p className="text-xs text-gray-500 italic">No updates yet. Your complaint is queued for review.</p>
             ) : (
               <ol className="relative border-l border-gray-200 ml-2 space-y-3">
@@ -182,15 +182,30 @@ function GrievanceCard({ g }: { g: Grievance }) {
 export default function MyGrievances() {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState<GrievanceStatus | 'all'>('all')
+  const [grievancesList, setGrievancesList] = useState<Grievance[]>(DEMO_GRIEVANCES)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('saathi-user-grievances')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setGrievancesList([...parsed, ...DEMO_GRIEVANCES])
+        }
+      }
+    } catch {
+      // fallback
+    }
+  }, [])
 
   const filtered =
     activeFilter === 'all'
-      ? DEMO_GRIEVANCES
-      : DEMO_GRIEVANCES.filter((g) => g.status === activeFilter)
+      ? grievancesList
+      : grievancesList.filter((g) => g.status === activeFilter)
 
-  const total = DEMO_GRIEVANCES.length
-  const open = DEMO_GRIEVANCES.filter((g) => g.status === 'open').length
-  const resolved = DEMO_GRIEVANCES.filter((g) => g.status === 'resolved').length
+  const total = grievancesList.length
+  const open = grievancesList.filter((g) => g.status === 'open').length
+  const resolved = grievancesList.filter((g) => g.status === 'resolved').length
 
   return (
     <div className="space-y-4 px-4 py-5 pb-10">

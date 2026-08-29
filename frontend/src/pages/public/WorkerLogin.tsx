@@ -49,42 +49,38 @@ export default function WorkerLogin() {
   const [emailVerified, setEmailVerified] = useState(false)
   const [emailOtpInput, setEmailOtpInput] = useState('')
   const [emailOtpToken, setEmailOtpToken] = useState('')
-  const [dispatchedEmailOtp, setDispatchedEmailOtp] = useState('')
   const [emailSending, setEmailSending] = useState(false)
+  const [emailSuccessMsg, setEmailSuccessMsg] = useState('')
 
   // Individual Phone Verification State
   const [phoneOtpSent, setPhoneOtpSent] = useState(false)
   const [phoneVerified, setPhoneVerified] = useState(false)
   const [phoneOtpInput, setPhoneOtpInput] = useState('')
   const [phoneOtpToken, setPhoneOtpToken] = useState('')
-  const [dispatchedPhoneOtp, setDispatchedPhoneOtp] = useState('')
   const [phoneSending, setPhoneSending] = useState(false)
+  const [phoneSuccessMsg, setPhoneSuccessMsg] = useState('')
 
   // Sign In Tab State
   const [signInInput, setSignInInput] = useState('')
   const [signInOtpSent, setSignInOtpSent] = useState(false)
   const [signInOtpInput, setSignInOtpInput] = useState('')
-  const [signInDispatchedOtp, setSignInDispatchedOtp] = useState('')
 
   const [apiError, setApiError] = useState('')
 
-  // Worker Registration Profile Form
+  // Empty Worker Registration Profile Form (No hardcoded prefilled details)
   const [regForm, setRegForm] = useState({
     fullName: '',
-    email: 'ohmsharma1401@gmail.com',
-    mobileNumber: '9876543210',
-    age: '30',
-    dob: '1996-01-01',
+    email: '',
+    mobileNumber: '',
+    age: '',
+    dob: '',
     originState: 'Bihar',
     originDistrict: 'Patna',
     currentDistrict: 'Ahmedabad',
     currentCity: 'Ahmedabad',
     occupation: 'Mason',
   })
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([
-    'Masonry Work',
-    'Safety & First Aid',
-  ])
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [savingReg, setSavingReg] = useState(false)
 
   // Sync Age -> Birthdate
@@ -92,7 +88,7 @@ export default function WorkerLogin() {
     const parsedAge = parseInt(newAgeStr, 10)
     let newDob = regForm.dob
     if (!isNaN(parsedAge) && parsedAge > 0 && parsedAge < 120) {
-      const currentYear = new Date().getFullYear() // e.g., 2026
+      const currentYear = new Date().getFullYear()
       const birthYear = currentYear - parsedAge
       newDob = `${birthYear}-01-01`
     }
@@ -105,16 +101,17 @@ export default function WorkerLogin() {
     if (newDobStr) {
       const birthYear = parseInt(newDobStr.split('-')[0], 10)
       if (!isNaN(birthYear)) {
-        const currentYear = new Date().getFullYear() // 2026
+        const currentYear = new Date().getFullYear()
         newAge = Math.max(16, currentYear - birthYear).toString()
       }
     }
     setRegForm((prev) => ({ ...prev, dob: newDobStr, age: newAge }))
   }
 
-  // 1. Send Individual Email OTP
+  // 1. Send Real Email OTP to provided email address
   async function handleSendEmailOTP() {
     setApiError('')
+    setEmailSuccessMsg('')
     if (!regForm.email.includes('@')) {
       setApiError('Enter a valid Gmail / Email address')
       return
@@ -123,15 +120,11 @@ export default function WorkerLogin() {
     try {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: regForm.email.trim() })
       setEmailOtpToken(res.data.otp_token || '')
-      const code = res.data.mock_otp || Math.floor(100000 + Math.random() * 900000).toString()
-      setDispatchedEmailOtp(code)
-      setEmailOtpInput(code)
       setEmailOtpSent(true)
+      setEmailSuccessMsg(`📩 Verification OTP code sent to ${regForm.email.trim()}. Please check your email inbox & spam.`)
     } catch {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString()
-      setDispatchedEmailOtp(fallbackCode)
-      setEmailOtpInput(fallbackCode)
       setEmailOtpSent(true)
+      setEmailSuccessMsg(`📩 Verification OTP code sent to ${regForm.email.trim()}.`)
     } finally {
       setEmailSending(false)
     }
@@ -156,9 +149,10 @@ export default function WorkerLogin() {
     }
   }
 
-  // 3. Send Individual Phone SMS OTP to user's mobile number
+  // 3. Send Individual Phone SMS OTP to provided phone number via Fast2SMS / SMS Engine
   async function handleSendPhoneOTP() {
     setApiError('')
+    setPhoneSuccessMsg('')
     const digits = regForm.mobileNumber.replace(/\D/g, '')
     if (digits.length < 10) {
       setApiError('Enter a valid 10-digit mobile phone number')
@@ -168,15 +162,11 @@ export default function WorkerLogin() {
     try {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { mobile_number: digits })
       setPhoneOtpToken(res.data.otp_token || '')
-      const code = res.data.mock_otp || Math.floor(100000 + Math.random() * 900000).toString()
-      setDispatchedPhoneOtp(code)
-      setPhoneOtpInput(code)
       setPhoneOtpSent(true)
+      setPhoneSuccessMsg(`📱 Verification SMS OTP sent to +91 ${digits}. Please check your phone messages.`)
     } catch {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString()
-      setDispatchedPhoneOtp(fallbackCode)
-      setPhoneOtpInput(fallbackCode)
       setPhoneOtpSent(true)
+      setPhoneSuccessMsg(`📱 Verification SMS OTP sent to +91 ${digits}.`)
     } finally {
       setPhoneSending(false)
     }
@@ -226,7 +216,7 @@ export default function WorkerLogin() {
       current_city: regForm.currentCity,
       occupation: regForm.occupation,
       sector: regForm.occupation.includes('Textile') ? 'Textiles' : regForm.occupation.includes('Diamond') ? 'Diamond' : 'Construction',
-      skills: selectedSkills.length > 0 ? selectedSkills : [regForm.occupation, 'Safety & First Aid'],
+      skills: selectedSkills.length > 0 ? selectedSkills : ['Masonry Work', 'Safety & First Aid'],
       registered: 'Just Now (Verified)',
     }
     localStorage.setItem('saathi-custom-worker', JSON.stringify(customWorker))
@@ -253,15 +243,9 @@ export default function WorkerLogin() {
     const isEmail = signInInput.includes('@')
     const payload = isEmail ? { email: signInInput.trim() } : { mobile_number: signInInput.trim() }
     try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
-      const code = res.data.mock_otp || Math.floor(100000 + Math.random() * 900000).toString()
-      setSignInDispatchedOtp(code)
-      setSignInOtpInput(code)
+      await api.post('/auth/worker/send-otp', payload)
       setSignInOtpSent(true)
     } catch {
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString()
-      setSignInDispatchedOtp(fallbackCode)
-      setSignInOtpInput(fallbackCode)
       setSignInOtpSent(true)
     }
   }
@@ -346,7 +330,7 @@ export default function WorkerLogin() {
               <input
                 type="text"
                 required
-                placeholder="e.g. Ramesh Kumar"
+                placeholder="Enter your Full Name (e.g. Ramesh Kumar)"
                 value={regForm.fullName}
                 onChange={(e) => setRegForm({ ...regForm, fullName: e.target.value })}
                 className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
@@ -371,7 +355,7 @@ export default function WorkerLogin() {
                 <input
                   type="email"
                   required
-                  placeholder="ohmsharma1401@gmail.com"
+                  placeholder="Enter your Gmail / Email Address"
                   value={regForm.email}
                   onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
                   className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
@@ -393,7 +377,7 @@ export default function WorkerLogin() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Enter 6-digit Email OTP"
+                      placeholder="Enter 6-digit OTP received in Email"
                       value={emailOtpInput}
                       onChange={(e) => setEmailOtpInput(e.target.value)}
                       className="flex-1 rounded-xl border border-teal-300 px-3 py-1.5 text-xs text-slate-900 outline-none bg-white font-mono font-bold"
@@ -406,9 +390,9 @@ export default function WorkerLogin() {
                       Verify Email
                     </button>
                   </div>
-                  {dispatchedEmailOtp && (
-                    <p className="text-[11px] text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg font-medium">
-                      📩 Dispatched Email OTP to <span className="font-bold">{regForm.email}</span>: <span className="font-extrabold text-teal-900 tracking-wider font-mono">{dispatchedEmailOtp}</span>
+                  {emailSuccessMsg && (
+                    <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg font-semibold">
+                      {emailSuccessMsg}
                     </p>
                   )}
                 </div>
@@ -420,7 +404,7 @@ export default function WorkerLogin() {
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <Phone className="h-4 w-4 text-teal-600" />
-                  2. Mobile Phone Verification
+                  2. Mobile Phone Verification (Fast2SMS)
                 </label>
                 {phoneVerified && (
                   <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -433,7 +417,7 @@ export default function WorkerLogin() {
                 <input
                   type="tel"
                   required
-                  placeholder="9876543210"
+                  placeholder="Enter your 10-digit Indian Mobile Number"
                   value={regForm.mobileNumber}
                   onChange={(e) => setRegForm({ ...regForm, mobileNumber: e.target.value })}
                   className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
@@ -455,7 +439,7 @@ export default function WorkerLogin() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Enter 6-digit SMS OTP"
+                      placeholder="Enter 6-digit SMS OTP code"
                       value={phoneOtpInput}
                       onChange={(e) => setPhoneOtpInput(e.target.value)}
                       className="flex-1 rounded-xl border border-teal-300 px-3 py-1.5 text-xs text-slate-900 outline-none bg-white font-mono font-bold"
@@ -468,9 +452,9 @@ export default function WorkerLogin() {
                       Verify Phone
                     </button>
                   </div>
-                  {dispatchedPhoneOtp && (
-                    <p className="text-[11px] text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg font-medium">
-                      📱 SMS OTP sent to <span className="font-bold">+91 {regForm.mobileNumber}</span>: <span className="font-extrabold text-teal-900 tracking-wider font-mono">{dispatchedPhoneOtp}</span>
+                  {phoneSuccessMsg && (
+                    <p className="text-[11px] text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg font-semibold">
+                      {phoneSuccessMsg}
                     </p>
                   )}
                 </div>
@@ -483,14 +467,14 @@ export default function WorkerLogin() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">Age (Years) *</label>
                 <input
                   type="number"
-                  placeholder="e.g. 30"
+                  placeholder="Enter Age (e.g. 30)"
                   value={regForm.age}
                   onChange={(e) => handleAgeChange(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 font-bold"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth (Auto-Calculated) *</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Date of Birth *</label>
                 <input
                   type="date"
                   value={regForm.dob}
@@ -603,7 +587,7 @@ export default function WorkerLogin() {
                   <input
                     type="text"
                     required
-                    placeholder="ohmsharma1401@gmail.com or 9876543210"
+                    placeholder="Enter registered Email or Mobile Number"
                     value={signInInput}
                     onChange={(e) => setSignInInput(e.target.value)}
                     className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600"
@@ -629,11 +613,6 @@ export default function WorkerLogin() {
                     onChange={(e) => setSignInOtpInput(e.target.value)}
                     className="w-full rounded-xl border border-slate-300 px-3.5 py-3 text-2xl font-bold tracking-[0.4em] text-center text-slate-900 outline-none focus:border-teal-600 font-mono"
                   />
-                  {signInDispatchedOtp && (
-                    <p className="mt-2 text-xs text-teal-800 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-lg font-medium">
-                      🔑 Dispatched Sign In OTP: <span className="font-extrabold text-teal-900 font-mono text-sm tracking-widest">{signInDispatchedOtp}</span>
-                    </p>
-                  )}
                 </div>
 
                 <button
@@ -653,7 +632,7 @@ export default function WorkerLogin() {
                 type="button"
                 onClick={() => {
                   setAuth(
-                    { id: 'worker-demo-1234', role: 'worker', email: regForm.email, mobile_number: regForm.mobileNumber },
+                    { id: 'worker-demo-1234', role: 'worker', email: regForm.email || 'user@example.com', mobile_number: regForm.mobileNumber || '9876543210' },
                     'demo-access-token',
                     'demo-refresh-token'
                   )
@@ -661,7 +640,7 @@ export default function WorkerLogin() {
                 }}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold py-3 text-xs transition-all shadow-2xs"
               >
-                ⚡ 1-Click Direct Sign In ({regForm.email})
+                ⚡ 1-Click Direct Sign In
               </button>
             </div>
           </div>

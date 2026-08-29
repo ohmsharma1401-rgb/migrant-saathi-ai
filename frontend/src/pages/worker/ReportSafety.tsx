@@ -59,20 +59,62 @@ export default function ReportSafety() {
   async function handleSubmit() {
     if (!canSubmit) return
     setSubmitting(true)
+    const newId = randomComplaintId()
+
+    let workerName = 'Ramesh Kumar'
     try {
-      const res = await api.post<{ complaint_code: string }>('/grievances/', {
+      const stored = localStorage.getItem('saathi-custom-worker')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.full_name) workerName = parsed.full_name
+      }
+    } catch {
+      // fallback
+    }
+
+    const categoryMap: Record<string, string> = {
+      safety: 'Safety',
+      wage: 'Wage',
+      harassment: 'Harassment',
+      conditions: 'Conditions',
+      other: 'Other',
+    }
+    const catName = categoryMap[issueType] || 'Harassment'
+
+    const newGrievance = {
+      id: newId,
+      category: catName,
+      status: 'open',
+      priority: issueType === 'harassment' || issueType === 'safety' ? 'High' : 'Medium',
+      description: description.trim(),
+      worker: workerName,
+      location: district || 'Ahmedabad',
+      submittedAgo: 'Just now',
+      created: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      inspector: 'Unassigned',
+      updates: [
+        { date: 'Just now', text: 'Report submitted confidentially and queued for inspector review.' }
+      ]
+    }
+
+    try {
+      const existing = localStorage.getItem('saathi-user-grievances')
+      const list = existing ? JSON.parse(existing) : []
+      localStorage.setItem('saathi-user-grievances', JSON.stringify([newGrievance, ...list]))
+    } catch {
+      // fallback
+    }
+
+    try {
+      await api.post('/grievances/', {
         description: `[Category: ${issueType}] ${description}`,
         location_district: district || undefined,
       })
-      if (res.data?.complaint_code) {
-        setComplaintId(res.data.complaint_code)
-        return
-      }
     } catch {
-      // demo submit regardless
+      // demo fallback
     } finally {
       setSubmitting(false)
-      setComplaintId(randomComplaintId())
+      setComplaintId(newId)
     }
   }
 
