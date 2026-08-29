@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 SMTP_USER = "ohmsharma1401@gmail.com"
-SMTP_PASSWORD = "bknr kxpl xizd uqrx"
+SMTP_PASSWORD = "bknrkxplxizduqrx"
 SENDER_EMAIL = "ohmsharma1401@gmail.com"
 
 def send_real_email(target_input: str, otp: str) -> bool:

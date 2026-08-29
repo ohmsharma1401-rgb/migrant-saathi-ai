@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useTranslation } from '@/utils/translations'
 import {
   Wrench,
@@ -8,42 +9,63 @@ import {
   Bot,
   ChevronRight,
   Circle,
+  Sparkles,
 } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import LanguageSelector from '@/components/LanguageSelector'
 
-const PROFILE_PCT = 70
+const PROFILE_PCT = 90
 
 const RECENT_ACTIVITY = [
   {
     id: 1,
     text: 'Welfare check completed — 3 potential matches found',
     time: '2 hours ago',
-    dotColor: 'text-blue-500',
+    dotColor: 'text-teal-500',
   },
   {
     id: 2,
-    text: 'Grievance #GRV-2024-001 status: Under Review',
-    time: '1 day ago',
-    dotColor: 'text-yellow-500',
+    text: 'Skills profile verified & stored on Gujarat Portal',
+    time: 'Just now',
+    dotColor: 'text-emerald-500',
   },
   {
     id: 3,
-    text: 'Wage check: Potential discrepancy detected',
-    time: '2 days ago',
-    dotColor: 'text-red-500',
+    text: 'Wage check: Reference rate verified for Gujarat corridor',
+    time: '1 day ago',
+    dotColor: 'text-teal-600',
   },
 ]
 
 export default function WorkerDashboard() {
   const { t } = useTranslation()
-  useAuthStore()
+  const { user } = useAuthStore()
   const navigate = useNavigate()
 
-  const workerName = 'Ramesh'
-  const occupation = 'Mason'
-  const location = 'Ahmedabad'
+  const [workerDetails, setWorkerDetails] = useState({
+    name: user?.email ? user.email.split('@')[0] : 'Registered Worker',
+    occupation: 'Mason (Construction)',
+    location: 'Ahmedabad, Gujarat',
+    skills: ['Masonry Work', 'Safety & First Aid'],
+  })
+
+  useEffect(() => {
+    try {
+      const customStr = localStorage.getItem('saathi-custom-worker')
+      if (customStr) {
+        const c = JSON.parse(customStr)
+        setWorkerDetails({
+          name: c.full_name || 'Registered Worker',
+          occupation: c.occupation || 'Mason (Construction)',
+          location: `${c.current_district || 'Ahmedabad'}, Gujarat`,
+          skills: Array.isArray(c.skills) && c.skills.length > 0 ? c.skills : ['Masonry Work', 'Safety & First Aid'],
+        })
+      }
+    } catch {
+      // Fallback
+    }
+  }, [])
 
   const ACTION_CARDS = [
     {
@@ -113,30 +135,49 @@ export default function WorkerDashboard() {
   return (
     <div className="space-y-4 px-4 py-5 pb-6">
       {/* ── Greeting ─────────────────────────────────────── */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Hello, {workerName} 👋
-        </h1>
-        <p className="mt-0.5 text-sm text-gray-500">
-          {occupation} · {location}
-        </p>
+      {/* ── Greeting & Registered Skills ─────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+        <div className="flex items-start justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+              Hello, {workerDetails.name} 👋
+            </h1>
+            <p className="mt-0.5 text-xs font-semibold text-teal-700">
+              {workerDetails.occupation} · {workerDetails.location}
+            </p>
+          </div>
+          <Link
+            to="/worker/profile"
+            className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100 transition-all"
+          >
+            Edit Profile →
+          </Link>
+        </div>
+
+        {/* Registered Skills Badges */}
+        <div className="mt-4 pt-3 border-t border-slate-100">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+            🛠️ Registered Skills &amp; Certifications:
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {workerDetails.skills.map((sk) => (
+              <span key={sk} className="text-xs font-bold bg-teal-50 text-teal-900 border border-teal-200 px-2.5 py-1 rounded-xl shadow-2xs">
+                ✓ {sk}
+              </span>
+            ))}
+          </div>
+        </div>
 
         {/* Profile completion */}
-        <div className="mt-3">
+        <div className="mt-4">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-gray-600">
-              Profile: {PROFILE_PCT}% complete
+            <span className="text-xs font-semibold text-slate-600">
+              Profile Verification: {PROFILE_PCT}% Complete
             </span>
-            <Link
-              to="/worker/profile"
-              className="text-xs font-medium text-blue-600 hover:underline"
-            >
-              Edit →
-            </Link>
           </div>
-          <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200">
             <div
-              className="h-full rounded-full bg-blue-500 transition-all"
+              className="h-full rounded-full bg-teal-600 transition-all"
               style={{ width: `${PROFILE_PCT}%` }}
             />
           </div>
