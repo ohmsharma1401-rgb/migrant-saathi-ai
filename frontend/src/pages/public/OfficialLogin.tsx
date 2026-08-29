@@ -186,7 +186,7 @@ export default function OfficialLogin() {
                 id="email"
                 type="email"
                 autoComplete="username"
-                placeholder="officer@gujarat.gov.in"
+                placeholder="official@gujarat.gov.in"
                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
                 {...register('email')}
               />
