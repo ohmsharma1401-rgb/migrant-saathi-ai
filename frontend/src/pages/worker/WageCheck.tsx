@@ -2,28 +2,68 @@ import { useState } from 'react'
 import { DollarSign, AlertTriangle, Loader2, Info } from 'lucide-react'
 import api from '@/services/api'
 
-// ─── Reference wage table (demo) ─────────────────────────────────────────────
+// ─── Reference wage table ─────────────────────────────────────────────
 const REFERENCE_WAGES = [
-  { occupation: 'Mason', skill: 'Skilled', wage: 500 },
-  { occupation: 'Carpenter', skill: 'Skilled', wage: 480 },
-  { occupation: 'Weaver', skill: 'Semi-skilled', wage: 380 },
-  { occupation: 'Helper', skill: 'Unskilled', wage: 290 },
-  { occupation: 'Electrician', skill: 'Highly Skilled', wage: 620 },
-  { occupation: 'Painter', skill: 'Semi-skilled', wage: 360 },
+  { occupation: 'Masonry Work', skill: 'Skilled', wage: 550 },
+  { occupation: 'Carpentry & Shuttering', skill: 'Skilled', wage: 520 },
+  { occupation: 'Textile Weaving', skill: 'Semi-skilled', wage: 420 },
+  { occupation: 'Construction Labor / Helper', skill: 'Unskilled', wage: 350 },
+  { occupation: 'Electrical Wiring', skill: 'Highly Skilled', wage: 750 },
+  { occupation: 'Arc & MIG Welding', skill: 'Skilled', wage: 600 },
+  { occupation: 'Diamond Cutting & Polishing', skill: 'Highly Skilled', wage: 800 },
+  { occupation: 'Heavy Vehicle Driving', skill: 'Skilled', wage: 650 },
+  { occupation: 'CNC Machine Operation', skill: 'Highly Skilled', wage: 780 },
 ]
 
-const DISTRICTS = ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar']
+const TRADE_OCCUPATIONS = [
+  'Masonry Work',
+  'Plumbing & Fitting',
+  'Carpentry & Shuttering',
+  'Electrical Wiring',
+  'Arc & MIG Welding',
+  'CNC Machine Operation',
+  'Heavy Vehicle Driving',
+  'Textile Weaving',
+  'Diamond Cutting & Polishing',
+  'Construction Labor / Helper',
+  'Painter & Finishing',
+  'Security Guard',
+]
+
+const GUJARAT_DISTRICTS = [
+  'Ahmedabad',
+  'Surat',
+  'Vadodara',
+  'Rajkot',
+  'Kutch',
+  'Bharuch',
+  'Bhavnagar',
+  'Jamnagar',
+  'Mehsana',
+  'Anand',
+  'Morbi',
+  'Valsad',
+  'Gandhinagar',
+]
+
 const SKILL_LEVELS = ['Unskilled', 'Semi-skilled', 'Skilled', 'Highly Skilled']
+
+const SKILL_REF_MAP: Record<string, number> = {
+  Unskilled: 350,
+  'Semi-skilled': 450,
+  Skilled: 550,
+  'Highly Skilled': 750,
+}
 
 // ─── Demo result (shown on first render) ─────────────────────────────────────
 const DEMO_RESULT = {
-  occupation: 'Mason',
+  occupation: 'Masonry Work',
   district: 'Ahmedabad',
   skillLevel: 'Skilled',
-  yourWage: 350,
-  referenceWage: 500,
-  discrepancy: 150,
-  discrepancyPct: 30,
+  yourWage: 380,
+  referenceWage: 550,
+  discrepancy: 170,
+  discrepancyPct: 31,
   status: 'discrepancy' as const,
 }
 
@@ -44,7 +84,7 @@ function WageGauge({ pct }: { pct: number }) {
       </div>
       <div className="flex justify-between text-[10px] text-gray-400">
         <span>₹0</span>
-        <span>Reference ₹{DEMO_RESULT.referenceWage}</span>
+        <span>Reference Wage</span>
       </div>
     </div>
   )
@@ -52,30 +92,40 @@ function WageGauge({ pct }: { pct: number }) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function WageCheck() {
-  const [occupation, setOccupation] = useState('')
-  const [district, setDistrict] = useState('')
-  const [skillLevel, setSkillLevel] = useState('')
+  const [occupation, setOccupation] = useState('Masonry Work')
+  const [district, setDistrict] = useState('Ahmedabad')
+  const [skillLevel, setSkillLevel] = useState('Skilled')
   const [yourWage, setYourWage] = useState('')
   const [checking, setChecking] = useState(false)
+  const [wageError, setWageError] = useState('')
   const [result, setResult] = useState<CheckResult>(DEMO_RESULT)
 
   async function handleCheck() {
+    setWageError('')
+    const wageNum = Number(yourWage)
+
+    if (isNaN(wageNum) || wageNum < 50 || wageNum > 3000) {
+      setWageError('Please enter a valid daily wage between ₹50 and ₹3,000 / day.')
+      return
+    }
+
     if (!occupation || !district || !skillLevel || !yourWage) return
     setChecking(true)
+
     try {
       await api.post('/wages/check', {
         occupation,
         district,
         state: 'Gujarat',
         skill_level: skillLevel.toLowerCase().replace(' ', '_'),
-        reported_daily_wage: Number(yourWage),
+        reported_daily_wage: wageNum,
       })
     } catch {
-      // demo data shown regardless
+      // demo data fallback
     } finally {
       setChecking(false)
-      const ref = 500
-      const reported = Number(yourWage)
+      const ref = SKILL_REF_MAP[skillLevel] || 550
+      const reported = wageNum
       const disc = Math.max(0, ref - reported)
       const pct = ref > 0 ? Math.round((disc / ref) * 100) : 0
       setResult({
@@ -112,7 +162,7 @@ export default function WageCheck() {
       <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 p-4">
         <Info className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
         <p className="text-xs text-blue-800 leading-relaxed">
-          This tool compares your reported wage with available reference data. A{' '}
+          This tool compares your reported wage with official reference data. A{' '}
           <span className="font-semibold">'Potential Discrepancy'</span> means your wage may be below reference
           levels — not a legal conclusion. Report through official channels for investigation.
         </p>
@@ -122,61 +172,70 @@ export default function WageCheck() {
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm space-y-4">
         <h2 className="text-sm font-semibold text-gray-800">Enter Your Wage Details</h2>
 
-        {/* Occupation */}
+        {/* Occupation Select Dropdown */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-700">Occupation</label>
-          <input
-            type="text"
+          <label className="text-xs font-medium text-gray-700">Occupation / Trade *</label>
+          <select
             value={occupation}
             onChange={(e) => setOccupation(e.target.value)}
-            placeholder="e.g. Mason, Weaver, Carpenter"
-            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+          >
+            {TRADE_OCCUPATIONS.map((occ) => (
+              <option key={occ} value={occ}>{occ}</option>
+            ))}
+          </select>
         </div>
 
-        {/* District */}
+        {/* District Select Dropdown */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-700">District</label>
+          <label className="text-xs font-medium text-gray-700">Working District (Gujarat) *</label>
           <select
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
-            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
           >
-            <option value="">Select district</option>
-            {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
+            {GUJARAT_DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
 
         {/* Skill Level */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-700">Skill Level</label>
+          <label className="text-xs font-medium text-gray-700">Skill Level *</label>
           <select
             value={skillLevel}
             onChange={(e) => setSkillLevel(e.target.value)}
-            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
           >
-            <option value="">Select skill level</option>
             {SKILL_LEVELS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
 
-        {/* Daily wage */}
+        {/* Daily wage with min ₹50 and max ₹3,000 bounds */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-700">Your Daily Wage (₹)</label>
+          <label className="text-xs font-medium text-gray-700">Your Daily Wage (₹50 to ₹3,000 / day) *</label>
           <input
             type="number"
+            min={50}
+            max={3000}
             value={yourWage}
-            onChange={(e) => setYourWage(e.target.value)}
-            placeholder="Enter your daily wage"
-            min={0}
-            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => {
+              setYourWage(e.target.value)
+              setWageError('')
+            }}
+            placeholder="e.g. 450"
+            className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
           />
+          {wageError && (
+            <p className="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">
+              {wageError}
+            </p>
+          )}
         </div>
 
         <button
           onClick={handleCheck}
           disabled={checking || !occupation || !district || !skillLevel || !yourWage}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60 hover:bg-green-700 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60 hover:bg-green-700 transition-colors shadow-sm"
         >
           {checking ? <><Loader2 className="h-4 w-4 animate-spin" /> Checking…</> : 'Check Wage →'}
         </button>
