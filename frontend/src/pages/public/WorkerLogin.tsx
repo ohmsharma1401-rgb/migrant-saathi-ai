@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Loader2, KeyRound, UserPlus, LogIn, Mail, Phone } from 'lucide-react'
+import { Shield, ArrowLeft, Loader2, KeyRound, UserPlus, LogIn, Mail, Phone, CheckCircle2 } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 
