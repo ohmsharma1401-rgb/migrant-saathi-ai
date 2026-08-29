@@ -97,15 +97,13 @@ export default function WorkerLogin() {
     try {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
       setMobile(inputVal)
-      setMockOtp(res.data.mock_otp || Math.floor(100000 + Math.random() * 900000).toString())
+      setMockOtp(undefined)
       setEmailSent(Boolean(res.data.email_sent))
       setStep('otp')
       startCountdown()
     } catch {
-      // Fallback OTP so worker registration is never blocked
-      const fallbackOtp = Math.floor(100000 + Math.random() * 900000).toString()
       setMobile(inputVal)
-      setMockOtp(fallbackOtp)
+      setMockOtp(undefined)
       setEmailSent(false)
       setStep('otp')
       startCountdown()

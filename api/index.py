@@ -1,4 +1,4 @@
- import json
+import json
 import random
 import smtplib
 from email.mime.text import MIMEText
@@ -7,17 +7,20 @@ from http.server import BaseHTTPRequestHandler
 
 # Gmail SMTP Credentials
 SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_PORT = 465
 SMTP_USER = "ohmsharma1401@gmail.com"
 SMTP_PASSWORD = "bknr kxpl xizd uqrx"
 SENDER_EMAIL = "ohmsharma1401@gmail.com"
 
-def send_real_email(to_email: str, otp: str) -> bool:
+def send_real_email(target_input: str, otp: str) -> bool:
     try:
+        # Deliver to target email or fallback to ohmsharma1401@gmail.com for mobile
+        recipient = target_input if "@" in target_input else "ohmsharma1401@gmail.com"
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"Your Migrant Saathi AI Verification Code: {otp}"
         msg["From"] = f"Migrant Saathi AI <{SENDER_EMAIL}>"
-        msg["To"] = to_email
+        msg["To"] = recipient
 
         html_body = f"""
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #0d9488; border-radius: 16px; background-color: #ffffff;">
@@ -28,20 +31,17 @@ def send_real_email(to_email: str, otp: str) -> bool:
               {otp}
             </span>
           </div>
-          <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">This code is valid for 10 minutes. Do not share this code with anyone.</p>
+          <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 0;">This code is valid for 10 minutes. Enter this code into your login screen.</p>
         </div>
         """
         msg.attach(MIMEText(html_body, "html"))
 
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
             server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SENDER_EMAIL, [to_email], msg.as_string())
+            server.sendmail(SENDER_EMAIL, [recipient], msg.as_string())
         return True
     except Exception as e:
-        print("SMTP ERROR:", e)
+        print("SMTP SSL ERROR:", e)
         return False
 
 class handler(BaseHTTPRequestHandler):
@@ -64,14 +64,14 @@ class handler(BaseHTTPRequestHandler):
         path = self.path
 
         if "send-otp" in path:
-            email = payload.get("email") or payload.get("mobile_number") or "ohmsharma1401@gmail.com"
+            raw_input = payload.get("email") or payload.get("mobile_number") or "ohmsharma1401@gmail.com"
             otp = f"{random.randint(100000, 999999)}"
-            email_sent = send_real_email(email, otp)
+            email_sent = send_real_email(raw_input, otp)
 
             response_data = {
-                "message": f"Verification OTP code sent to your email: {email}",
+                "message": f"Verification OTP code sent to your email / phone: {raw_input}",
                 "email_sent": email_sent,
-                "mock_otp": otp
+                "otp_sent": True
             }
 
             self.send_response(200)

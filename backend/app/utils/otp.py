@@ -134,12 +134,18 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
         msg.attach(MIMEText(text_body, "plain"))
         msg.attach(MIMEText(html_body, "html"))
 
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(sender, [to_email], msg.as_string())
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as server:
+                server.login(smtp_user, smtp_password)
+                server.sendmail(sender, [to_email], msg.as_string())
+        except Exception as e_ssl:
+            logger.warning(f"SSL 465 failed, trying STARTTLS 587: {e_ssl}")
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(sender, [to_email], msg.as_string())
 
     try:
         await asyncio.to_thread(_sync_send)
