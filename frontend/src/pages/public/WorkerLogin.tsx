@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2 } from 'lucide-react'
+import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2, Building2, MapPin } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 
@@ -23,6 +23,37 @@ const STATE_DISTRICTS: Record<string, string[]> = {
   Jharkhand: ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro', 'Hazaribagh', 'Giridih'],
   'West Bengal': ['Kolkata', 'Howrah', 'Murshidabad', 'Malda', 'Hooghly', 'Nadia', 'North 24 Parganas'],
 }
+
+const GUJARAT_WORKING_DISTRICTS = [
+  'Ahmedabad',
+  'Surat',
+  'Vadodara',
+  'Rajkot',
+  'Kutch',
+  'Bharuch',
+  'Bhavnagar',
+  'Jamnagar',
+  'Mehsana',
+  'Anand',
+  'Morbi',
+  'Valsad',
+  'Gandhinagar',
+  'Navsari',
+  'Surendranagar',
+]
+
+const DEMO_COMPANIES = [
+  { name: 'L&T Construction (Larsen & Toubro Ltd)', sector: 'Construction & Civil Infrastructure', district: 'Ahmedabad' },
+  { name: 'Adani Ports & Special Economic Zone (APSEZ)', sector: 'Port Logistics & Heavy Machinery', district: 'Kutch' },
+  { name: 'Tata Motors Passenger Vehicles Ltd (Sanand)', sector: 'Automotive & Assembly', district: 'Ahmedabad' },
+  { name: 'Reliance Industries Limited (Hazira Complex)', sector: 'Petrochemicals & Electrical Wiring', district: 'Surat' },
+  { name: 'Arvind Limited Textiles & Apparel', sector: 'Textile Mills & Weaving Operations', district: 'Ahmedabad' },
+  { name: 'Kiran Gems & Diamond Processing Corp', sector: 'Diamond Cutting & Polishing', district: 'Surat' },
+  { name: 'Shree Ram Krishna Exports (SRK Diamond Ltd)', sector: 'Diamond Processing & Gemology', district: 'Surat' },
+  { name: 'Welspun India Manufacturing Facility', sector: 'Textile Manufacturing & Industrial Plant', district: 'Kutch' },
+  { name: 'Torrent Pharmaceuticals Indrad Complex', sector: 'Pharma Machine Operation', district: 'Mehsana' },
+  { name: 'Gujarat State Road Transport Corp (GSRTC)', sector: 'Heavy Vehicle Driving & Fleet Maintenance', district: 'Vadodara' },
+]
 
 const ALL_SKILLS = [
   'Masonry Work',
@@ -67,7 +98,7 @@ export default function WorkerLogin() {
 
   const [apiError, setApiError] = useState('')
 
-  // Empty Worker Registration Profile Form (No hardcoded prefilled details)
+  // Worker Registration Profile Form
   const [regForm, setRegForm] = useState({
     fullName: '',
     email: '',
@@ -77,8 +108,9 @@ export default function WorkerLogin() {
     originState: 'Bihar',
     originDistrict: 'Patna',
     currentDistrict: 'Ahmedabad',
-    currentCity: 'Ahmedabad',
-    occupation: 'Mason',
+    currentCity: 'Sanand Industrial GIDC',
+    employerName: 'L&T Construction (Larsen & Toubro Ltd)',
+    occupation: 'Masonry Work',
   })
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [savingReg, setSavingReg] = useState(false)
@@ -108,7 +140,7 @@ export default function WorkerLogin() {
     setRegForm((prev) => ({ ...prev, dob: newDobStr, age: newAge }))
   }
 
-  // 1. Send Real Email OTP to provided email address
+  // 1. Send Real Email OTP
   async function handleSendEmailOTP() {
     setApiError('')
     setEmailSuccessMsg('')
@@ -149,7 +181,7 @@ export default function WorkerLogin() {
     }
   }
 
-  // 3. Send Individual Phone SMS OTP to provided phone number via Fast2SMS / SMS Engine
+  // 3. Send Individual Phone SMS OTP via Fast2SMS
   async function handleSendPhoneOTP() {
     setApiError('')
     setPhoneSuccessMsg('')
@@ -214,8 +246,9 @@ export default function WorkerLogin() {
       origin_district: regForm.originDistrict,
       current_district: regForm.currentDistrict,
       current_city: regForm.currentCity,
+      employer: regForm.employerName,
       occupation: regForm.occupation,
-      sector: regForm.occupation.includes('Textile') ? 'Textiles' : regForm.occupation.includes('Diamond') ? 'Diamond' : 'Construction',
+      sector: regForm.employerName.includes('Textiles') ? 'Textiles' : regForm.employerName.includes('Diamond') ? 'Diamond' : 'Construction',
       skills: selectedSkills.length > 0 ? selectedSkills : ['Masonry Work', 'Safety & First Aid'],
       registered: 'Just Now (Verified)',
     }
@@ -514,6 +547,64 @@ export default function WorkerLogin() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            {/* CURRENT GUJARAT WORK LOCATION DETAILS */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <MapPin className="h-4 w-4 text-teal-600" />
+                Current Work Location (in Gujarat) *
+              </label>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Working District (Gujarat) *</label>
+                  <select
+                    value={regForm.currentDistrict}
+                    onChange={(e) => setRegForm({ ...regForm, currentDistrict: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-2.5 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+                  >
+                    {GUJARAT_WORKING_DISTRICTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">City / Industrial Area *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Sanand GIDC, Pandesara"
+                    value={regForm.currentCity}
+                    onChange={(e) => setRegForm({ ...regForm, currentCity: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* DEMO COMPANIES & EMPLOYER SELECTION ACCORDING TO ROLES */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Building2 className="h-4 w-4 text-teal-600" />
+                Select Employer / Registered Company (Gujarat) *
+              </label>
+
+              <select
+                value={regForm.employerName}
+                onChange={(e) => setRegForm({ ...regForm, employerName: e.target.value })}
+                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white font-medium"
+              >
+                {DEMO_COMPANIES.map((comp) => (
+                  <option key={comp.name} value={comp.name}>
+                    🏢 {comp.name} — ({comp.sector} · {comp.district})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-slate-500 italic">
+                Choose from prominent Gujarat enterprises according to your technical trade role.
+              </p>
             </div>
 
             {/* Occupation & Technical Skills */}
