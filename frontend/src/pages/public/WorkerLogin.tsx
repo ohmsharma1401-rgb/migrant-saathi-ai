@@ -183,7 +183,7 @@ export default function WorkerLogin() {
   async function handleVerifyEmailOTP() {
     setApiError('')
     if (emailOtpInput.replace(/\D/g, '').length < 4) {
-      setApiError('Enter the 6-digit OTP code sent to your email')
+      setApiError('❌ Enter the 6-digit OTP code sent to your email')
       return
     }
     try {
@@ -194,9 +194,11 @@ export default function WorkerLogin() {
       })
       setEmailVerified(true)
       setEmailSuccessMsg('✅ Email address successfully verified!')
+      setApiError('')
     } catch (err: any) {
       const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
-      setApiError(`Email Verification Failed: ${errMsg}`)
+      setApiError(`❌ Wrong OTP Entered! ${errMsg}. Please enter the correct verification code.`)
+      setEmailVerified(false)
     }
   }
 
@@ -232,7 +234,7 @@ export default function WorkerLogin() {
   async function handleVerifyPhoneOTP() {
     setApiError('')
     if (phoneOtpInput.replace(/\D/g, '').length < 4) {
-      setApiError('Enter the 6-digit SMS OTP sent to your phone')
+      setApiError('❌ Enter the 6-digit SMS OTP sent to your phone')
       return
     }
     try {
@@ -243,9 +245,11 @@ export default function WorkerLogin() {
       })
       setPhoneVerified(true)
       setPhoneSuccessMsg('✅ Mobile phone number successfully verified!')
+      setApiError('')
     } catch (err: any) {
       const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
-      setApiError(`Phone Verification Failed: ${errMsg}`)
+      setApiError(`❌ Wrong OTP Entered! ${errMsg}. Please enter the correct verification code.`)
+      setPhoneVerified(false)
     }
   }
 
@@ -329,13 +333,32 @@ export default function WorkerLogin() {
 
   async function handleSignInVerifyOTP(e: React.FormEvent) {
     e.preventDefault()
+    setApiError('')
+    if (!signInOtpInput.trim()) {
+      setApiError('❌ Enter the 6-digit OTP code')
+      return
+    }
     const isEmail = signInInput.includes('@')
-    setAuth(
-      { id: 'worker-signin-123', role: 'worker', email: isEmail ? signInInput : regForm.email, mobile_number: !isEmail ? signInInput : regForm.mobileNumber },
-      'demo-access-token',
-      'demo-refresh-token'
-    )
-    navigate('/worker')
+    const digits = signInInput.replace(/\D/g, '')
+
+    try {
+      const payload = isEmail
+        ? { email: signInInput.trim(), otp: signInOtpInput.trim(), otp_token: signInOtpToken }
+        : { mobile_number: digits, otp: signInOtpInput.trim(), otp_token: signInOtpToken }
+
+      const res = await api.post('/auth/worker/verify-otp', payload)
+      if (res.data.access_token) {
+        setAuth(
+          { id: res.data.user_id || 'worker-signin-123', role: 'worker', email: isEmail ? signInInput : '', mobile_number: !isEmail ? signInInput : '' },
+          res.data.access_token,
+          res.data.refresh_token
+        )
+        navigate('/worker')
+      }
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
+      setApiError(`❌ Wrong OTP Entered! ${errMsg}. Please enter the correct 6-digit OTP code.`)
+    }
   }
 
   return (
@@ -388,6 +411,17 @@ export default function WorkerLogin() {
             2. Sign In (Existing User)
           </button>
         </div>
+
+        {/* Global Error Banner */}
+        {apiError && (
+          <div className="rounded-2xl bg-rose-50 border border-rose-300 p-3.5 text-xs font-bold text-rose-800 flex items-start gap-2.5 mb-5 shadow-xs animate-shake">
+            <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1 text-left">
+              <span className="font-extrabold block text-sm text-rose-900">Verification Error</span>
+              <span>{apiError}</span>
+            </div>
+          </div>
+        )}
 
         {/* ========================================================= */}
         {/* VIEW 1: SIGN UP WITH INDIVIDUAL PHONE & EMAIL VERIFICATION  */}
