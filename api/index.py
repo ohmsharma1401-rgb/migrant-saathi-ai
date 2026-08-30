@@ -206,32 +206,31 @@ class handler(BaseHTTPRequestHandler):
             otp = f"{random.randint(100000, 999999)}"
 
             if email:
-                import threading
-                threading.Thread(target=send_real_email, args=(email, otp), daemon=True).start()
-                ident = email.lower()
+                email = email.lower()
+                success = send_real_email(email, otp)
+                if not success:
+                    _json_response(self, 400, {"detail": f"Failed to send OTP email to {email} via Gmail SMTP."})
+                    return
                 channel = "email"
                 response_data = {
                     "message": f"Verification OTP dispatched to {email}",
                     "email_sent": True,
                     "otp_sent": True,
                     "channel": channel,
-                    "otp_token": create_otp_token(ident, otp, channel),
-                    "mock_otp": otp,
+                    "otp_token": create_otp_token(email, otp, channel),
                 }
                 _json_response(self, 200, response_data)
                 return
 
             if not mobile:
                 mobile = "9876543210"
-            import threading
-            threading.Thread(target=send_sms_otp, args=(mobile, otp), daemon=True).start()
+            send_sms_otp(mobile, otp)
             response_data = {
                 "message": f"Verification OTP sent by SMS to +91 {mobile[:2]}XXXX{mobile[-4:]}",
                 "email_sent": False,
                 "otp_sent": True,
                 "channel": "sms",
                 "otp_token": create_otp_token(mobile, otp, "sms"),
-                "mock_otp": otp,
             }
             _json_response(self, 200, response_data)
             return
