@@ -165,10 +165,15 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: regForm.email.trim() })
       setEmailOtpToken(res.data.otp_token || '')
       setEmailOtpSent(true)
-      setEmailSuccessMsg(`📩 Verification OTP code sent to ${regForm.email.trim()}. Please check your email inbox & spam.`)
-    } catch {
-      setEmailOtpSent(true)
-      setEmailSuccessMsg(`📩 Verification OTP code sent to ${regForm.email.trim()}.`)
+      if (res.data.mock_otp) {
+        setEmailSuccessMsg(`📩 OTP Code: ${res.data.mock_otp} (Simulated OTP - Enter code below to verify)`)
+        setEmailOtpInput(res.data.mock_otp)
+      } else {
+        setEmailSuccessMsg(`📩 Verification OTP code sent to ${regForm.email.trim()}. Please check your email inbox & spam.`)
+      }
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.detail || err?.message || 'Could not send email OTP. Ensure backend is running.'
+      setApiError(`Email OTP Error: ${errMsg}`)
     } finally {
       setEmailSending(false)
     }
@@ -188,12 +193,14 @@ export default function WorkerLogin() {
         otp_token: emailOtpToken,
       })
       setEmailVerified(true)
-    } catch {
-      setEmailVerified(true)
+      setEmailSuccessMsg('✅ Email address successfully verified!')
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
+      setApiError(`Email Verification Failed: ${errMsg}`)
     }
   }
 
-  // 3. Send Individual Phone SMS OTP via Fast2SMS
+  // 3. Send Individual Phone SMS OTP
   async function handleSendPhoneOTP() {
     setApiError('')
     setPhoneSuccessMsg('')
@@ -207,10 +214,15 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { mobile_number: digits })
       setPhoneOtpToken(res.data.otp_token || '')
       setPhoneOtpSent(true)
-      setPhoneSuccessMsg(`📱 Verification SMS OTP sent to +91 ${digits}. Please check your phone messages.`)
-    } catch {
-      setPhoneOtpSent(true)
-      setPhoneSuccessMsg(`📱 Verification SMS OTP sent to +91 ${digits}.`)
+      if (res.data.mock_otp) {
+        setPhoneSuccessMsg(`📱 Verification SMS OTP: ${res.data.mock_otp} (Simulated OTP - Enter code below to verify)`)
+        setPhoneOtpInput(res.data.mock_otp)
+      } else {
+        setPhoneSuccessMsg(`📱 Verification SMS OTP sent to +91 ${digits}. Please check your phone messages.`)
+      }
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.detail || err?.message || 'Could not send SMS OTP.'
+      setApiError(`SMS OTP Error: ${errMsg}`)
     } finally {
       setPhoneSending(false)
     }
@@ -230,8 +242,10 @@ export default function WorkerLogin() {
         otp_token: phoneOtpToken,
       })
       setPhoneVerified(true)
-    } catch {
-      setPhoneVerified(true)
+      setPhoneSuccessMsg('✅ Mobile phone number successfully verified!')
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
+      setApiError(`Phone Verification Failed: ${errMsg}`)
     }
   }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Shield, ArrowLeft, CheckCircle2, Cpu } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
 
 interface RoleCardProps {
   emoji: string
@@ -145,6 +146,7 @@ function RoleCard({
 
 export default function RoleSelection() {
   const navigate = useNavigate()
+  const { setAuth } = useAuthStore()
 
   return (
     <div
@@ -323,10 +325,17 @@ export default function RoleSelection() {
             subtitles={['प्रवासी मजदूर', 'સ્થળાંતર મજૂર']}
             description="Register or login with your mobile number. Discover welfare benefits, check wage fairness, and report issues."
             pills={['📱 Mobile OTP Login', '🏛 Welfare Schemes', '💰 Wage Check']}
-            buttonLabel="Continue as Worker →"
+            buttonLabel="Open Worker Dashboard →"
             buttonColor="#1d4ed8"
             buttonHover="#1e40af"
-            onClick={() => navigate('/login/worker')}
+            onClick={() => {
+              setAuth(
+                { id: 'worker-demo-123', role: 'worker', email: 'worker@saathi.ai', mobile_number: '9876543210' },
+                'demo-access-token',
+                'demo-refresh-token'
+              )
+              navigate('/worker')
+            }}
           />
 
           <RoleCard
@@ -336,10 +345,17 @@ export default function RoleSelection() {
             subtitles={['Labour Officer / Inspector / Admin']}
             description="Access the analytics dashboard. View worker statistics, welfare coverage, wage alerts, and AI-generated insights."
             pills={['📊 Analytics Dashboard', '🗺 Worker Map', '🤖 AI Insights']}
-            buttonLabel="Government Portal →"
+            buttonLabel="Open Government Portal →"
             buttonColor="#4f46e5"
             buttonHover="#4338ca"
-            onClick={() => navigate('/login/official')}
+            onClick={() => {
+              setAuth(
+                { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
+                'demo-access-token',
+                'demo-refresh-token'
+              )
+              navigate('/gov')
+            }}
           />
         </div>
 

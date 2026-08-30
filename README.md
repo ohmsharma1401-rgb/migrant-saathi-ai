@@ -1,171 +1,147 @@
-# Migrant Saathi AI
+# Migrant Saathi AI 🛡️
 ## Smart Migrant Labour Welfare & Skill Mapping Platform
 
-> **Domain:** Social Governance | **AI:** IBM watsonx.ai + IBM Granite | **Stack:** React + FastAPI + PostgreSQL
+> **Domain:** Social Governance & Labour Rights | **AI Engine:** IBM watsonx.ai + IBM Granite | **Stack:** React + Vite + TypeScript + FastAPI + SQLite/PostgreSQL
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![IBM watsonx](https://img.shields.io/badge/AI-IBM%20watsonx.ai-purple.svg)](https://cloud.ibm.com/watsonx)
+[![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61dafb.svg)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 
 ---
 
-### Overview
+## 📌 Executive Summary
 
-Migrant Saathi AI is an Agentic AI-powered platform that:
-- Maps migrant worker skills and locations across Gujarat
-- Identifies potentially relevant government welfare schemes using deterministic eligibility filtering + IBM Granite
-- Monitors potential wage discrepancies using verified reference data
-- Allows workers to report workplace safety issues and grievances
-- Provides government authorities with a centralized intelligence dashboard
-- Generates AI-powered insights for labour officials
+**Migrant Saathi AI** is an AI-powered social governance platform designed to protect and empower over **6 million+ interstate migrant workers in Gujarat**. The platform bridges the critical gap between vulnerable unorganized labor, government welfare schemes, minimum wage compliance, workplace safety reporting, and state-level policy decision-making.
 
-> **Important:** The AI uses cautious language ("Potentially Eligible", "Needs Verification", "Potential Wage Discrepancy") and never makes unsupported legal conclusions.
+Powered by **IBM watsonx.ai** and **IBM Granite**, the system operates using specialized AI Agents that process multi-lingual queries (Hindi, Gujarati, English), perform deterministic scheme eligibility matching, detect minimum wage underpayment discrepancies, and provide government authorities with real-time labor intelligence.
 
 ---
 
-### Quick Start (Docker)
+## ✨ Key Platform Features
+
+### 1. 👷 Migrant Worker Portal
+- **Multilingual AI Assistant**: Ask questions naturally in Hindi, Gujarati, or English regarding labor laws, compensation, and worker rights.
+- **Skill Mapping & Verification**: Micro-credentials and trade skill registration across Construction, Textile, Diamond, Manufacturing, and Agriculture sectors.
+- **Welfare Scheme Discovery Engine**: Instant eligibility analysis for major state and central welfare schemes (BOCW Fund, PM-SYM Pension, Aam Aadmi Bima Yojana, NFSA Ration).
+- **Wage Fairness & Discrepancy Analyzer**: Compare reported daily and monthly wages against official Gujarat government minimum wage notifications.
+- **Safety Issue & Grievance Reporting**: Log unsafe working conditions, wage theft, or harassment with priority tracking and live status updates.
+
+### 2. 🏛️ Government Portal & Inspections Control
+- **Interactive Migration Heatmap**: Visual geographic analysis of worker concentration across Gujarat districts (Ahmedabad, Surat, Vadodara, Rajkot, etc.).
+- **Labor Inspection & Grievance Management**: Assign official inspectors (`Insp. Sharma`, `Insp. Patel`), initiate site audits, and track complaint resolution.
+- **District & Sector Analytics**: Real-time workforce demography, wage discrepancy metrics, and welfare enrollment statistics.
+- **IBM Granite Executive Insights**: AI-generated summary reports and actionable policy recommendations for state administrators.
+
+### 3. ⚙️ Admin Console
+- **User & Role Management**: Provision and manage Worker, Official, Inspector, and System Admin accounts.
+- **Welfare Scheme Registry**: Configure eligibility criteria, income caps, age brackets, and required documentation.
+- **Reference Minimum Wages**: Dynamic management of state-level reference minimum wage rates with single-click government database synchronization.
+
+---
+
+## 🤖 AI Agent Architecture
+
+```
+                               ┌─────────────────────────────┐
+                               │   IBM watsonx.ai Engine     │
+                               │  (IBM Granite 3-8B Instruct)│
+                               └──────────────┬──────────────┘
+                                              │
+           ┌──────────────────────────────────┼──────────────────────────────────┐
+           │                                  │                                  │
+┌──────────▼──────────┐            ┌──────────▼──────────┐            ┌──────────▼──────────┐
+│  Skill Mapping      │            │ Welfare Matching    │            │ Wage Discrepancy    │
+│  Agent              │            │ Agent               │            │ Agent               │
+└──────────┬──────────┘            └──────────┬──────────┘            └──────────┬──────────┘
+           │                                  │                                  │
+           └──────────────────────────────────┼──────────────────────────────────┘
+                                              │
+                               ┌──────────────▼──────────────┐
+                               │   FastAPI Business Logic    │
+                               │   SQLite / PostgreSQL DB    │
+                               └─────────────────────────────┘
+```
+
+| AI Agent | Role & Function | IBM Granite LLM Task |
+| :--- | :--- | :--- |
+| **Skill Agent** | Extracts trade skills, experience years, and certifications from natural language voice/text | Multilingual Entity Extraction |
+| **Welfare Agent** | Matches worker profiles against scheme rules and provides grounded explanations | Grounded Explanation & Natural Language Reasoning |
+| **Wage Discrepancy Agent** | Compares reported wages vs official Gazette rates and flags underpayment | Quantitative Discrepancy Explanation |
+| **Grievance Agent** | Categorizes worker complaints by severity and assigns inspection priority | Complaint Categorization & Risk Assessment |
+| **Executive Insight Agent**| Summarizes state-wide migration statistics into actionable policy briefings | Executive Summarization & Trend Analysis |
+
+---
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide Icons, Recharts, Zustand State Management
+- **Backend**: Python 3.11, FastAPI, Uvicorn, SQLAlchemy (Async), Pydantic v2
+- **Database**: SQLite (Development) / PostgreSQL 15 + pgvector (Production)
+- **AI Infrastructure**: IBM watsonx.ai, IBM Granite 3-8B Instruct LLM Model
+- **Security & Authentication**: JWT (JSON Web Tokens), Passlib (Bcrypt), OTP Verification
+
+---
+
+## ⚡ Quick Start & Installation
+
+### Option 1: Local Development
 
 ```bash
-# 1. Clone and enter directory
+# 1. Clone repository
+git clone https://github.com/ohmsharma1401-rgb/migrant-saathi-ai.git
 cd migrant-saathi-ai
 
-# 2. Configure backend environment
-cp backend/.env.example backend/.env
-# Edit backend/.env — add your IBM watsonx credentials
-
-# 3. Start all services
-docker-compose up -d
-
-# 4. Run database migrations
-docker-compose exec backend alembic upgrade head
-
-# 5. Seed demo data
-docker-compose exec backend python -m app.database.seed
-
-# Frontend: http://localhost:5173
-# Backend API: http://localhost:8000
-# API Docs: http://localhost:8000/docs
-```
-
----
-
-### Manual Setup (without Docker)
-
-#### Backend
-```bash
+# 2. Setup Backend
 cd backend
 python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+# On Windows:
+venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+
 pip install -r requirements.txt
 cp .env.example .env
-# Edit .env with your credentials
-alembic upgrade head
-python -m app.database.seed
-uvicorn app.main:app --reload --port 8000
-```
+# Edit .env and supply your WATSONX_API_KEY and WATSONX_PROJECT_ID
 
-#### Frontend
-```bash
-cd frontend
+# Seed database
+python -m app.database.seed
+
+# Run backend server
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# 3. Setup Frontend (in a new terminal)
+cd ../frontend
 npm install
 npm run dev
 ```
 
----
-
-### IBM watsonx.ai Configuration
-
-Edit `backend/.env`:
-
-```env
-WATSONX_API_KEY=your-ibm-cloud-api-key
-WATSONX_URL=https://us-south.ml.cloud.ibm.com
-WATSONX_PROJECT_ID=your-watsonx-project-id
-WATSONX_MODEL_ID=ibm/granite-3-8b-instruct
-```
-
-**Finding your credentials:**
-1. Log into [IBM Cloud](https://cloud.ibm.com)
-2. Navigate to watsonx.ai
-3. Open your project → Manage → General → Project ID
-4. Create an API key: Account → Manage → Access → API Keys
-5. Confirm available model IDs in the Model Catalog
-
-> If watsonx credentials are not set, the platform runs in **deterministic-only mode** — all eligibility filtering and wage analysis still works; only natural language explanations are replaced with generic messages.
+Visit:
+- **Frontend App**: [http://localhost:5173](http://localhost:5173)
+- **Backend Swagger Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
 
-### User Roles & Demo Credentials
+### Option 2: Docker Setup
 
-| Role | Login | Demo Credentials |
-|------|-------|-----------------|
-| Migrant Worker | Mobile + OTP | Any mobile number; OTP shown in console (mock mode) |
-| Government Official | Email + Password | `official@gujarat.gov.in` / `Demo@1234` |
-| Labour Inspector | Email + Password | `inspector@gujarat.gov.in` / `Demo@1234` |
-| System Admin | Email + Password | `admin@saathi.ai` / `Admin@1234` |
-
----
-
-### Architecture
-
-```
-REACT FRONTEND (Vite + TypeScript + Tailwind)
-       ↓ HTTPS REST
-FASTAPI BACKEND (Python 3.11)
-       ↓                    ↓
-PostgreSQL 15          IBM watsonx.ai
-+ pgvector             IBM Granite LLM
-(RAG welfare)
-       ↓
-Redis (OTP / cache)
+```bash
+cp backend/.env.example backend/.env
+docker-compose up -d --build
+docker-compose exec backend python -m app.database.seed
 ```
 
 ---
 
-### AI Agents
+## 🔑 Demo Login Credentials
 
-| Agent | Responsibility | Granite Usage |
-|-------|---------------|---------------|
-| Skill Agent | Extract occupation/skills from natural language | NL extraction |
-| Welfare Agent | Match schemes via deterministic filter + explain | Explanation only |
-| Wage Agent | Compute discrepancy against reference data + explain | Explanation only |
-| Grievance Agent | Classify complaints by category and severity | Classification |
-| Dashboard Insight Agent | Generate insights from aggregated stats | Summarization |
-
----
-
-### ⚠️ Important Notices
-
-- **Welfare scheme data** is labelled `DEMO DATA` — verify against official Gujarat/Central government sources before production use
-- **Reference wage data** is labelled `DEMO DATA` — integrate official Minimum Wages Act notifications for production
-- **OTP SMS** is mocked for the hackathon demo — integrate MSG91 or Twilio for production
-- The AI **never** makes legal conclusions — all outputs use cautious language
+| Portal / Role | URL Route | Demo Credentials |
+| :--- | :--- | :--- |
+| **Migrant Worker** | `/worker` | Any mobile number (Simulated OTP auto-filled) |
+| **Government Official** | `/gov` | `official@gujarat.gov.in` / Password: `Demo@1234` |
+| **Labour Inspector** | `/gov/grievances` | `inspector@gujarat.gov.in` / Password: `Demo@1234` |
+| **System Admin** | `/admin` | `admin@saathi.ai` / Password: `Admin@1234` |
 
 ---
 
-### Folder Structure
-
-```
-migrant-saathi-ai/
-├── frontend/          # React + Vite + TypeScript
-│   └── src/
-│       ├── pages/     # All page components
-│       ├── layouts/   # Worker / Gov / Admin layouts
-│       ├── components/# Reusable UI components
-│       ├── services/  # API service functions
-│       ├── store/     # Zustand state stores
-│       ├── types/     # TypeScript types
-│       └── i18n/      # EN / HI / GU translations
-├── backend/           # Python + FastAPI
-│   └── app/
-│       ├── api/       # Route handlers
-│       ├── models/    # SQLAlchemy models
-│       ├── schemas/   # Pydantic schemas
-│       ├── services/  # AI agents + business logic
-│       ├── core/      # Config, security, dependencies
-│       └── database/  # Engine, migrations, seed
-├── scripts/           # DB init scripts
-├── docker-compose.yml
-└── README.md
-```
-
----
-
-### License
-MIT — Built for hackathon demonstration purposes.
+## 📜 License
+This project is licensed under the [MIT License](LICENSE). Built for hackathon demonstration.

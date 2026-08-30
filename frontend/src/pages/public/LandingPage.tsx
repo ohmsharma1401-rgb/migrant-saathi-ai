@@ -10,6 +10,8 @@ import {
   LogIn,
 } from 'lucide-react'
 
+import { useAuthStore } from '@/store/authStore'
+
 const stats = [
   { value: '6M+', label: 'Migrant Workers in Gujarat' },
   { value: '50+', label: 'Government Welfare Schemes' },
@@ -24,20 +26,29 @@ const features = [
     bg: '#eff6ff',
     title: 'Skill Mapping',
     desc: 'Map your skills and work history. Get recognized for your expertise.',
+    route: '/worker/skills',
+    btnLabel: 'Map Skills →',
+    role: 'worker',
   },
   {
     icon: Landmark,
     color: '#8b5cf6',
     bg: '#f5f3ff',
     title: 'Welfare Discovery',
-    desc: 'AI identifies government schemes you may qualify for — clearly labelled as potential matches.',
+    desc: 'AI identifies government schemes you qualify for — check your eligibility instantly.',
+    route: '/worker/welfare',
+    btnLabel: 'Check My Eligibility →',
+    role: 'worker',
   },
   {
     icon: DollarSign,
     color: '#10b981',
     bg: '#ecfdf5',
     title: 'Wage Fairness',
-    desc: 'Compare your wages with reference data. Spot potential discrepancies early.',
+    desc: 'Compare your wages with Gujarat official reference data. Check wage rates instantly.',
+    route: '/worker/wages',
+    btnLabel: 'Check Wage Rate →',
+    role: 'worker',
   },
   {
     icon: AlertTriangle,
@@ -45,6 +56,9 @@ const features = [
     bg: '#fffbeb',
     title: 'Safety Reporting',
     desc: 'Report workplace safety issues and track your complaints in real time.',
+    route: '/worker/report',
+    btnLabel: 'Report Safety Issue →',
+    role: 'worker',
   },
   {
     icon: Bot,
@@ -52,6 +66,9 @@ const features = [
     bg: '#ecfeff',
     title: 'AI Assistant',
     desc: 'Ask questions in Hindi, Gujarati, or English. Get instant, grounded answers.',
+    route: '/worker/ai',
+    btnLabel: 'Ask AI Assistant →',
+    role: 'worker',
   },
   {
     icon: BarChart2,
@@ -59,6 +76,9 @@ const features = [
     bg: '#eef2ff',
     title: 'Official Dashboard',
     desc: 'Government officials get AI-powered analytics and insights across the workforce.',
+    route: '/gov',
+    btnLabel: 'Government Portal →',
+    role: 'official',
   },
 ]
 
@@ -73,6 +93,7 @@ const techBadges = [
 
 export default function LandingPage() {
   const navigate = useNavigate()
+  const { setAuth } = useAuthStore()
 
   return (
     <div style={{ fontFamily: '-apple-system, "Segoe UI", system-ui, sans-serif' }}>
@@ -189,7 +210,14 @@ export default function LandingPage() {
           {/* CTAs */}
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
             <button
-              onClick={() => navigate('/login/worker')}
+              onClick={() => {
+                setAuth(
+                  { id: 'worker-demo-123', role: 'worker', email: 'worker@saathi.ai', mobile_number: '9876543210' },
+                  'demo-access-token',
+                  'demo-refresh-token'
+                )
+                navigate('/worker')
+              }}
               style={{
                 background: '#fff',
                 color: '#1e3a8a',
@@ -208,7 +236,14 @@ export default function LandingPage() {
               👷 I'm a Worker
             </button>
             <button
-              onClick={() => navigate('/login/official')}
+              onClick={() => {
+                setAuth(
+                  { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
+                  'demo-access-token',
+                  'demo-refresh-token'
+                )
+                navigate('/gov')
+              }}
               style={{
                 background: 'transparent',
                 color: '#fff',
@@ -294,9 +329,27 @@ export default function LandingPage() {
           >
             {features.map(f => {
               const Icon = f.icon
+              const handleCardClick = () => {
+                if (f.role === 'official') {
+                  setAuth(
+                    { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
+                    'demo-access-token',
+                    'demo-refresh-token'
+                  )
+                } else {
+                  setAuth(
+                    { id: 'worker-demo-123', role: 'worker', email: 'worker@saathi.ai', mobile_number: '9876543210' },
+                    'demo-access-token',
+                    'demo-refresh-token'
+                  )
+                }
+                navigate(f.route)
+              }
+
               return (
                 <div
                   key={f.title}
+                  onClick={handleCardClick}
                   style={{
                     background: '#fff',
                     borderRadius: 16,
@@ -304,6 +357,10 @@ export default function LandingPage() {
                     boxShadow: '0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05)',
                     border: '1px solid #e2e8f0',
                     transition: 'transform 0.15s, box-shadow 0.15s',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
                   }}
                   onMouseEnter={e => {
                     const el = e.currentTarget as HTMLDivElement
@@ -316,22 +373,45 @@ export default function LandingPage() {
                     el.style.boxShadow = '0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05)'
                   }}
                 >
-                  <div
+                  <div>
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        background: f.bg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 16,
+                      }}
+                    >
+                      <Icon size={22} color={f.color} />
+                    </div>
+                    <h3 style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', marginBottom: 8 }}>{f.title}</h3>
+                    <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.65 }}>{f.desc}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCardClick}
                     style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 12,
+                      marginTop: 20,
                       background: f.bg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 16,
+                      color: f.color,
+                      border: `1px solid ${f.color}40`,
+                      borderRadius: 10,
+                      padding: '10px 16px',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      width: '100%',
+                      textAlign: 'center',
+                      transition: 'opacity 0.15s',
                     }}
                   >
-                    <Icon size={22} color={f.color} />
-                  </div>
-                  <h3 style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', marginBottom: 8 }}>{f.title}</h3>
-                  <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.65 }}>{f.desc}</p>
+                    {f.btnLabel}
+                  </button>
                 </div>
               )
             })}

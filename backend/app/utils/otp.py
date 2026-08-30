@@ -237,9 +237,23 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
         msg.attach(MIMEText(html_body, "html"))
 
         errors = []
-        if smtp_host.endswith("gmail.com") or smtp_port == 465:
+        if smtp_port == 587:
             try:
-                with smtplib.SMTP_SSL(smtp_host, 465, timeout=20) as server:
+                with smtplib.SMTP(smtp_host, 587, timeout=7) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(smtp_user, smtp_password)
+                    refused = server.sendmail(sender, [recipient], msg.as_string())
+                    if refused:
+                        raise RuntimeError(f"SMTP refused recipients: {refused}")
+                return
+            except Exception as e_tls:
+                errors.append(f"STARTTLS 587: {e_tls}")
+
+        if smtp_port == 465 or smtp_host.endswith("gmail.com"):
+            try:
+                with smtplib.SMTP_SSL(smtp_host, 465, timeout=7) as server:
                     server.login(smtp_user, smtp_password)
                     refused = server.sendmail(sender, [recipient], msg.as_string())
                     if refused:
@@ -248,18 +262,22 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
             except Exception as e_ssl:
                 errors.append(f"SSL 465: {e_ssl}")
 
-        try:
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(smtp_user, smtp_password)
-                refused = server.sendmail(sender, [recipient], msg.as_string())
-                if refused:
-                    raise RuntimeError(f"SMTP refused recipients: {refused}")
-        except Exception as e_tls:
-            errors.append(f"STARTTLS {smtp_port}: {e_tls}")
-            raise RuntimeError("; ".join(errors)) from e_tls
+        if smtp_port != 587:
+            try:
+                with smtplib.SMTP(smtp_host, 587, timeout=7) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(smtp_user, smtp_password)
+                    refused = server.sendmail(sender, [recipient], msg.as_string())
+                    if refused:
+                        raise RuntimeError(f"SMTP refused recipients: {refused}")
+                return
+            except Exception as e_tls:
+                errors.append(f"STARTTLS 587 fallback: {e_tls}")
+                raise RuntimeError("; ".join(errors)) from e_tls
+        else:
+            raise RuntimeError("; ".join(errors))
 
     try:
         await asyncio.to_thread(_sync_send)

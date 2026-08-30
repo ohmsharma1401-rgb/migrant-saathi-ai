@@ -15,12 +15,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const url = String(error.config?.url || '')
-    const isAuthChallenge = url.includes('/auth/worker/send-otp') || url.includes('/auth/worker/verify-otp')
-    if (error.response?.status === 401 && !isAuthChallenge) {
-      useAuthStore.getState().clearAuth()
-      window.location.href = '/select-role'
-    }
+    // Never force window.location redirect to /select-role on API errors
     return Promise.reject(error)
   }
 )

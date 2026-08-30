@@ -13,6 +13,8 @@ import {
   ChevronRight,
   LogOut,
   Menu,
+  ShieldCheck,
+  Settings,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useTranslation } from '@/utils/translations'
@@ -20,7 +22,7 @@ import LanguageSelector from '@/components/LanguageSelector'
 
 export default function GovLayout() {
   const { t } = useTranslation()
-  const { user, clearAuth } = useAuthStore()
+  const { user, clearAuth, setAuth } = useAuthStore()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
 
@@ -35,8 +37,9 @@ export default function GovLayout() {
     { to: '/gov/workers', label: t('nav_workers'), icon: Users },
     { to: '/gov/welfare', label: t('nav_welfare'), icon: Heart },
     { to: '/gov/wages', label: t('nav_wages'), icon: DollarSign },
-    { to: '/gov/grievances', label: t('nav_grievances'), icon: MessageSquare },
+    { to: '/gov/grievances', label: 'Inspections & Grievances', icon: MessageSquare },
     { to: '/gov/insights', label: t('nav_insights'), icon: BrainCircuit },
+    { to: '/admin', label: 'Admin Console', icon: Settings },
   ]
 
   return (
@@ -110,6 +113,34 @@ export default function GovLayout() {
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setAuth(
+                  { id: 'demo-inspector-id', role: 'inspector', email: 'inspector@gujarat.gov.in' },
+                  'demo-access-token',
+                  'demo-refresh-token'
+                )
+                navigate('/gov/grievances')
+              }}
+              className="hidden sm:flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-100 transition-all shadow-2xs"
+            >
+              <ShieldCheck className="h-4 w-4 text-amber-600" />
+              🔍 Inspections Panel
+            </button>
+            <button
+              onClick={() => {
+                setAuth(
+                  { id: 'demo-admin-id', role: 'admin', email: 'admin@saathi.ai' },
+                  'demo-access-token',
+                  'demo-refresh-token'
+                )
+                navigate('/admin')
+              }}
+              className="hidden sm:flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition-all shadow-2xs"
+            >
+              <Settings className="h-4 w-4 text-indigo-600" />
+              ⚙️ Admin Console
+            </button>
             <LanguageSelector />
             <button className="rounded-full p-2 hover:bg-muted" aria-label="Notifications">
               <Bell className="h-5 w-5 text-muted-foreground" />

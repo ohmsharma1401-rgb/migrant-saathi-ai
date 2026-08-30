@@ -14,7 +14,7 @@ import {
 import { useAuthStore } from '@/store/authStore'
 
 export default function AdminLayout() {
-  const { user, clearAuth } = useAuthStore()
+  const { user, clearAuth, setAuth } = useAuthStore()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
 
@@ -93,6 +93,20 @@ export default function AdminLayout() {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-white px-6 shadow-sm">
           <div className="flex-1" />
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setAuth(
+                  { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
+                  'demo-access-token',
+                  'demo-refresh-token'
+                )
+                navigate('/gov')
+              }}
+              className="hidden sm:flex items-center gap-1.5 rounded-lg bg-teal-50 border border-teal-200 px-3 py-1.5 text-xs font-bold text-teal-800 hover:bg-teal-100 transition-all shadow-2xs"
+            >
+              <ShieldCheck className="h-4 w-4 text-teal-600" />
+              🏛️ Government Portal
+            </button>
             <button className="rounded-full p-2 hover:bg-muted" aria-label="Notifications">
               <Bell className="h-5 w-5 text-muted-foreground" />
             </button>
