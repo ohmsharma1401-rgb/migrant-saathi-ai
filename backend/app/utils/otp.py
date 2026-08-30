@@ -195,7 +195,8 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
     smtp_user = (settings.SMTP_USER or "").strip()
     smtp_password = (settings.SMTP_PASSWORD or "").replace(" ", "")
     sender = (settings.SENDER_EMAIL or smtp_user or "").strip()
-    recipient = (to_email or "").strip()
+    recipient = (to_email or "").strip().lower()
+    otp = str(otp).strip()
 
     if "@" not in recipient:
         logger.error("Refusing to send OTP: invalid recipient email %s", to_email)
@@ -239,7 +240,7 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
         errors = []
         if smtp_port == 587:
             try:
-                with smtplib.SMTP(smtp_host, 587, timeout=7) as server:
+                with smtplib.SMTP(smtp_host, 587, timeout=20) as server:
                     server.ehlo()
                     server.starttls()
                     server.ehlo()
@@ -253,7 +254,7 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
 
         if smtp_port == 465 or smtp_host.endswith("gmail.com"):
             try:
-                with smtplib.SMTP_SSL(smtp_host, 465, timeout=7) as server:
+                with smtplib.SMTP_SSL(smtp_host, 465, timeout=20) as server:
                     server.login(smtp_user, smtp_password)
                     refused = server.sendmail(sender, [recipient], msg.as_string())
                     if refused:
@@ -264,7 +265,7 @@ async def send_email_otp(to_email: str, otp: str) -> bool:
 
         if smtp_port != 587:
             try:
-                with smtplib.SMTP(smtp_host, 587, timeout=7) as server:
+                with smtplib.SMTP(smtp_host, 587, timeout=20) as server:
                     server.ehlo()
                     server.starttls()
                     server.ehlo()

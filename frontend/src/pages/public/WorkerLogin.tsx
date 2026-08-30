@@ -154,12 +154,13 @@ export default function WorkerLogin() {
       setApiError('Enter a valid Gmail / Email address')
       return
     }
+    const email = regForm.email.trim().toLowerCase()
     setEmailSending(true)
     try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: regForm.email.trim() })
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email })
       setEmailOtpToken(res.data.otp_token || '')
       setEmailOtpSent(true)
-      setEmailSuccessMsg(`📩 Verification OTP code sent to your Gmail (${regForm.email.trim()}). Please check your email inbox & spam folder.`)
+      setEmailSuccessMsg(`📩 Verification OTP code sent to your Gmail (${email}). Please check your email inbox & spam folder.`)
     } catch (err: any) {
       const errMsg = err?.response?.data?.detail || err?.message || 'Could not send email OTP. Ensure backend is running.'
       setApiError(`Email OTP Error: ${errMsg}`)
@@ -255,7 +256,7 @@ export default function WorkerLogin() {
     e.preventDefault()
     setApiError('')
     setSignInSuccessMsg('')
-    const email = signInInput.trim()
+    const email = signInInput.trim().toLowerCase()
     if (!email.includes('@')) {
       setApiError('Enter a valid registered Gmail / Email address')
       return
