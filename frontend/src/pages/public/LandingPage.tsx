@@ -210,6 +210,43 @@ export default function LandingPage() {
           {/* CTAs */}
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 40 }}>
             <button
+              onClick={() => navigate('/login/worker')}
+              style={{
+                background: '#fff',
+                color: '#1e3a8a',
+                border: 'none',
+                borderRadius: 12,
+                padding: '15px 28px',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 28px rgba(0,0,0,0.3)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.25)' }}
+            >
+              👷 Worker Login
+            </button>
+            <button
+              onClick={() => navigate('/login/official')}
+              style={{
+                background: 'transparent',
+                color: '#fff',
+                border: '2px solid rgba(255,255,255,0.5)',
+                borderRadius: 12,
+                padding: '15px 28px',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#fff'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.5)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+            >
+              🏛 Government Login
+            </button>
+            <button
               onClick={() => {
                 setAuth(
                   { id: 'worker-demo-123', role: 'worker', email: 'worker@saathi.ai', mobile_number: '9876543210' },
@@ -219,46 +256,20 @@ export default function LandingPage() {
                 navigate('/worker')
               }}
               style={{
-                background: '#fff',
-                color: '#1e3a8a',
-                border: 'none',
-                borderRadius: 12,
-                padding: '15px 32px',
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 28px rgba(0,0,0,0.3)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.25)' }}
-            >
-              👷 I'm a Worker
-            </button>
-            <button
-              onClick={() => {
-                setAuth(
-                  { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
-                  'demo-access-token',
-                  'demo-refresh-token'
-                )
-                navigate('/gov')
-              }}
-              style={{
-                background: 'transparent',
+                background: 'rgba(255,255,255,0.15)',
                 color: '#fff',
-                border: '2px solid rgba(255,255,255,0.5)',
+                border: '1px solid rgba(255,255,255,0.3)',
                 borderRadius: 12,
-                padding: '15px 32px',
-                fontSize: 16,
-                fontWeight: 700,
+                padding: '15px 24px',
+                fontSize: 15,
+                fontWeight: 600,
                 cursor: 'pointer',
-                transition: 'border-color 0.15s, background 0.15s',
+                transition: 'background 0.15s',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#fff'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.5)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.25)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.15)' }}
             >
-              🏛 Government Portal
+              🚀 Quick Demo
             </button>
           </div>
 

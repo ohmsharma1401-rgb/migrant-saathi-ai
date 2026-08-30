@@ -323,19 +323,12 @@ export default function RoleSelection() {
             emojiLabel="Migrant worker"
             title="Migrant Worker"
             subtitles={['प्रवासी मजदूर', 'સ્થળાંતર મજૂર']}
-            description="Register or login with your mobile number. Discover welfare benefits, check wage fairness, and report issues."
-            pills={['📱 Mobile OTP Login', '🏛 Welfare Schemes', '💰 Wage Check']}
-            buttonLabel="Open Worker Dashboard →"
+            description="Register or login with your mobile number / email OTP. Discover welfare benefits, check wage fairness, and report issues."
+            pills={['📱 Mobile OTP Login', '✉️ Email OTP', '🏛 Welfare Schemes', '💰 Wage Check']}
+            buttonLabel="Worker Login / Register →"
             buttonColor="#1d4ed8"
             buttonHover="#1e40af"
-            onClick={() => {
-              setAuth(
-                { id: 'worker-demo-123', role: 'worker', email: 'worker@saathi.ai', mobile_number: '9876543210' },
-                'demo-access-token',
-                'demo-refresh-token'
-              )
-              navigate('/worker')
-            }}
+            onClick={() => navigate('/login/worker')}
           />
 
           <RoleCard
@@ -343,19 +336,12 @@ export default function RoleSelection() {
             emojiLabel="Government official"
             title="Government Official"
             subtitles={['Labour Officer / Inspector / Admin']}
-            description="Access the analytics dashboard. View worker statistics, welfare coverage, wage alerts, and AI-generated insights."
-            pills={['📊 Analytics Dashboard', '🗺 Worker Map', '🤖 AI Insights']}
-            buttonLabel="Open Government Portal →"
+            description="Login with your official credentials. Access analytics, worker statistics, welfare coverage, wage alerts, and AI insights."
+            pills={['🔑 Official Login', '📊 Analytics Dashboard', '🗺 Worker Map', '🤖 AI Insights']}
+            buttonLabel="Government Login →"
             buttonColor="#4f46e5"
             buttonHover="#4338ca"
-            onClick={() => {
-              setAuth(
-                { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
-                'demo-access-token',
-                'demo-refresh-token'
-              )
-              navigate('/gov')
-            }}
+            onClick={() => navigate('/login/official')}
           />
         </div>
 
