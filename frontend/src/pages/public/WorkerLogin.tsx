@@ -83,18 +83,13 @@ export default function WorkerLogin() {
   const [emailSending, setEmailSending] = useState(false)
   const [emailSuccessMsg, setEmailSuccessMsg] = useState('')
 
-  // Individual Phone Verification State
-  const [phoneOtpSent, setPhoneOtpSent] = useState(false)
-  const [phoneVerified, setPhoneVerified] = useState(false)
-  const [phoneOtpInput, setPhoneOtpInput] = useState('')
-  const [phoneOtpToken, setPhoneOtpToken] = useState('')
-  const [phoneSending, setPhoneSending] = useState(false)
-  const [phoneSuccessMsg, setPhoneSuccessMsg] = useState('')
-
   // Sign In Tab State
   const [signInInput, setSignInInput] = useState('')
   const [signInOtpSent, setSignInOtpSent] = useState(false)
   const [signInOtpInput, setSignInOtpInput] = useState('')
+  const [signInOtpToken, setSignInOtpToken] = useState('')
+  const [signInSuccessMsg, setSignInSuccessMsg] = useState('')
+  const [signInSending, setSignInSending] = useState(false)
 
   const [apiError, setApiError] = useState('')
 
@@ -102,7 +97,6 @@ export default function WorkerLogin() {
   const [regForm, setRegForm] = useState({
     fullName: '',
     email: '',
-    mobileNumber: '',
     age: '',
     dob: '',
     yearsExp: '3',
@@ -201,64 +195,18 @@ export default function WorkerLogin() {
     }
   }
 
-  // 3. Send Individual Phone SMS OTP
-  async function handleSendPhoneOTP() {
-    setApiError('')
-    setPhoneSuccessMsg('')
-    const digits = regForm.mobileNumber.replace(/\D/g, '')
-    if (digits.length < 10) {
-      setApiError('Enter a valid 10-digit mobile phone number')
-      return
-    }
-    setPhoneSending(true)
-    try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { mobile_number: digits })
-      setPhoneOtpToken(res.data.otp_token || '')
-      setPhoneOtpSent(true)
-      if (res.data.mock_otp) {
-        setPhoneSuccessMsg(`📱 Verification SMS OTP: ${res.data.mock_otp} (Simulated OTP - Enter code below to verify)`)
-        setPhoneOtpInput(res.data.mock_otp)
-      } else {
-        setPhoneSuccessMsg(`📱 Verification SMS OTP sent to +91 ${digits}. Please check your phone messages.`)
-      }
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.detail || err?.message || 'Could not send SMS OTP.'
-      setApiError(`SMS OTP Error: ${errMsg}`)
-    } finally {
-      setPhoneSending(false)
-    }
-  }
-
-  // 4. Verify Individual Phone SMS OTP
-  async function handleVerifyPhoneOTP() {
-    setApiError('')
-    if (phoneOtpInput.replace(/\D/g, '').length < 4) {
-      setApiError('❌ Enter the 6-digit SMS OTP sent to your phone')
-      return
-    }
-    try {
-      await api.post('/auth/worker/verify-otp', {
-        mobile_number: regForm.mobileNumber.replace(/\D/g, ''),
-        otp: phoneOtpInput.trim(),
-        otp_token: phoneOtpToken,
-      })
-      setPhoneVerified(true)
-      setPhoneSuccessMsg('✅ Mobile phone number successfully verified!')
-      setApiError('')
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
-      setApiError(`❌ Wrong OTP Entered! ${errMsg}. Please enter the correct verification code.`)
-      setPhoneVerified(false)
-    }
-  }
-
-  // Complete Sign Up & Save Worker Profile
+  // Complete Sign Up & Save Worker Profile -> Switch to Sign In Tab
   async function handleCompleteSignUp(e: React.FormEvent) {
     e.preventDefault()
     setApiError('')
 
     if (!regForm.fullName.trim()) {
       setApiError('Full Name is required')
+      return
+    }
+
+    if (!regForm.email.trim() || !regForm.email.includes('@')) {
+      setApiError('Valid Email Address is required')
       return
     }
 
@@ -285,7 +233,6 @@ export default function WorkerLogin() {
       id: 'W-' + Math.floor(1000 + Math.random() * 9000).toString(),
       full_name: regForm.fullName || 'Registered Worker',
       email: regForm.email,
-      mobile_number: regForm.mobileNumber,
       age: regForm.age || '30',
       dob: regForm.dob || '1996-01-01',
       years_exp: expNum,
@@ -301,15 +248,10 @@ export default function WorkerLogin() {
     }
     localStorage.setItem('saathi-custom-worker', JSON.stringify(customWorker))
 
-    const demoId = 'worker-' + Math.floor(1000 + Math.random() * 9000).toString()
-    setAuth(
-      { id: demoId, role: 'worker', email: regForm.email, mobile_number: regForm.mobileNumber },
-      'demo-access-token',
-      'demo-refresh-token'
-    )
-
     setSavingReg(false)
-    navigate('/worker')
+    setSignInInput(regForm.email)
+    setSignInSuccessMsg(`🎉 Registration successful for ${regForm.fullName}! Please sign in below using your verified email (${regForm.email}).`)
+    setAuthTab('signin')
   }
 
   // Sign In for Existing Users (Email Verification Only)
@@ -519,67 +461,7 @@ export default function WorkerLogin() {
               )}
             </div>
 
-            {/* INDIVIDUAL VERIFICATION 2: MOBILE PHONE NUMBER */}
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Phone className="h-4 w-4 text-teal-600" />
-                  2. Mobile Phone Verification (Fast2SMS)
-                </label>
-                {phoneVerified && (
-                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Phone Verified
-                  </span>
-                )}
-              </div>
 
-              <div className="flex gap-2">
-                <input
-                  type="tel"
-                  required
-                  placeholder="Enter your 10-digit Indian Mobile Number"
-                  value={regForm.mobileNumber}
-                  onChange={(e) => setRegForm({ ...regForm, mobileNumber: e.target.value })}
-                  className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-teal-600 bg-white"
-                />
-                {!phoneVerified && (
-                  <button
-                    type="button"
-                    onClick={handleSendPhoneOTP}
-                    disabled={phoneSending}
-                    className="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-all shrink-0 shadow-xs"
-                  >
-                    {phoneSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Send SMS OTP'}
-                  </button>
-                )}
-              </div>
-
-              {phoneOtpSent && !phoneVerified && (
-                <div className="space-y-1.5 pt-1">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Enter 6-digit SMS OTP code"
-                      value={phoneOtpInput}
-                      onChange={(e) => setPhoneOtpInput(e.target.value)}
-                      className="flex-1 rounded-xl border border-teal-300 px-3 py-1.5 text-xs text-slate-900 outline-none bg-white font-mono font-bold"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyPhoneOTP}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
-                    >
-                      Verify Phone
-                    </button>
-                  </div>
-                  {phoneSuccessMsg && (
-                    <p className="text-[11px] text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg font-semibold">
-                      {phoneSuccessMsg}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
 
             {/* Dynamic Bounded Age (18-70 Yrs), Birthdate & Work Experience */}
             <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
@@ -768,7 +650,7 @@ export default function WorkerLogin() {
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20 disabled:opacity-60"
             >
               {savingReg ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Complete Sign Up &amp; Go to Dashboard →
+              Complete Registration → (Proceed to Sign In)
             </button>
           </form>
         )}

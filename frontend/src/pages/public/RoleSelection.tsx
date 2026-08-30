@@ -323,8 +323,8 @@ export default function RoleSelection() {
             emojiLabel="Migrant worker"
             title="Migrant Worker"
             subtitles={['प्रवासी मजदूर', 'સ્થળાંતર મજૂર']}
-            description="Register or login with your mobile number / email OTP. Discover welfare benefits, check wage fairness, and report issues."
-            pills={['📱 Mobile OTP Login', '✉️ Email OTP', '🏛 Welfare Schemes', '💰 Wage Check']}
+            description="Register or login with your email OTP. Discover welfare benefits, check wage fairness, and report issues."
+            pills={['✉️ Email OTP Verification', '🏛 Welfare Schemes', '💰 Wage Check']}
             buttonLabel="Worker Login / Register →"
             buttonColor="#1d4ed8"
             buttonHover="#1e40af"

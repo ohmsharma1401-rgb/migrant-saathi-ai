@@ -312,13 +312,6 @@ export default function WorkerProfile() {
           <CardTitle className="text-sm text-gray-800">4. Contact &amp; Identity</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FieldRow label="Mobile Number">
-            <Input
-              value={user?.mobile_number ?? '9876543210'}
-              readOnly
-              className="bg-gray-50 text-gray-500 cursor-not-allowed"
-            />
-          </FieldRow>
           <FieldRow label="Aadhaar Last 4 Digits" optional>
             <Input
               maxLength={4}

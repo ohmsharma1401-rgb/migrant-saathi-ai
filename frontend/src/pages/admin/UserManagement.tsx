@@ -23,10 +23,10 @@ const INITIAL_USERS: DemoUser[] = [
   { id: 'U001', name: 'Raj Mehta',        credential: 'official@gujarat.gov.in',  role: 'official',  active: true,  joined: '2024-01-15' },
   { id: 'U002', name: 'Priya Sharma',     credential: 'inspector@gujarat.gov.in', role: 'inspector', active: true,  joined: '2024-02-20' },
   { id: 'U003', name: 'System Admin',     credential: 'admin@saathi.ai',          role: 'admin',     active: true,  joined: '2024-01-01' },
-  { id: 'U004', name: 'Ramesh Kumar',     credential: '9876543210',               role: 'worker',    active: true,  joined: '2024-03-05' },
+  { id: 'U004', name: 'Ramesh Kumar',     credential: 'ramesh.worker@saathi.ai',  role: 'worker',    active: true,  joined: '2024-03-05' },
   { id: 'U005', name: 'Ankit Patel',      credential: 'ankit.official@guj.gov.in',role: 'official',  active: false, joined: '2024-03-10' },
-  { id: 'U006', name: 'Sunita Devi',      credential: '9812345678',               role: 'worker',    active: true,  joined: '2024-04-02' },
-  { id: 'U007', name: 'Rahul Verma',      credential: '9898001122',               role: 'worker',    active: true,  joined: '2024-04-18' },
+  { id: 'U006', name: 'Sunita Devi',      credential: 'sunita.worker@saathi.ai',  role: 'worker',    active: true,  joined: '2024-04-02' },
+  { id: 'U007', name: 'Rahul Verma',      credential: 'rahul.worker@saathi.ai',   role: 'worker',    active: true,  joined: '2024-04-18' },
   { id: 'U008', name: 'Kavita Inspector', credential: 'kavita.insp@labour.gov.in',role: 'inspector', active: false, joined: '2024-05-01' },
 ]
 
