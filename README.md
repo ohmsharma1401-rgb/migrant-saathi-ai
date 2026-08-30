@@ -10,6 +10,13 @@
 
 ---
 
+## 🔗 Live Application Links
+
+- 🚀 **Live Production Web App**: [https://migrant-saathi-ai.vercel.app](https://migrant-saathi-ai.vercel.app)
+- 📦 **GitHub Source Repository**: [https://github.com/ohmsharma1401-rgb/migrant-saathi-ai](https://github.com/ohmsharma1401-rgb/migrant-saathi-ai)
+
+---
+
 ## 📌 Executive Summary
 
 **Migrant Saathi AI** is an AI-powered social governance platform designed to protect and empower over **6 million+ interstate migrant workers in Gujarat**. The platform bridges the critical gap between vulnerable unorganized labor, government welfare schemes, minimum wage compliance, workplace safety reporting, and state-level policy decision-making.
