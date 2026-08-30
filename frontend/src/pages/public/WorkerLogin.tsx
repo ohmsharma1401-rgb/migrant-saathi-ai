@@ -165,12 +165,7 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email: regForm.email.trim() })
       setEmailOtpToken(res.data.otp_token || '')
       setEmailOtpSent(true)
-      if (res.data.mock_otp) {
-        setEmailSuccessMsg(`📩 OTP Code: ${res.data.mock_otp} (Simulated OTP - Enter code below to verify)`)
-        setEmailOtpInput(res.data.mock_otp)
-      } else {
-        setEmailSuccessMsg(`📩 Verification OTP code sent to ${regForm.email.trim()}. Please check your email inbox & spam.`)
-      }
+      setEmailSuccessMsg(`📩 Verification OTP code sent to your Gmail (${regForm.email.trim()}). Please check your email inbox & spam folder.`)
     } catch (err: any) {
       const errMsg = err?.response?.data?.detail || err?.message || 'Could not send email OTP. Ensure backend is running.'
       setApiError(`Email OTP Error: ${errMsg}`)
@@ -328,12 +323,7 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email })
       setSignInOtpToken(res.data.otp_token || '')
       setSignInOtpSent(true)
-      if (res.data.mock_otp) {
-        setSignInSuccessMsg(`🔑 Email OTP Code: ${res.data.mock_otp} (Simulated OTP - Enter code below to verify)`)
-        setSignInOtpInput(res.data.mock_otp)
-      } else {
-        setSignInSuccessMsg(`📩 Verification OTP code sent to ${email}. Check your email inbox.`)
-      }
+      setSignInSuccessMsg(`📩 Verification OTP code sent to your Gmail (${email}). Please check your email inbox & spam folder.`)
     } catch (err: any) {
       const errMsg = err?.response?.data?.detail || err?.message || 'Could not send Email OTP'
       setApiError(`OTP Error: ${errMsg}`)
