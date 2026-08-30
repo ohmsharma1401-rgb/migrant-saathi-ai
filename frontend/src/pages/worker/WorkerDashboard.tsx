@@ -14,7 +14,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import LanguageSelector from '@/components/LanguageSelector'
 
-const PROFILE_PCT = 90
+const PROFILE_PCT = 100
 
 const RECENT_ACTIVITY = [
   {

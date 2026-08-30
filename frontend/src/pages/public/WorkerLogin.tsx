@@ -373,9 +373,9 @@ export default function WorkerLogin() {
         {authTab === 'signup' && (
           <form onSubmit={handleCompleteSignUp} className="space-y-4 text-left">
             <div className="text-center mb-2">
-              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Dual Verification</h2>
+              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Email Verification</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Verify your Email AND Phone Number individually to link your profile with state labor benefits.
+                Create your worker account and verify your email address to access Gujarat state labor benefits &amp; welfare schemes.
               </p>
             </div>
 

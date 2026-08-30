@@ -120,7 +120,7 @@ export default function WorkerSkills() {
   function handleAddSkill() {
     if (!addForm.name) { setAddError('Please select a skill.'); return }
     const yrs = parseInt(addForm.years, 10)
-    if (isNaN(yrs) || yrs < 0) { setAddError('Enter valid years of experience.'); return }
+    if (isNaN(yrs) || yrs < 0 || yrs > 50) { setAddError('Enter valid years of experience (between 0 and 50 years).'); return }
     const level: DemoSkill['level'] = yrs >= 4 ? 'Skilled' : yrs >= 2 ? 'Semi-skilled' : 'Unskilled'
     setSkills((prev) => [
       ...prev,
@@ -241,14 +241,21 @@ export default function WorkerSkills() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Years of Experience</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Years of Experience (0–50 Yrs)</label>
               <input
                 type="number"
-                min="0"
+                min={0}
+                max={50}
+                maxLength={2}
                 value={addForm.years}
-                onChange={(e) => setAddForm((f) => ({ ...f, years: e.target.value }))}
-                placeholder="e.g. 3"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 2)
+                  const num = parseInt(cleaned, 10)
+                  if (!isNaN(num) && num > 50) return
+                  setAddForm((f) => ({ ...f, years: cleaned }))
+                }}
+                placeholder="e.g. 3 (Max 50 years)"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
