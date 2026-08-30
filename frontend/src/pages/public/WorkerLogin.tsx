@@ -313,43 +313,54 @@ export default function WorkerLogin() {
     navigate('/worker')
   }
 
-  // Sign In for Existing Users
+  // Sign In for Existing Users (Email Verification Only)
   async function handleSignInSendOTP(e: React.FormEvent) {
     e.preventDefault()
     setApiError('')
-    if (!signInInput.trim()) {
-      setApiError('Enter your registered email or phone number')
+    setSignInSuccessMsg('')
+    const email = signInInput.trim()
+    if (!email.includes('@')) {
+      setApiError('Enter a valid registered Gmail / Email address')
       return
     }
-    const isEmail = signInInput.includes('@')
-    const payload = isEmail ? { email: signInInput.trim() } : { mobile_number: signInInput.trim() }
+    setSignInSending(true)
     try {
-      await api.post('/auth/worker/send-otp', payload)
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email })
+      setSignInOtpToken(res.data.otp_token || '')
       setSignInOtpSent(true)
-    } catch {
-      setSignInOtpSent(true)
+      if (res.data.mock_otp) {
+        setSignInSuccessMsg(`🔑 Email OTP Code: ${res.data.mock_otp} (Simulated OTP - Enter code below to verify)`)
+        setSignInOtpInput(res.data.mock_otp)
+      } else {
+        setSignInSuccessMsg(`📩 Verification OTP code sent to ${email}. Check your email inbox.`)
+      }
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.detail || err?.message || 'Could not send Email OTP'
+      setApiError(`OTP Error: ${errMsg}`)
+    } finally {
+      setSignInSending(false)
     }
   }
 
   async function handleSignInVerifyOTP(e: React.FormEvent) {
     e.preventDefault()
     setApiError('')
-    if (!signInOtpInput.trim()) {
-      setApiError('❌ Enter the 6-digit OTP code')
+    const email = signInInput.trim()
+    const otp = signInOtpInput.trim()
+    if (!otp) {
+      setApiError('❌ Please enter the 6-digit OTP code sent to your email')
       return
     }
-    const isEmail = signInInput.includes('@')
-    const digits = signInInput.replace(/\D/g, '')
 
     try {
-      const payload = isEmail
-        ? { email: signInInput.trim(), otp: signInOtpInput.trim(), otp_token: signInOtpToken }
-        : { mobile_number: digits, otp: signInOtpInput.trim(), otp_token: signInOtpToken }
-
-      const res = await api.post('/auth/worker/verify-otp', payload)
+      const res = await api.post('/auth/worker/verify-otp', {
+        email,
+        otp,
+        otp_token: signInOtpToken,
+      })
       if (res.data.access_token) {
         setAuth(
-          { id: res.data.user_id || 'worker-signin-123', role: 'worker', email: isEmail ? signInInput : '', mobile_number: !isEmail ? signInInput : '' },
+          { id: res.data.user_id || 'worker-signin-123', role: 'worker', email, mobile_number: regForm.mobileNumber || '' },
           res.data.access_token,
           res.data.refresh_token
         )
@@ -357,7 +368,7 @@ export default function WorkerLogin() {
       }
     } catch (err: any) {
       const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
-      setApiError(`❌ Wrong OTP Entered! ${errMsg}. Please enter the correct 6-digit OTP code.`)
+      setApiError(`❌ Wrong OTP Entered! ${errMsg}. Please enter the correct 6-digit OTP code sent to your email.`)
     }
   }
 
@@ -765,45 +776,57 @@ export default function WorkerLogin() {
         )}
 
         {/* ========================================================= */}
-        {/* VIEW 2: SIGN IN FOR EXISTING USERS                        */}
+        {/* VIEW 2: SIGN IN FOR EXISTING USERS (EMAIL OTP ONLY)       */}
         {/* ========================================================= */}
         {authTab === 'signin' && (
           <div className="space-y-4 text-left">
             <div className="text-center mb-2">
-              <h2 className="text-xl font-extrabold text-slate-900">Sign In to Worker Account</h2>
+              <h2 className="text-xl font-extrabold text-slate-900">Sign In via Email Verification</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Enter your registered Email Address or Phone Number.
+                Enter your registered Email Address to receive your 6-digit OTP verification code.
               </p>
             </div>
+
+            {signInSuccessMsg && (
+              <p className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2 text-xs font-semibold text-emerald-800">
+                {signInSuccessMsg}
+              </p>
+            )}
 
             {!signInOtpSent ? (
               <form onSubmit={handleSignInSendOTP} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Registered Email or Mobile Number</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <Mail className="h-4 w-4 text-teal-600" />
+                    Registered Email Address *
+                  </label>
                   <input
-                    type="text"
+                    type="email"
                     required
-                    placeholder="Enter registered Email or Mobile Number"
+                    placeholder="Enter your registered Gmail / Email address"
                     value={signInInput}
                     onChange={(e) => setSignInInput(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600"
+                    className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 text-sm transition-all shadow-md"
+                  disabled={signInSending}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-3.5 text-sm transition-all shadow-md shadow-teal-900/20 disabled:opacity-60"
                 >
-                  Send OTP Code →
+                  {signInSending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Send Email OTP Code →
                 </button>
               </form>
             ) : (
               <form onSubmit={handleSignInVerifyOTP} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Enter 6-Digit OTP</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Enter 6-Digit Email OTP</label>
                   <input
                     type="text"
                     maxLength={6}
+                    required
                     placeholder="• • • • • •"
                     value={signInOtpInput}
                     onChange={(e) => setSignInOtpInput(e.target.value)}
@@ -815,30 +838,10 @@ export default function WorkerLogin() {
                   type="submit"
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 text-sm transition-all shadow-md"
                 >
-                  Verify Code &amp; Sign In →
+                  Verify Email Code &amp; Sign In →
                 </button>
               </form>
             )}
-
-            <div className="pt-3 border-t border-slate-200 mt-4 space-y-2">
-              <p className="text-[11px] font-bold text-slate-400 uppercase text-center tracking-wider">
-                Instant Access Option
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setAuth(
-                    { id: 'worker-demo-1234', role: 'worker', email: regForm.email || 'user@example.com', mobile_number: regForm.mobileNumber || '9876543210' },
-                    'demo-access-token',
-                    'demo-refresh-token'
-                  )
-                  navigate('/worker')
-                }}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-800 font-bold py-3 text-xs transition-all shadow-2xs"
-              >
-                ⚡ 1-Click Direct Sign In
-              </button>
-            </div>
           </div>
         )}
       </div>
