@@ -17,6 +17,18 @@
 
 ---
 
+## 📖 About Migrant Saathi AI
+
+**Migrant Saathi AI** is a next-generation **Social Governance & Digital Welfare Platform** designed to solve systemic challenges faced by unorganized interstate migrant workers in India. By leveraging **IBM watsonx.ai** and **IBM Granite AI models**, the platform unifies worker verification, skill certification, wage discrepancy detection, welfare scheme matching, and safety grievance management into an accessible, multi-lingual portal.
+
+### 🎯 Key Objectives:
+- **Zero-Barrier Inclusion**: Multi-lingual assistance (Hindi, Gujarati, English) via Email OTP verification.
+- **Fair Wage Protection**: Real-time cross-referencing of reported worker earnings against official Gujarat government reference minimum wages.
+- **Automated Scheme Eligibility**: Direct AI matching for major labor funds including BOCW, PM-SYM, Aam Aadmi Bima Yojana, and NFSA ration portability.
+- **Government Intelligence & Oversight**: Live district heatmaps, complaint triage, and Labour Inspector site audit dispatch workflows.
+
+---
+
 ## 📌 Executive Summary
 
 **Migrant Saathi AI** is an AI-powered social governance platform designed to protect and empower over **6 million+ interstate migrant workers in Gujarat**. The platform bridges the critical gap between vulnerable unorganized labor, government welfare schemes, minimum wage compliance, workplace safety reporting, and state-level policy decision-making.
