@@ -13,10 +13,10 @@ import {
   ShieldCheck,
   AlertTriangle,
 } from 'lucide-react'
+import LanguageSelector from '@/components/LanguageSelector'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 
-// ── Types ────────────────────────────────────────────────────────────────────
 interface TokenResponse {
   access_token: string
   refresh_token: string
@@ -26,7 +26,6 @@ interface TokenResponse {
   email?: string
 }
 
-// ── Validation ───────────────────────────────────────────────────────────────
 const schema = z.object({
   email: z
     .string()
@@ -40,7 +39,6 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-// ── Component ────────────────────────────────────────────────────────────────
 export default function OfficialLogin() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
@@ -73,7 +71,7 @@ export default function OfficialLogin() {
       } else {
         navigate('/gov')
       }
-    } catch (err: unknown) {
+    } catch {
       if (
         values.email.includes('official') ||
         values.email.includes('inspector') ||
@@ -94,258 +92,164 @@ export default function OfficialLogin() {
         navigate(fallbackRole === 'admin' ? '/admin' : '/gov')
         return
       }
-      const msg =
-        (err as { response?: { data?: { detail?: string } } }).response?.data?.detail ??
-        'Invalid credentials. Please try again.'
-      setApiError(msg)
+      setApiError('Invalid credentials. Try Demo credentials or enter correct email.')
     }
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* ── Left panel (desktop only) ── */}
-      <div className="hidden lg:flex lg:w-5/12 xl:w-[42%] flex-col justify-between bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 px-12 py-14 text-white">
-        {/* Top branding */}
-        <div>
+      <div className="hidden lg:flex lg:w-5/12 xl:w-[42%] flex-col justify-between bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 px-12 py-14 text-white relative overflow-hidden border-r border-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+
+        <div className="relative z-10">
           <div className="flex items-center gap-3 mb-16">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15">
-              <Shield className="h-5 w-5 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300">
+              <Shield className="h-6 w-6" />
             </div>
-            <span className="font-bold text-lg tracking-wide">Migrant Saathi AI</span>
+            <div>
+              <span className="font-extrabold text-xl tracking-tight text-white block">Migrant Saathi AI</span>
+              <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">Official Administration Portal</span>
+            </div>
           </div>
 
-          <h2 className="text-3xl font-extrabold leading-snug mb-4">
+          <h2 className="text-3xl font-extrabold leading-snug mb-4 text-white">
             Secure Government Portal
           </h2>
-          <p className="text-indigo-200 text-sm leading-relaxed mb-10">
-            Authorised access for government officials, labour inspectors,
-            and system administrators to monitor, manage, and act on
-            migrant worker welfare.
+          <p className="text-slate-300 text-sm leading-relaxed mb-10">
+            Authorised portal for Labour Officers, District Inspectors, and System Administrators to monitor corridor analytics and enforce fair labour standards.
           </p>
 
-          {/* Feature list */}
           <ul className="space-y-4">
             {[
-              'Real-time worker registry & compliance dashboard',
-              'AI-powered grievance analysis and routing',
-              'Wage theft detection and enforcement tools',
-              'Secure, role-based access control',
+              'Real-time worker registry & district compliance map',
+              'AI-powered grievance routing & automated inspector dispatch',
+              'Wage theft detection & reference rate enforcement tools',
+              'Encrypted, role-based audit logging',
             ].map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-indigo-100">
-                <ShieldCheck className="h-4 w-4 text-indigo-300 mt-0.5 shrink-0" />
+              <li key={item} className="flex items-start gap-3 text-sm text-slate-200">
+                <ShieldCheck className="h-4.5 w-4.5 text-indigo-400 mt-0.5 shrink-0" />
                 {item}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Bottom security notice */}
-        <div className="rounded-xl border border-white/15 bg-white/10 px-5 py-4">
+        <div className="relative z-10 rounded-2xl border border-indigo-500/30 bg-indigo-950/60 p-4 backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-1">
-            <Lock className="h-3.5 w-3.5 text-indigo-300" />
-            <span className="text-xs font-semibold text-indigo-200 uppercase tracking-wide">
-              Security Notice
+            <Lock className="h-4 w-4 text-indigo-400" />
+            <span className="text-xs font-bold text-indigo-300 uppercase tracking-wide">
+              Official Security Notice
             </span>
           </div>
-          <p className="text-xs text-indigo-300 leading-relaxed">
-            This portal is for authorised government officials only. All access
-            is logged, monitored, and subject to the Information Technology
-            Act, 2000.
+          <p className="text-xs text-slate-300 leading-relaxed">
+            This system is for authorized Gujarat Labour Department personnel only. Unauthorized access is prohibited and subject to legal monitoring.
           </p>
         </div>
       </div>
 
       {/* ── Right panel — login form ── */}
-      <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-12 sm:px-10">
-        {/* Back arrow */}
-        <div className="w-full max-w-sm mb-6">
+      <div className="flex flex-1 flex-col items-center justify-between p-6 sm:p-10 relative">
+        {/* Top Header Row with Back Button & Language/Theme Selector */}
+        <div className="flex items-center justify-between gap-4 w-full max-w-md">
           <button
             onClick={() => navigate('/select-role')}
-            className="inline-flex items-center gap-1.5 text-sm text-indigo-700 hover:text-indigo-900 font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-xs"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            Back to Select Role
           </button>
+
+          <LanguageSelector />
         </div>
 
-        <div className="w-full max-w-sm">
-          {/* Header */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 shadow-md mb-3">
-              <Lock className="h-7 w-7 text-white" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-2 text-center">
-              Government Portal
-            </h1>
-            {/* Amber warning badge */}
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-semibold text-amber-800">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Authorized Personnel Only
-            </span>
-          </div>
-
-          {/* Error alert */}
-          {apiError && (
-            <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-              <span>{apiError}</span>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-            {/* Email / Employee ID */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-semibold text-gray-700 mb-1.5"
-              >
-                Official Email / Employee ID
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="username"
-                placeholder="official@gujarat.gov.in"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                {...register('email')}
-              />
-              {errors.email && (
-                <p className="mt-1.5 text-xs text-red-600">{errors.email.message}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label
-                  htmlFor="password"
-                  className="text-sm font-semibold text-gray-700"
-                >
-                  Password
-                </label>
-                <button
-                  type="button"
-                  className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
-                >
-                  Forgot Password?
-                </button>
+        <div className="w-full max-w-md my-auto py-6">
+          <div className="w-full rounded-3xl bg-white dark:bg-slate-900 p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl transition-colors">
+            {/* Header */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 shadow-md shadow-indigo-900/30 mb-3">
+                <Lock className="h-7 w-7 text-white" />
               </div>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-11 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4.5 w-4.5" />
-                  ) : (
-                    <Eye className="h-4.5 w-4.5" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>
-              )}
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3.5 text-base transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm mt-2"
-            >
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-              Login to Dashboard →
-            </button>
-          </form>
-
-          {/* Quick Demo Login Shortcuts */}
-          <div className="mt-6 rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm">⚡</span>
-                <span className="text-xs font-bold text-indigo-900 uppercase tracking-wide">
-                  Quick Demo Login (1-Click)
-                </span>
-              </div>
-              <span className="text-[10px] text-indigo-600 font-semibold bg-indigo-100 px-2 py-0.5 rounded-full">
-                Pre-configured
+              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white text-center">
+                Government Login
+              </h1>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900 px-3 py-1 text-xs font-bold text-amber-800 dark:text-amber-300 mt-2">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Authorized Personnel Only
               </span>
             </div>
-            <div className="grid grid-cols-1 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setAuth(
-                    { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
-                    'demo-access-token',
-                    'demo-refresh-token'
-                  )
-                  navigate('/gov')
-                }}
-                className="flex items-center justify-between rounded-lg bg-white border border-indigo-200 px-3 py-2 text-xs hover:bg-indigo-600 hover:text-white transition-all text-left shadow-sm group"
-              >
-                <div>
-                  <span className="font-bold block text-slate-800 group-hover:text-white">🏛️ Government Official</span>
-                  <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 font-mono">official@gujarat.gov.in</span>
+
+            {/* Error alert */}
+            {apiError && (
+              <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 px-4 py-3 text-xs font-bold text-red-800 dark:text-red-300">
+                <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <span>{apiError}</span>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Official Email / Employee ID
+                </label>
+                <input
+                  type="email"
+                  placeholder="official@gujarat.gov.in"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  {...register('email')}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-[11px] font-semibold text-red-600 dark:text-red-400">{errors.email.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 pr-10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    {...register('password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
-                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Open Dashboard →</span>
-              </button>
+                {errors.password && (
+                  <p className="mt-1 text-[11px] font-semibold text-red-600 dark:text-red-400">{errors.password.message}</p>
+                )}
+              </div>
+
+              {/* Demo Credentials Hint Box */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs space-y-1">
+                <p className="font-bold text-slate-700 dark:text-slate-300">💡 Demo Access Credentials:</p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">Email: <code className="font-bold text-indigo-600 dark:text-indigo-400">official@gujarat.gov.in</code></p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">Password: <code className="font-bold text-indigo-600 dark:text-indigo-400">Demo@1234</code></p>
+              </div>
 
               <button
-                type="button"
-                onClick={() => {
-                  setAuth(
-                    { id: 'demo-inspector-id', role: 'inspector', email: 'inspector@gujarat.gov.in' },
-                    'demo-access-token',
-                    'demo-refresh-token'
-                  )
-                  navigate('/gov')
-                }}
-                className="flex items-center justify-between rounded-lg bg-white border border-indigo-200 px-3 py-2 text-xs hover:bg-indigo-600 hover:text-white transition-all text-left shadow-sm group"
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 text-xs sm:text-sm transition-all shadow-md shadow-indigo-900/20 disabled:opacity-60"
               >
-                <div>
-                  <span className="font-bold block text-slate-800 group-hover:text-white">🔍 Labour Inspector</span>
-                  <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 font-mono">inspector@gujarat.gov.in</span>
-                </div>
-                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Open Dashboard →</span>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Sign In to Government Portal →
               </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setAuth(
-                    { id: 'demo-admin-id', role: 'admin', email: 'admin@saathi.ai' },
-                    'demo-access-token',
-                    'demo-refresh-token'
-                  )
-                  navigate('/admin')
-                }}
-                className="flex items-center justify-between rounded-lg bg-white border border-indigo-200 px-3 py-2 text-xs hover:bg-indigo-600 hover:text-white transition-all text-left shadow-sm group"
-              >
-                <div>
-                  <span className="font-bold block text-slate-800 group-hover:text-white">⚙️ System Administrator</span>
-                  <span className="text-[10px] text-slate-500 group-hover:text-indigo-100 font-mono">admin@saathi.ai</span>
-                </div>
-                <span className="text-xs font-semibold text-indigo-600 group-hover:text-white">Open Dashboard →</span>
-              </button>
-            </div>
+            </form>
           </div>
+        </div>
 
-          {/* Security notice */}
-          <p className="mt-5 text-center text-xs text-gray-400 leading-relaxed">
-            🔒 This portal is for authorized government officials only.
-            All access is logged and monitored.
+        <div className="text-center">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            Internal Enforcement Console · Gujarat Labour Department
           </p>
         </div>
       </div>

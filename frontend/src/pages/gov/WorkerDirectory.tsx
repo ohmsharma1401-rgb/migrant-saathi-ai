@@ -138,34 +138,34 @@ export default function WorkerDirectory() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 space-y-6">
+    <div className="space-y-6 text-slate-900 dark:text-slate-100">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-teal-100 text-teal-700">
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-400">
               <Users className="h-6 w-6" />
             </div>
             Worker Directory
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Search, filter, and manage registered migrant workers across Gujarat corridors.
           </p>
         </div>
         <button
           onClick={handleExportCSV}
-          className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all"
+          className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all"
         >
-          <Download className="h-4 w-4 text-teal-600" />
+          <Download className="h-4 w-4 text-teal-600 dark:text-teal-400" />
           Export Directory (CSV)
         </button>
       </div>
 
       {/* Search + Filter Bar */}
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 sm:p-5">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 sm:p-5 transition-colors">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[220px] flex flex-col gap-1">
-            <label className="text-xs font-bold text-slate-700">Search Query</label>
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Search Query</label>
             <div className="relative">
               <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
               <input
@@ -174,7 +174,7 @@ export default function WorkerDirectory() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilter() }}
-                className="w-full border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
+                className="w-full border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
               />
             </div>
           </div>

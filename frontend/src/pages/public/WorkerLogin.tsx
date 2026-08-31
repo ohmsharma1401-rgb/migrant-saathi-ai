@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2, Building2, MapPin, Briefcase } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
+import LanguageSelector from '@/components/LanguageSelector'
 
 interface SendOTPResponse {
   message: string
@@ -303,35 +304,35 @@ export default function WorkerLogin() {
       const errMsg = err?.response?.data?.detail || err?.message || 'Invalid or expired OTP code'
       setApiError(`❌ Wrong OTP Entered! ${errMsg}. Please enter the correct 6-digit OTP code sent to your email.`)
     }
-  }
-
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 px-4 py-10 text-slate-800">
-      {/* Back arrow */}
-      <div className="w-full max-w-xl mb-4">
+  }  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-8 text-slate-800 dark:text-slate-200 transition-colors">
+      {/* Top Header Row with Back Button and Language/Theme Selector */}
+      <div className="w-full max-w-xl mb-4 flex items-center justify-between gap-3">
         <button
           onClick={() => navigate('/select-role')}
-          className="inline-flex items-center gap-1.5 text-sm text-teal-300 hover:text-white font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-xs"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Portal Selection
         </button>
+
+        <LanguageSelector />
       </div>
 
       {/* Main Card */}
-      <div className="w-full max-w-xl rounded-3xl bg-white shadow-2xl border border-slate-100 px-8 py-9">
+      <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 px-6 sm:px-8 py-8 transition-colors">
         {/* App Icon + Header */}
         <div className="flex flex-col items-center mb-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 shadow-lg shadow-teal-900/30 mb-3">
-            <Shield className="h-9 w-9 text-white" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-600 shadow-lg shadow-teal-900/30 mb-3">
+            <Shield className="h-8 w-8 text-white" />
           </div>
-          <span className="text-xs font-bold tracking-widest text-teal-700 uppercase">
+          <span className="text-xs font-extrabold tracking-wider text-teal-600 dark:text-teal-400 uppercase">
             Migrant Saathi AI · Worker Portal
           </span>
         </div>
 
         {/* Tab Navigation: Sign Up First -> Then Sign In */}
-        <div className="flex rounded-2xl bg-slate-100 p-1 mb-6 border border-slate-200">
+        <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-800 p-1 mb-6 border border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => { setAuthTab('signup'); setApiError('') }}

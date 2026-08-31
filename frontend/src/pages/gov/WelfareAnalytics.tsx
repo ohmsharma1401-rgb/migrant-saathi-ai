@@ -48,11 +48,11 @@ export default function WelfareAnalytics() {
     <div className="space-y-6">
       {/* ── Header ──────────────────────────────────────────── */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <BarChart2 className="h-5 w-5 text-indigo-600" />
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <BarChart2 className="h-5 w-5 text-teal-600 dark:text-teal-400" />
           Welfare Analytics
         </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
           Scheme eligibility and coverage overview across the registered workforce
         </p>
       </div>

@@ -47,14 +47,14 @@ export default function WageMonitoring() {
   const discrepCount  = 311
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+    <div className="space-y-6 text-slate-900 dark:text-slate-100">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <TrendingDown className="h-6 w-6 text-indigo-600" />
+        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+          <TrendingDown className="h-6 w-6 text-teal-600 dark:text-teal-400" />
           Wage Monitoring
         </h1>
-        <p className="text-sm text-gray-500 mt-1">Review reported wages against reference levels to identify cases that may require investigation</p>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Review reported wages against reference levels to identify cases that may require investigation</p>
       </div>
 
       {/* Summary Cards */}

@@ -208,14 +208,14 @@ export default function ReferenceWages() {
       {/* ── Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-teal-600" /> Reference Minimum Wages
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" /> Reference Minimum Wages
           </h1>
-          <p className="text-sm text-slate-500">Minimum wage reference data by state, sector, and skill level</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Minimum wage reference data by state, sector, and skill level</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleSyncGovt} disabled={isSyncing}>
-            {isSyncing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4 text-teal-600" />}
+          <Button variant="outline" size="sm" onClick={handleSyncGovt} disabled={isSyncing} className="dark:border-slate-700 dark:text-slate-300">
+            {isSyncing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4 text-teal-600 dark:text-teal-400" />}
             Sync from Govt
           </Button>
           <Button size="sm" onClick={handleOpenAdd} className="bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-xs">
@@ -225,17 +225,17 @@ export default function ReferenceWages() {
       </div>
 
       {syncMsg && (
-        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-semibold text-emerald-800">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900 px-4 py-2.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>{syncMsg}</span>
         </div>
       )}
 
       {/* ── Wages Table ─────────────────────────────────────── */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-xs">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-slate-50 text-xs text-slate-500 font-bold">
+            <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-500 dark:text-slate-400 font-bold">
               <th className="px-4 py-3 text-left">State / District</th>
               <th className="px-4 py-3 text-left">Sector / Occupation</th>
               <th className="px-4 py-3 text-left">Skill Level</th>

@@ -420,18 +420,18 @@ export default function SchemeManagement() {
       {/* ── Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Heart className="h-5 w-5 text-rose-500" />
             Welfare Scheme Management
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage welfare schemes and eligibility criteria</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage welfare schemes and eligibility criteria</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="dark:border-slate-700 dark:text-slate-300">
             <Upload className="mr-1.5 h-4 w-4" />
             Import from CSV
           </Button>
-          <Button size="sm" onClick={() => setShowAdd(true)}>
+          <Button size="sm" onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
             <Plus className="mr-1.5 h-4 w-4" />
             Add New Scheme
           </Button>
