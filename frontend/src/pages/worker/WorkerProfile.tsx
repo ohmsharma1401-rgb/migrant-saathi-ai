@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/authStore'
+import { useTranslation } from '@/utils/translations'
 import api from '@/services/api'
 
 // ─── Static lists ─────────────────────────────────────────────────────────────
@@ -29,7 +30,6 @@ const GUJARAT_DISTRICTS = [
 
 const SECTORS = ['Construction','Textiles','Diamond','Manufacturing','Agriculture','Domestic','Other']
 
-// ─── Demo defaults (Ramesh Kumar) ─────────────────────────────────────────────
 const DEFAULT_FORM = {
   fullName: 'Ramesh Kumar',
   dateOfBirth: '1990-06-15',
@@ -45,7 +45,6 @@ const DEFAULT_FORM = {
   language: 'en' as 'en' | 'hi' | 'gu',
 }
 
-// ─── Completion logic ─────────────────────────────────────────────────────────
 const SECTIONS = [
   { label: 'Personal Information', fields: ['fullName', 'dateOfBirth', 'gender'] },
   { label: 'Location Information', fields: ['originState', 'currentDistrict', 'currentCity'] },
@@ -65,24 +64,22 @@ function calcCompletion(form: typeof DEFAULT_FORM): { pct: number; complete: boo
   return { pct, complete }
 }
 
-// ─── Toast helper ─────────────────────────────────────────────────────────────
-function Toast({ show }: { show: boolean }) {
+function Toast({ show, message }: { show: boolean; message: string }) {
   if (!show) return null
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl bg-green-700 px-5 py-3 text-white text-sm font-medium shadow-lg">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-white text-sm font-medium shadow-lg">
       <CheckCircle className="h-4 w-4" />
-      Profile saved successfully!
+      {message}
     </div>
   )
 }
 
-// ─── Reusable field wrapper ────────────────────────────────────────────────────
 function FieldRow({ label, children, optional }: { label: string; children: React.ReactNode; optional?: boolean }) {
   return (
     <div>
-      <Label className="text-xs font-medium text-gray-700 mb-1 flex gap-1">
+      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex gap-1">
         {label}
-        {optional && <span className="text-gray-400 font-normal">(optional)</span>}
+        {optional && <span className="text-slate-400 font-normal">(optional)</span>}
       </Label>
       {children}
     </div>
@@ -90,6 +87,7 @@ function FieldRow({ label, children, optional }: { label: string; children: Reac
 }
 
 export default function WorkerProfile() {
+  const { t } = useTranslation()
   const { user } = useAuthStore()
   const [form, setForm] = useState(DEFAULT_FORM)
   const [saving, setSaving] = useState(false)
@@ -135,7 +133,7 @@ export default function WorkerProfile() {
         preferred_language: form.language,
       })
     } catch {
-      // Local fallback for demo mode
+      // Local fallback
     } finally {
       setSaving(false)
       setToastVisible(true)
@@ -144,33 +142,33 @@ export default function WorkerProfile() {
   }
 
   const selectCls =
-    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+    'flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500'
 
   return (
-    <div className="space-y-5 px-4 py-5 pb-10">
+    <div className="space-y-5 px-2 sm:px-4 py-4 pb-10">
       {/* ── Header ──────────────────────────────────────────── */}
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
-          <User className="h-5 w-5 text-blue-600" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-950/80">
+          <User className="h-5 w-5 text-teal-600 dark:text-teal-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-sm text-gray-500">
-            Keep your profile updated to get better welfare scheme matches
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('profile_title')}</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            {t('profile_subtitle')}
           </p>
         </div>
       </div>
 
       {/* ── Completion indicator ────────────────────────────── */}
-      <Card>
+      <Card className="dark:bg-slate-900 dark:border-slate-800">
         <CardContent className="pt-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-800">Profile Completion</span>
-            <span className="text-sm font-bold text-blue-600">{pct}%</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">{t('profile_verification')}</span>
+            <span className="text-xs sm:text-sm font-bold text-teal-600 dark:text-teal-400">{pct}%</span>
           </div>
-          <div className="h-2.5 w-full rounded-full bg-gray-200 overflow-hidden mb-3">
+          <div className="h-2.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden mb-3">
             <div
-              className="h-full rounded-full bg-blue-500 transition-all duration-500"
+              className="h-full rounded-full bg-teal-600 dark:bg-teal-500 transition-all duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -178,11 +176,11 @@ export default function WorkerProfile() {
             {SECTIONS.map(({ label }, i) => (
               <div key={label} className="flex items-center gap-1.5 text-xs">
                 {complete[i] ? (
-                  <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                 ) : (
                   <AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                 )}
-                <span className={complete[i] ? 'text-gray-600' : 'text-amber-700'}>{label}</span>
+                <span className={complete[i] ? 'text-slate-600 dark:text-slate-400' : 'text-amber-600 dark:text-amber-400'}>{label}</span>
               </div>
             ))}
           </div>
@@ -190,15 +188,16 @@ export default function WorkerProfile() {
       </Card>
 
       {/* ── Section 1: Personal Information ─────────────────── */}
-      <Card>
+      <Card className="dark:bg-slate-900 dark:border-slate-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-800">1. Personal Information</CardTitle>
+          <CardTitle className="text-sm font-bold text-slate-800 dark:text-slate-200">1. {t('personal_info')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FieldRow label="Full Name">
+          <FieldRow label={t('full_name')}>
             <Input
               value={form.fullName}
               onChange={(e) => set('fullName', e.target.value)}
+              className="dark:bg-slate-900 dark:border-slate-700"
               placeholder="e.g. Ramesh Kumar"
             />
           </FieldRow>
@@ -207,19 +206,20 @@ export default function WorkerProfile() {
               type="date"
               value={form.dateOfBirth}
               onChange={(e) => set('dateOfBirth', e.target.value)}
+              className="dark:bg-slate-900 dark:border-slate-700"
             />
           </FieldRow>
           <FieldRow label="Gender">
             <div className="flex gap-4 mt-1">
               {(['male', 'female', 'other'] as const).map((g) => (
-                <label key={g} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 capitalize">
+                <label key={g} className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300 capitalize">
                   <input
                     type="radio"
                     name="gender"
                     value={g}
                     checked={form.gender === g}
                     onChange={() => set('gender', g)}
-                    className="h-4 w-4 accent-blue-600"
+                    className="h-4 w-4 accent-teal-600"
                   />
                   {g.charAt(0).toUpperCase() + g.slice(1)}
                 </label>
@@ -230,12 +230,12 @@ export default function WorkerProfile() {
       </Card>
 
       {/* ── Section 2: Location Information ─────────────────── */}
-      <Card>
+      <Card className="dark:bg-slate-900 dark:border-slate-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-800">2. Location Information</CardTitle>
+          <CardTitle className="text-sm font-bold text-slate-800 dark:text-slate-200">2. Location Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FieldRow label="Origin State">
+          <FieldRow label={t('home_state')}>
             <select
               className={selectCls}
               value={form.originState}
@@ -245,7 +245,7 @@ export default function WorkerProfile() {
               {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </FieldRow>
-          <FieldRow label="Current District">
+          <FieldRow label={t('current_district')}>
             <select
               className={selectCls}
               value={form.currentDistrict}
@@ -259,6 +259,7 @@ export default function WorkerProfile() {
             <Input
               value={form.currentCity}
               onChange={(e) => set('currentCity', e.target.value)}
+              className="dark:bg-slate-900 dark:border-slate-700"
               placeholder="e.g. Ahmedabad"
             />
           </FieldRow>
@@ -266,15 +267,16 @@ export default function WorkerProfile() {
       </Card>
 
       {/* ── Section 3: Work Information ──────────────────────── */}
-      <Card>
+      <Card className="dark:bg-slate-900 dark:border-slate-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-800">3. Work Information</CardTitle>
+          <CardTitle className="text-sm font-bold text-slate-800 dark:text-slate-200">3. Work Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FieldRow label="Primary Occupation">
+          <FieldRow label={t('occupation_label')}>
             <Input
               value={form.occupation}
               onChange={(e) => set('occupation', e.target.value)}
+              className="dark:bg-slate-900 dark:border-slate-700"
               placeholder="e.g. Mason, Weaver"
             />
           </FieldRow>
@@ -291,6 +293,7 @@ export default function WorkerProfile() {
             <Input
               value={form.employer}
               onChange={(e) => set('employer', e.target.value)}
+              className="dark:bg-slate-900 dark:border-slate-700"
               placeholder="e.g. Shree Construction Ltd."
             />
           </FieldRow>
@@ -301,54 +304,28 @@ export default function WorkerProfile() {
               max={50}
               value={form.yearsExp}
               onChange={(e) => set('yearsExp', parseInt(e.target.value, 10) || 0)}
+              className="dark:bg-slate-900 dark:border-slate-700"
             />
           </FieldRow>
         </CardContent>
       </Card>
 
       {/* ── Section 4: Contact & Identity ────────────────────── */}
-      <Card>
+      <Card className="dark:bg-slate-900 dark:border-slate-800">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-800">4. Contact &amp; Identity</CardTitle>
+          <CardTitle className="text-sm font-bold text-slate-800 dark:text-slate-200">4. Contact &amp; Identity</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FieldRow label="Aadhaar Last 4 Digits" optional>
+          <FieldRow label={t('aadhaar_number')} optional>
             <Input
               maxLength={4}
               pattern="\d{4}"
               value={form.aadhaarLast4}
               onChange={(e) => set('aadhaarLast4', e.target.value.replace(/\D/g, '').slice(0, 4))}
+              className="dark:bg-slate-900 dark:border-slate-700"
               placeholder="e.g. 4321"
             />
           </FieldRow>
-        </CardContent>
-      </Card>
-
-      {/* ── Section 5: Language Preference ───────────────────── */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-gray-800">5. Language Preference</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            {([
-              { code: 'en', label: 'English' },
-              { code: 'hi', label: 'हिन्दी' },
-              { code: 'gu', label: 'ગુજરાતી' },
-            ] as const).map(({ code, label }) => (
-              <label key={code} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                <input
-                  type="radio"
-                  name="language"
-                  value={code}
-                  checked={form.language === code}
-                  onChange={() => set('language', code)}
-                  className="h-4 w-4 accent-blue-600"
-                />
-                {label}
-              </label>
-            ))}
-          </div>
         </CardContent>
       </Card>
 
@@ -356,16 +333,17 @@ export default function WorkerProfile() {
       <div className="flex items-center justify-between gap-4">
         <Link
           to="/worker/skills"
-          className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline"
+          className="flex items-center gap-1 text-sm font-bold text-teal-600 dark:text-teal-400 hover:underline"
         >
-          Manage your skills <ChevronRight className="h-4 w-4" />
+          {t('skills_title')} <ChevronRight className="h-4 w-4" />
         </Link>
-        <Button onClick={handleSave} disabled={saving} className="min-w-36">
-          {saving ? 'Saving…' : 'Save Changes'}
+        <Button onClick={handleSave} disabled={saving} className="bg-teal-600 hover:bg-teal-700 text-white min-w-36">
+          {saving ? 'Saving…' : t('save_profile_btn')}
         </Button>
       </div>
 
-      <Toast show={toastVisible} />
+      <Toast show={toastVisible} message={t('profile_saved_toast')} />
     </div>
   )
 }
+

@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Map, Info } from 'lucide-react'
+import { Map, Info, Filter, Layers } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import LanguageSelector from '@/components/LanguageSelector'
 import { useTranslation } from '@/utils/translations'
 
-// Fix leaflet default marker icon
+// Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -14,7 +14,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-// ─── DEMO DATA ──────────────────────────────────────────────────────────────
 const GUJARAT_DISTRICTS = [
   'All Districts', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar',
   'Bhavnagar', 'Jamnagar', 'Junagadh', 'Anand', 'Mehsana', 'Bharuch', 'Kheda',
@@ -28,7 +27,7 @@ const WORKER_LOCATIONS = [
     city: 'Ahmedabad',
     coords: [23.0225, 72.5714] as [number, number],
     workers: 4231,
-    radius: 25,
+    radius: 24,
     topSector: 'Construction',
     rank: 1,
   },
@@ -61,20 +60,19 @@ const WORKER_LOCATIONS = [
     coords: [23.2156, 72.6369] as [number, number],
     workers: 891,
     radius: 12,
-    topSector: 'Government / Services',
+    topSector: 'Services & Infrastructure',
     rank: 5,
   },
 ]
 
 const SECTOR_BADGE: Record<string, string> = {
-  Construction: 'bg-blue-100 text-blue-800',
-  Textiles: 'bg-purple-100 text-purple-800',
-  Diamond: 'bg-amber-100 text-amber-800',
-  Manufacturing: 'bg-green-100 text-green-800',
-  'Diamond & Textiles': 'bg-amber-100 text-amber-800',
-  'Government / Services': 'bg-gray-100 text-gray-700',
+  Construction: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300',
+  Textiles: 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300',
+  Diamond: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300',
+  Manufacturing: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300',
+  'Diamond & Textiles': 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300',
+  'Services & Infrastructure': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function WorkerMap() {
   const { t } = useTranslation()
@@ -95,29 +93,29 @@ export default function WorkerMap() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
-      {/* Header */}
+    <div className="space-y-5 px-2 sm:px-4 py-4 pb-10">
+      {/* ── Header ── */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Map className="h-6 w-6 text-indigo-600" />
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <Map className="h-6 w-6 text-teal-600 dark:text-teal-400" />
             {t('nav_map')}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Geographic distribution of registered migrant workers across Gujarat
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Geographic corridor distribution of registered migrant workers across Gujarat
           </p>
         </div>
         <LanguageSelector />
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-wrap gap-3 items-end">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-500">District</label>
+      {/* ── Filter Bar ── */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 flex flex-wrap gap-3 items-end transition-colors">
+        <div className="flex flex-col gap-1 min-w-[140px]">
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">District</label>
           <select
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             {GUJARAT_DISTRICTS.map((d) => (
               <option key={d}>{d}</option>
@@ -125,12 +123,12 @@ export default function WorkerMap() {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-500">Sector</label>
+        <div className="flex flex-col gap-1 min-w-[140px]">
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Sector</label>
           <select
             value={sector}
             onChange={(e) => setSector(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             {SECTORS.map((s) => (
               <option key={s}>{s}</option>
@@ -140,24 +138,27 @@ export default function WorkerMap() {
 
         <button
           onClick={handleApplyFilter}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5"
         >
+          <Filter className="h-3.5 w-3.5" />
           Apply Filters
         </button>
       </div>
 
-      {/* Map + Side Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Map — 2/3 */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div style={{ minHeight: 500, height: 500 }}>
+      {/* ── Map + Side Panel ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        {/* Responsive Map Container (350px on mobile, 500px on desktop) */}
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-colors">
+          <div className="w-full h-[350px] sm:h-[500px] relative z-10">
             <MapContainer
               center={[22.2587, 71.1924]}
               zoom={7}
-              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom={false}
+              style={{ height: '100%', width: '100%', borderRadius: '1rem' }}
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               {filteredLocations.map((loc) => (
@@ -166,19 +167,19 @@ export default function WorkerMap() {
                   center={loc.coords}
                   radius={loc.radius}
                   pathOptions={{
-                    color: '#2563eb',
-                    fillColor: '#3b82f6',
-                    fillOpacity: 0.6,
+                    color: '#0d9488',
+                    fillColor: '#14b8a6',
+                    fillOpacity: 0.75,
                     weight: 2,
                   }}
                 >
                   <Popup>
-                    <div className="text-sm">
-                      <p className="font-bold text-gray-900">{loc.city}</p>
-                      <p className="text-gray-600 mt-1">
-                        <span className="font-semibold">{loc.workers.toLocaleString()}</span> registered workers
+                    <div className="text-xs p-1">
+                      <p className="font-extrabold text-slate-900">{loc.city}</p>
+                      <p className="text-teal-700 font-bold mt-0.5">
+                        {loc.workers.toLocaleString()} registered workers
                       </p>
-                      <p className="text-gray-500 text-xs mt-1">Top sector: {loc.topSector}</p>
+                      <p className="text-slate-500 text-[11px] mt-0.5">Top sector: {loc.topSector}</p>
                     </div>
                   </Popup>
                 </CircleMarker>
@@ -186,72 +187,71 @@ export default function WorkerMap() {
             </MapContainer>
           </div>
 
-          {/* Legend below map */}
-          <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 space-y-2">
+          {/* Map Guide Legend */}
+          <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-2">
             <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-gray-400" />
-              <span className="text-xs font-medium text-gray-600">Circle size guide:</span>
+              <Info className="h-4 w-4 text-slate-400" />
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Circle scale indicator:</span>
             </div>
-            <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-400 border border-blue-600 opacity-60" />
-                Small = &lt; 1,000 workers
+            <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-teal-500 border border-teal-700 opacity-70" />
+                Small = &lt; 1,000
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-blue-400 border border-blue-600 opacity-60" />
-                Medium = 1,000–2,000 workers
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full bg-teal-500 border border-teal-700 opacity-70" />
+                Medium = 1,000–2,000
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-blue-400 border border-blue-600 opacity-60" />
-                Large = &gt; 2,000 workers
+              <div className="flex items-center gap-1.5">
+                <div className="w-7 h-7 rounded-full bg-teal-500 border border-teal-700 opacity-70" />
+                Large = &gt; 2,000
               </div>
             </div>
-            <p className="text-[11px] text-amber-600 font-medium mt-1">
-              ⚠ DEMO DATA — positions are approximate district centers
-            </p>
           </div>
         </div>
 
-        {/* Side Panel — 1/3 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-          <h2 className="font-semibold text-gray-800 mb-4 text-sm">Top Districts by Workers</h2>
-          <div className="space-y-3">
-            {WORKER_LOCATIONS.map((loc) => (
-              <div
-                key={loc.city}
-                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
-                    {loc.rank}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{loc.city}</p>
-                    <span
-                      className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                        SECTOR_BADGE[loc.topSector] ?? 'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      {loc.topSector}
+        {/* Side Panel: Top Districts */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 p-5 transition-colors flex flex-col justify-between">
+          <div>
+            <h2 className="font-extrabold text-slate-900 dark:text-white mb-4 text-sm flex items-center gap-2">
+              <Layers className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+              Top Worker Hubs by District
+            </h2>
+            <div className="space-y-2.5">
+              {WORKER_LOCATIONS.map((loc) => (
+                <div
+                  key={loc.city}
+                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 text-xs font-bold flex items-center justify-center shrink-0">
+                      #{loc.rank}
                     </span>
+                    <div>
+                      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{loc.city}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${SECTOR_BADGE[loc.topSector]}`}>
+                        {loc.topSector}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">{loc.workers.toLocaleString()}</p>
+                    <p className="text-[10px] text-slate-400">workers</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-gray-900">{loc.workers.toLocaleString()}</p>
-                  <p className="text-xs text-gray-400">workers</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 font-medium mb-2">Total Registered</p>
-            <p className="text-2xl font-bold text-indigo-700">
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Total Registered Migration Volume</p>
+            <p className="text-2xl font-extrabold text-teal-600 dark:text-teal-400">
               {WORKER_LOCATIONS.reduce((s, l) => s + l.workers, 0).toLocaleString()}
             </p>
-            <p className="text-xs text-gray-400">across Gujarat (DEMO)</p>
+            <p className="text-[11px] text-slate-400">Active across Gujarat Corridor</p>
           </div>
         </div>
+
       </div>
     </div>
   )

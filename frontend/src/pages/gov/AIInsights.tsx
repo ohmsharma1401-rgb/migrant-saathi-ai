@@ -200,9 +200,9 @@ export default function AIInsights() {
             {t('nav_insights')}
           </h1>
           <div className="flex items-center gap-2 mt-1.5">
-            <span className="inline-flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full px-3 py-1 font-medium">
+            <span className="inline-flex items-center gap-1.5 text-xs bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-3 py-1 font-medium">
               <Sparkles className="h-3 w-3" />
-              Powered by IBM Granite · IBM watsonx.ai
+              Powered by Saathi AI Insights Engine
             </span>
           </div>
         </div>

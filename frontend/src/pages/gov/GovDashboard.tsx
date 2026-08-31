@@ -315,8 +315,8 @@ export default function GovDashboard() {
             <h2 className="font-semibold text-gray-800 flex items-center gap-2">
               🤖 AI Insights
             </h2>
-            <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full px-2.5 py-0.5 font-medium">
-              Powered by IBM Granite
+            <span className="text-xs bg-teal-50 text-teal-700 border border-teal-100 rounded-full px-2.5 py-0.5 font-medium">
+              Saathi AI Intelligence
             </span>
           </div>
           <p className="text-xs text-gray-400 mb-4">Auto-generated from labour data</p>

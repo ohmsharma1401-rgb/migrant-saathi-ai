@@ -41,12 +41,12 @@ export default function WorkerLayout() {
   ]
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
       {/* ─── Left Sidebar Navigation ─── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 dark:bg-slate-950 text-slate-100 flex flex-col justify-between transition-transform duration-300 ease-in-out md:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } shadow-xl md:shadow-none`}
+        } shadow-xl md:shadow-none border-r border-slate-800`}
       >
         <div>
           {/* Logo / Header */}
@@ -138,15 +138,15 @@ export default function WorkerLayout() {
       {/* ─── Main Content Area ─── */}
       <div className="flex flex-1 flex-col md:pl-64 min-h-screen">
         {/* Top Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 sm:px-6 shadow-xs">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 sm:px-6 shadow-xs transition-colors">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="md:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+              className="md:hidden rounded-lg p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <h2 className="text-sm font-bold text-slate-800 hidden sm:block">
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 hidden sm:block">
               Gujarat Migrant Worker Support Portal
             </h2>
           </div>
@@ -155,7 +155,7 @@ export default function WorkerLayout() {
             <LanguageSelector />
             <button
               onClick={handleLogout}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-700 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 transition-all"
             >
               <LogOut className="h-3.5 w-3.5" />
               {t('nav_logout')}
@@ -164,7 +164,7 @@ export default function WorkerLayout() {
         </header>
 
         {/* Page View */}
-        <main className="flex-1 p-4 sm:p-6 bg-slate-50/50">
+        <main className="flex-1 p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950/50">
           <Outlet />
         </main>
       </div>

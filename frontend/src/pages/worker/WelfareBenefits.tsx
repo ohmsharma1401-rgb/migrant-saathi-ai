@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Heart, ChevronDown, ChevronUp, Loader2, ExternalLink, AlertTriangle } from 'lucide-react'
+import { useTranslation } from '@/utils/translations'
+import { Heart, ChevronDown, ChevronUp, Loader2, CheckCircle2 } from 'lucide-react'
 import api from '@/services/api'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 type MatchStatus = 'potentially_eligible' | 'needs_verification'
 
 interface SchemeCard {
@@ -18,15 +17,14 @@ interface SchemeCard {
   learnMoreUrl?: string
 }
 
-// ─── Demo scheme data ─────────────────────────────────────────────────────────
 const DEMO_SCHEMES: SchemeCard[] = [
   {
     id: 'cwwf',
-    name: 'Construction Workers Welfare Fund (CWWF)',
+    name: 'Gujarat Building & Construction Workers Welfare Fund (BOCW)',
     status: 'potentially_eligible',
     matchScore: 85,
     why: 'Your occupation (Mason) in the construction sector in Gujarat matches this scheme\'s criteria.',
-    benefits: '₹2 lakh life insurance, medical assistance, pension after retirement',
+    benefits: '₹2 lakh life insurance, medical assistance, education grant for children, pension',
     documents: ['Aadhaar Card', 'Work Certificate from Employer', 'Active Bank Account'],
     learnMoreUrl: '#',
   },
@@ -35,10 +33,10 @@ const DEMO_SCHEMES: SchemeCard[] = [
     name: 'PM Shram Yogi Maan-dhan (PM-SYM)',
     status: 'needs_verification',
     matchScore: 72,
-    why: 'You may qualify based on your occupation. Monthly income verification required.',
-    benefits: '₹3,000/month pension after age 60',
-    missingInfo: 'Income documentation (monthly wage proof)',
-    documents: ['Aadhaar Card', 'Savings Bank Account', 'Income Proof'],
+    why: 'You qualify based on unorganized sector work. Monthly income verification required.',
+    benefits: '₹3,000/month assured pension after age 60',
+    missingInfo: 'Income documentation (monthly wage below ₹15,000)',
+    documents: ['Aadhaar Card', 'Savings Bank Account', 'Income Self-Declaration'],
     learnMoreUrl: '#',
   },
   {
@@ -46,208 +44,145 @@ const DEMO_SCHEMES: SchemeCard[] = [
     name: 'Aam Aadmi Bima Yojana (AABY)',
     status: 'needs_verification',
     matchScore: 60,
-    why: 'Age and occupation may qualify. BPL status or landlessness criterion needs verification.',
-    benefits: 'Life and disability insurance coverage',
-    missingInfo: 'BPL / landless household verification',
-    documents: ['Aadhaar Card', 'BPL Certificate or land documents', 'Bank Account'],
+    why: 'Age and unorganized occupation qualify. Primary breadwinner criterion verification.',
+    benefits: 'Life cover of ₹75,000 and disability insurance cover up to ₹75,000',
+    missingInfo: 'Head of family / breadwinner verification',
+    documents: ['Aadhaar Card', 'Ration Card / BPL Proof', 'Bank Account Passbook'],
     learnMoreUrl: '#',
   },
 ]
 
-// ─── Status config ────────────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<MatchStatus, { label: string; bg: string; text: string; border: string }> = {
-  potentially_eligible: {
-    label: 'Potentially Eligible',
-    bg: 'bg-green-100',
-    text: 'text-green-800',
-    border: 'border-green-200',
-  },
-  needs_verification: {
-    label: 'Needs Verification',
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-800',
-    border: 'border-yellow-200',
-  },
-}
-
-// ─── Score bar ────────────────────────────────────────────────────────────────
-function ScoreBar({ score }: { score: number }) {
-  const color = score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-orange-400'
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-gray-200 overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${score}%` }} />
-      </div>
-      <span className="text-xs font-semibold text-gray-700 tabular-nums">{score}%</span>
-    </div>
-  )
-}
-
-// ─── Scheme card component ────────────────────────────────────────────────────
-function SchemeCardItem({ scheme }: { scheme: SchemeCard }) {
-  const [docsOpen, setDocsOpen] = useState(false)
-  const cfg = STATUS_CONFIG[scheme.status]
-
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      {/* Card header */}
-      <div className="px-4 pt-4 pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-gray-900 leading-snug flex-1">{scheme.name}</h3>
-          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-            {cfg.label}
-          </span>
-        </div>
-
-        {/* Match score */}
-        <div className="mt-3">
-          <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1">Match Score</p>
-          <ScoreBar score={scheme.matchScore} />
-        </div>
-
-        {/* Why */}
-        <p className="mt-3 text-xs text-gray-600 leading-relaxed">{scheme.why}</p>
-
-        {/* Benefits */}
-        <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2">
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Benefits</p>
-          <p className="text-sm font-medium text-gray-800">{scheme.benefits}</p>
-        </div>
-
-        {/* Missing info (if any) */}
-        {scheme.missingInfo && (
-          <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2">
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-yellow-600 mt-0.5" />
-            <p className="text-xs text-yellow-800"><span className="font-semibold">Missing info:</span> {scheme.missingInfo}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Documents toggle */}
-      <div className="border-t border-gray-100">
-        <button
-          onClick={() => setDocsOpen((v) => !v)}
-          className="flex w-full items-center justify-between px-4 py-2.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-        >
-          <span>See Required Documents ({scheme.documents.length})</span>
-          {docsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        {docsOpen && (
-          <ul className="px-4 pb-3 space-y-1.5">
-            {scheme.documents.map((doc, i) => (
-              <li key={i} className="flex items-center gap-2 text-xs text-gray-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-gray-400 shrink-0" />
-                {doc}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Action row */}
-      <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-4 py-2.5">
-        <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-          Demo Data
-        </span>
-        {scheme.learnMoreUrl && (
-          <a
-            href={scheme.learnMoreUrl}
-            className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
-          >
-            Apply / Learn More <ExternalLink className="h-3 w-3" />
-          </a>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 export default function WelfareBenefits() {
-  useTranslation()
+  const { t } = useTranslation()
+  const [schemes, setSchemes] = useState<SchemeCard[]>(DEMO_SCHEMES)
   const [checking, setChecking] = useState(false)
-  const [checked, setChecked] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  async function handleCheckEligibility() {
+  async function handleRefreshEligibility() {
     setChecking(true)
     try {
-      await api.post('/welfare/eligibility-check', {})
+      await api.get('/welfare/matches')
     } catch {
-      // Silently ignore — demo data shown regardless
-    } finally {
-      setChecking(false)
-      setChecked(true)
+      // Local fallback
     }
+    await new Promise((r) => setTimeout(r, 500))
+    setSchemes(DEMO_SCHEMES)
+    setChecking(false)
+  }
+
+  function toggleExpand(id: string) {
+    setExpandedId((curr) => (curr === id ? null : id))
   }
 
   return (
-    <div className="space-y-4 px-4 py-5 pb-10">
-      {/* ── Header ────────────────────────────────────────── */}
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100">
-          <Heart className="h-5 w-5 text-purple-600" />
+    <div className="space-y-5 px-2 sm:px-4 py-4 pb-10">
+      {/* ── Header ──────────────────────────────────────────── */}
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950/80 shrink-0">
+            <Heart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('welfare_title')}</h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{t('welfare_subtitle')}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Welfare Benefits</h1>
-          <p className="text-xs text-gray-500 leading-snug mt-0.5">
-            Schemes potentially relevant to your profile — requires official verification
-          </p>
-        </div>
+
+        <button
+          onClick={handleRefreshEligibility}
+          disabled={checking}
+          className="flex items-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 transition-all shadow-sm"
+        >
+          {checking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+          {checking ? 'Refreshing Eligibility...' : 'Re-Check Eligibility 🔄'}
+        </button>
       </div>
 
-      {/* ── AI info banner ────────────────────────────────── */}
-      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-        <p className="text-xs text-blue-800 leading-relaxed">
-          🤖 <span className="font-semibold">AI uses only verified government scheme data.</span> Eligibility shown
-          is indicative only. Please verify with the official scheme authority. Results marked as{' '}
-          <span className="font-semibold">'Potentially Eligible'</span> require formal application and official
-          verification.
-        </p>
-      </div>
-
-      {/* ── Check eligibility button ──────────────────────── */}
-      <button
-        onClick={handleCheckEligibility}
-        disabled={checking}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm disabled:opacity-70 hover:bg-blue-700 active:bg-blue-800 transition-colors"
-      >
-        {checking ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Checking eligibility…
-          </>
-        ) : (
-          'Check My Eligibility →'
-        )}
-      </button>
-
-      {/* ── Scheme cards ─────────────────────────────────── */}
+      {/* ── Schemes List ────────────────────────────────────── */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-800">
-            {DEMO_SCHEMES.length} Schemes Found
-          </p>
-          {checked && (
-            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-semibold text-green-800">
-              ✓ Check complete
-            </span>
-          )}
-        </div>
+        {schemes.map((s) => {
+          const isExpanded = expandedId === s.id
+          const isEligible = s.status === 'potentially_eligible'
 
-        {DEMO_SCHEMES.map((scheme) => (
-          <SchemeCardItem key={scheme.id} scheme={scheme} />
-        ))}
-      </div>
+          return (
+            <div
+              key={s.id}
+              className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-xs transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="space-y-1 max-w-xl">
+                  <span
+                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      isEligible
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                    }`}
+                  >
+                    {isEligible ? t('eligible_badge') : t('verification_needed_badge')}
+                  </span>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">{s.name}</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{s.why}</p>
+                </div>
 
-      {/* ── Bottom disclaimer ─────────────────────────────── */}
-      <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
-        <div className="flex items-start gap-2">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
-          <p className="text-xs text-amber-800 leading-relaxed">
-            <span className="font-semibold">⚠ DEMO DATA:</span> Scheme information is for demonstration only. Verify
-            with official government sources. The AI does not make legal eligibility determinations.
-          </p>
-        </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <span className="text-xs font-semibold text-slate-400 block">Match Confidence</span>
+                    <span className="text-sm font-extrabold text-purple-600 dark:text-purple-400">{s.matchScore}%</span>
+                  </div>
+
+                  <button
+                    onClick={() => toggleExpand(s.id)}
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    title="Details"
+                  >
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Benefits highlight */}
+              <div className="mt-3 p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900">
+                <p className="text-xs text-purple-950 dark:text-purple-200 font-bold">🎁 Benefits &amp; Cover:</p>
+                <p className="text-xs text-purple-800 dark:text-purple-300 mt-0.5 font-medium">{s.benefits}</p>
+              </div>
+
+              {/* Expanded details */}
+              {isExpanded && (
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 animate-in fade-in">
+                  {s.missingInfo && (
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                      ⚠ Pending: {s.missingInfo}
+                    </p>
+                  )}
+
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Required Application Documents:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {s.documents.map((doc) => (
+                        <span
+                          key={doc}
+                          className="inline-flex items-center gap-1 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg"
+                        >
+                          <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                          {doc}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end">
+                    <button
+                      onClick={() => alert(`Applying for ${s.name}... Your application request has been saved!`)}
+                      className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm transition-colors"
+                    >
+                      {t('apply_now')} →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

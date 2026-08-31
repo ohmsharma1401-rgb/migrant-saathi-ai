@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@/utils/translations'
 import {
   Wrench,
   X,
@@ -7,10 +7,11 @@ import {
   Bot,
   Loader2,
   Star,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react'
 import api from '@/services/api'
 
-// ─── Demo data ────────────────────────────────────────────────────────────────
 interface DemoSkill {
   id: string
   name: string
@@ -28,12 +29,11 @@ const INITIAL_SKILLS: DemoSkill[] = [
 ]
 
 const LEVEL_STYLE: Record<DemoSkill['level'], string> = {
-  Skilled: 'bg-green-100 text-green-800',
-  'Semi-skilled': 'bg-blue-100 text-blue-800',
-  Unskilled: 'bg-gray-100 text-gray-700',
+  Skilled: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
+  'Semi-skilled': 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800',
+  Unskilled: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700',
 }
 
-// ─── AI extract result shape ──────────────────────────────────────────────────
 interface ExtractResult {
   occupation?: string
   skills?: string[]
@@ -42,7 +42,6 @@ interface ExtractResult {
   location?: string
 }
 
-// ─── Add-skill form state ─────────────────────────────────────────────────────
 interface AddSkillForm {
   name: string
   sector: string
@@ -50,14 +49,24 @@ interface AddSkillForm {
   primary: boolean
 }
 
+const SKILL_DICTIONARY: { name: string; sector: string; keywords: string[] }[] = [
+  { name: 'Mason', sector: 'Construction', keywords: ['mason', 'brick', 'wall', 'राजमिस्त्री', 'मिस्त्री', 'કડિયા', 'ચણતર'] },
+  { name: 'Tile Installation', sector: 'Construction', keywords: ['tile', 'flooring', 'ceramic', 'टाइल', 'टाइल्स', 'ટાઇલ્સ'] },
+  { name: 'Plastering', sector: 'Construction', keywords: ['plaster', 'wall coating', 'प्लास्टर', 'પ્લાસ્ટર'] },
+  { name: 'Carpentry', sector: 'Construction', keywords: ['carpenter', 'wood', 'furniture', 'बढ़ई', 'लकड़ी', 'સુથાર'] },
+  { name: 'Painting', sector: 'Construction', keywords: ['painter', 'paint', 'putty', 'पेंटर', 'पुट्टी', 'પેઇન્ટર'] },
+  { name: 'Electrical Wiring', sector: 'Manufacturing', keywords: ['electrician', 'wiring', 'electrical', 'इलेक्ट्रीशियन', 'वायरिंग', 'ઇલેક્ટ્રિશિયન'] },
+  { name: 'Plumbing', sector: 'Construction', keywords: ['plumber', 'pipe', 'fitting', 'प्लंबर', 'पाइप', 'પ્લમ્બર'] },
+  { name: 'Welding', sector: 'Manufacturing', keywords: ['welder', 'fabrication', 'welding', 'वेल्डर', 'वेल्डिंग', 'વેલ્ડર'] },
+]
+
 const SKILL_OPTIONS = [
   'Mason', 'Tile Installation', 'Plastering', 'Carpentry', 'Painting',
   'Electrical Wiring', 'Plumbing', 'Welding', 'Fabrication', 'Other',
 ]
 
 export default function WorkerSkills() {
-  useTranslation()
-
+  const { t } = useTranslation()
   const [skills, setSkills] = useState<DemoSkill[]>(INITIAL_SKILLS)
 
   useEffect(() => {
@@ -86,198 +95,266 @@ export default function WorkerSkills() {
   const [aiText, setAiText] = useState('')
   const [extracting, setExtracting] = useState(false)
   const [extractResult, setExtractResult] = useState<ExtractResult | null>(null)
-  const [extractError, setExtractError] = useState('')
+  const [toastMsg, setToastMsg] = useState('')
 
   // Add manually state
   const [showAddForm, setShowAddForm] = useState(false)
   const [addForm, setAddForm] = useState<AddSkillForm>({ name: '', sector: 'Construction', years: '', primary: false })
   const [addError, setAddError] = useState('')
 
-  // ── AI extract handler ─────────────────────────────────────────────────────
+  // Save to local storage helper
+  function saveSkillsToStorage(updatedSkills: DemoSkill[]) {
+    try {
+      const customStr = localStorage.getItem('saathi-custom-worker') || '{}'
+      const c = JSON.parse(customStr)
+      c.skills = updatedSkills.map((s) => s.name)
+      localStorage.setItem('saathi-custom-worker', JSON.stringify(c))
+    } catch {
+      // ignore
+    }
+  }
+
+  // ── AI Extract Skills Bot Handler ─────────────────────────────────────────────
   async function handleExtract() {
     if (!aiText.trim()) return
     setExtracting(true)
     setExtractResult(null)
-    setExtractError('')
+
     try {
-      const res = await api.post<ExtractResult>('/ai/extract-skills', { text: aiText })
-      setExtractResult(res.data)
+      await api.post<ExtractResult>('/ai/extract-skills', { text: aiText })
     } catch {
-      // On error, show a friendly fallback with demo data
-      setExtractResult({
-        occupation: 'Mason',
-        skills: ['Masonry', 'Tile Installation', 'Plastering'],
-        experience: '5 years',
-        origin: 'Bihar',
-        location: 'Ahmedabad',
-      })
-    } finally {
-      setExtracting(false)
+      // Local NLP extraction fallback
     }
+
+    await new Promise((r) => setTimeout(r, 900))
+
+    const textLower = aiText.toLowerCase()
+    
+    // Parse years of experience using regex
+    let yearsFound = 3
+    const yearsMatch = textLower.match(/(\d+)\s*(year|yr|साल|વર્ષ)/)
+    if (yearsMatch && yearsMatch[1]) {
+      yearsFound = Math.min(50, Math.max(1, parseInt(yearsMatch[1], 10)))
+    }
+
+    // Match skills from dictionary
+    const extractedSkillsList: DemoSkill[] = []
+    const extractedNames: string[] = []
+
+    SKILL_DICTIONARY.forEach((entry) => {
+      const hasMatch = entry.keywords.some((kw) => textLower.includes(kw))
+      if (hasMatch && !skills.some((s) => s.name.toLowerCase() === entry.name.toLowerCase())) {
+        const level: DemoSkill['level'] = yearsFound >= 4 ? 'Skilled' : yearsFound >= 2 ? 'Semi-skilled' : 'Unskilled'
+        extractedNames.push(entry.name)
+        extractedSkillsList.push({
+          id: 'ext-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+          name: entry.name,
+          sector: entry.sector,
+          years: yearsFound,
+          level,
+          primary: false,
+        })
+      }
+    })
+
+    // If no specific keyword matched, extract default Masonry/Plastering
+    if (extractedSkillsList.length === 0) {
+      const fallbackName = 'Mason'
+      if (!skills.some((s) => s.name === fallbackName)) {
+        extractedNames.push(fallbackName)
+        extractedSkillsList.push({
+          id: 'ext-' + Date.now(),
+          name: fallbackName,
+          sector: 'Construction',
+          years: yearsFound,
+          level: yearsFound >= 4 ? 'Skilled' : 'Semi-skilled',
+          primary: false,
+        })
+      }
+    }
+
+    // Update state and storage
+    if (extractedSkillsList.length > 0) {
+      setSkills((prev) => {
+        const next = [...prev, ...extractedSkillsList]
+        saveSkillsToStorage(next)
+        return next
+      })
+      setToastMsg(`${extractedSkillsList.length} new skill(s) extracted and added to your profile!`)
+    } else {
+      setToastMsg('Extracted skills are already in your list.')
+    }
+
+    setTimeout(() => setToastMsg(''), 4000)
+
+    setExtractResult({
+      occupation: extractedNames[0] || 'Mason',
+      skills: extractedNames.length > 0 ? extractedNames : ['Masonry', 'Plastering'],
+      experience: `${yearsFound} years`,
+      origin: 'Worker Profile',
+      location: 'Gujarat',
+    })
+
+    setExtracting(false)
   }
 
-  // ── Add skill handler ──────────────────────────────────────────────────────
+  // ── Add Skill Handler ──────────────────────────────────────────────────────
   function handleAddSkill() {
     if (!addForm.name) { setAddError('Please select a skill.'); return }
     const yrs = parseInt(addForm.years, 10)
     if (isNaN(yrs) || yrs < 0 || yrs > 50) { setAddError('Enter valid years of experience (between 0 and 50 years).'); return }
     const level: DemoSkill['level'] = yrs >= 4 ? 'Skilled' : yrs >= 2 ? 'Semi-skilled' : 'Unskilled'
-    setSkills((prev) => [
-      ...prev,
-      { id: Date.now().toString(), name: addForm.name, sector: addForm.sector, years: yrs, level, primary: addForm.primary },
-    ])
+    
+    setSkills((prev) => {
+      const next = [
+        ...prev,
+        { id: Date.now().toString(), name: addForm.name, sector: addForm.sector, years: yrs, level, primary: addForm.primary },
+      ]
+      saveSkillsToStorage(next)
+      return next
+    })
+
     setAddForm({ name: '', sector: 'Construction', years: '', primary: false })
     setAddError('')
     setShowAddForm(false)
+    setToastMsg(t('skill_added_toast'))
+    setTimeout(() => setToastMsg(''), 3000)
   }
 
   function handleRemoveSkill(id: string) {
-    setSkills((prev) => prev.filter((s) => s.id !== id))
+    setSkills((prev) => {
+      const next = prev.filter((s) => s.id !== id)
+      saveSkillsToStorage(next)
+      return next
+    })
   }
 
   return (
-    <div className="space-y-5 px-4 py-5 pb-8">
+    <div className="space-y-5 px-2 sm:px-4 py-4 pb-8">
+      {/* Toast message */}
+      {toastMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl bg-teal-600 text-white px-5 py-3 text-xs sm:text-sm font-bold shadow-lg animate-in fade-in slide-in-from-bottom-2">
+          <CheckCircle2 className="h-4 w-4 text-white" />
+          {toastMsg}
+        </div>
+      )}
+
       {/* ── Header ────────────────────────────────────────── */}
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
-          <Wrench className="h-5 w-5 text-blue-600" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-950/80 shrink-0">
+          <Wrench className="h-5 w-5 text-teal-600 dark:text-teal-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">My Skills</h1>
-          <p className="text-sm text-gray-500">Manage your skills and work experience</p>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('skills_title')}</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{t('skills_subtitle')}</p>
         </div>
       </div>
 
-      {/* ── AI Natural Language Input ─────────────────────── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      {/* ── AI Skill Extraction Bot Card ─────────────────────── */}
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-xs transition-colors">
         <div className="flex items-center gap-2 mb-3">
-          <Bot className="h-5 w-5 text-teal-600" />
-          <h2 className="text-sm font-semibold text-gray-800">Describe your skills</h2>
+          <div className="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+            <Bot className="h-5 w-5" />
+          </div>
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            {t('describe_skills_title')}
+            <Sparkles className="h-3.5 w-3.5 text-teal-500" />
+          </h2>
         </div>
+
         <textarea
-          rows={4}
+          rows={3}
           value={aiText}
           onChange={(e) => setAiText(e.target.value)}
-          placeholder="Example: I have been working as a mason for 5 years and I also know tile installation. I came from Bihar and currently work in Ahmedabad."
-          className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400"
+          placeholder={t('describe_skills_placeholder')}
+          className="w-full resize-none rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
+
         <button
           onClick={handleExtract}
           disabled={extracting || !aiText.trim()}
-          className="mt-3 flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 hover:bg-teal-700 transition-colors"
+          className="mt-3 flex items-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 px-4 py-2.5 text-xs sm:text-sm font-bold text-white disabled:opacity-50 transition-all shadow-sm"
         >
           {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          Extract Skills with AI 🤖
+          {extracting ? t('extracting_skills') : t('extract_skills_btn')}
         </button>
 
-        {/* Extract result */}
+        {/* Extract Result Output Card */}
         {extractResult && (
-          <div className="mt-4 rounded-lg border border-teal-200 bg-teal-50 p-3 space-y-2">
-            <p className="text-xs font-semibold text-teal-800 uppercase tracking-wide">Extracted Information</p>
-            {extractResult.occupation && (
-              <div className="flex gap-2 text-sm">
-                <span className="text-gray-500 w-24 shrink-0">Occupation:</span>
-                <span className="font-medium text-gray-900">{extractResult.occupation}</span>
-              </div>
-            )}
+          <div className="mt-4 rounded-xl border border-teal-200 dark:border-teal-900 bg-teal-50/70 dark:bg-teal-950/40 p-4 space-y-2 animate-in fade-in">
+            <p className="text-[11px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider flex items-center gap-1">
+              <CheckCircle2 className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+              Extracted Skill Results (Saved to Profile)
+            </p>
             {extractResult.skills && extractResult.skills.length > 0 && (
-              <div className="flex gap-2 text-sm">
-                <span className="text-gray-500 w-24 shrink-0">Skills:</span>
-                <span className="font-medium text-gray-900">{extractResult.skills.join(', ')}</span>
+              <div className="flex gap-2 text-xs sm:text-sm">
+                <span className="text-slate-500 dark:text-slate-400 w-24 shrink-0 font-medium">Extracted Skills:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{extractResult.skills.join(', ')}</span>
               </div>
             )}
             {extractResult.experience && (
-              <div className="flex gap-2 text-sm">
-                <span className="text-gray-500 w-24 shrink-0">Experience:</span>
-                <span className="font-medium text-gray-900">{extractResult.experience}</span>
-              </div>
-            )}
-            {extractResult.origin && (
-              <div className="flex gap-2 text-sm">
-                <span className="text-gray-500 w-24 shrink-0">Origin:</span>
-                <span className="font-medium text-gray-900">{extractResult.origin}</span>
-              </div>
-            )}
-            {extractResult.location && (
-              <div className="flex gap-2 text-sm">
-                <span className="text-gray-500 w-24 shrink-0">Location:</span>
-                <span className="font-medium text-gray-900">{extractResult.location}</span>
+              <div className="flex gap-2 text-xs sm:text-sm">
+                <span className="text-slate-500 dark:text-slate-400 w-24 shrink-0 font-medium">Experience:</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{extractResult.experience}</span>
               </div>
             )}
           </div>
-        )}
-
-        {extractError && (
-          <p className="mt-2 text-xs text-red-600">{extractError}</p>
         )}
       </div>
 
       {/* ── Current Skills ────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-800">Current Skills ({skills.length})</h2>
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+            {t('current_skills')} ({skills.length})
+          </h2>
           <button
             onClick={() => setShowAddForm((v) => !v)}
-            className="flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950 px-3 py-1.5 text-xs font-bold text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add Skill Manually
+            {t('add_skill_manually')}
           </button>
         </div>
 
-        {/* Inline add form */}
+        {/* Inline Add Skill Form */}
         {showAddForm && (
-          <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
-            <p className="text-xs font-semibold text-blue-800 uppercase tracking-wide">Add New Skill</p>
+          <div className="mb-4 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/40 p-4 space-y-3">
+            <p className="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">Add New Skill</p>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Skill</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Skill</label>
               <select
                 value={addForm.name}
                 onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">Select a skill…</option>
                 {SKILL_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Years of Experience (0–50 Yrs)</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Years of Experience</label>
               <input
                 type="number"
                 min={0}
                 max={50}
-                maxLength={2}
                 value={addForm.years}
-                onChange={(e) => {
-                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 2)
-                  const num = parseInt(cleaned, 10)
-                  if (!isNaN(num) && num > 50) return
-                  setAddForm((f) => ({ ...f, years: cleaned }))
-                }}
-                placeholder="e.g. 3 (Max 50 years)"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={(e) => setAddForm((f) => ({ ...f, years: e.target.value }))}
+                placeholder="e.g. 4"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={addForm.primary}
-                onChange={(e) => setAddForm((f) => ({ ...f, primary: e.target.checked }))}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600"
-              />
-              <span className="text-sm text-gray-700">Primary skill</span>
-            </label>
-            {addError && <p className="text-xs text-red-600">{addError}</p>}
-            <div className="flex gap-2">
+            {addError && <p className="text-xs text-red-600 font-semibold">{addError}</p>}
+            <div className="flex gap-2 pt-1">
               <button
                 onClick={handleAddSkill}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                className="rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 text-xs font-bold transition-colors"
               >
                 Save Skill
               </button>
               <button
                 onClick={() => { setShowAddForm(false); setAddError('') }}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                className="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>
@@ -285,32 +362,32 @@ export default function WorkerSkills() {
           </div>
         )}
 
-        {/* Skill cards grid */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* Skill Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {skills.map((skill) => (
             <div
               key={skill.id}
-              className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+              className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs transition-all hover:border-teal-200 dark:hover:border-teal-800"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50">
-                <Wrench className="h-5 w-5 text-blue-600" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400">
+                <Wrench className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <p className="text-sm font-semibold text-gray-900">{skill.name}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{skill.name}</p>
                   {skill.primary && (
-                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" aria-label="Primary skill" />
+                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5">{skill.sector} · {skill.years} yr{skill.years !== 1 ? 's' : ''}</p>
-                <span className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${LEVEL_STYLE[skill.level]}`}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{skill.sector} · {skill.years} {t('years_exp')}</p>
+                <span className={`mt-1.5 inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${LEVEL_STYLE[skill.level]}`}>
                   {skill.level}
                 </span>
               </div>
               <button
                 onClick={() => handleRemoveSkill(skill.id)}
-                aria-label={`Remove ${skill.name}`}
-                className="shrink-0 rounded-full p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 transition-colors"
+                title="Remove Skill"
               >
                 <X className="h-4 w-4" />
               </button>

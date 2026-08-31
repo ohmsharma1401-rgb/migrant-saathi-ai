@@ -211,7 +211,7 @@ export default function RoleSelection() {
           {/* Feature highlights */}
           <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[
-              'IBM Granite AI-powered',
+              'Smart AI-powered Assistant',
               'Multilingual Support',
               'Privacy-First Design',
             ].map(item => (
@@ -223,22 +223,22 @@ export default function RoleSelection() {
           </div>
         </div>
 
-        {/* IBM watsonx badge */}
+        {/* AI Engine badge */}
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            background: 'rgba(190,149,255,0.18)',
-            border: '1px solid rgba(190,149,255,0.35)',
+            background: 'rgba(20,184,166,0.18)',
+            border: '1px solid rgba(20,184,166,0.35)',
             borderRadius: 10,
             padding: '10px 16px',
             alignSelf: 'flex-start',
           }}
         >
-          <Cpu size={16} color="#c4b5fd" />
-          <span style={{ color: '#c4b5fd', fontSize: 13, fontWeight: 600 }}>
-            IBM watsonx.ai
+          <Cpu size={16} color="#5eead4" />
+          <span style={{ color: '#5eead4', fontSize: 13, fontWeight: 600 }}>
+            Saathi AI Core
           </span>
         </div>
       </div>

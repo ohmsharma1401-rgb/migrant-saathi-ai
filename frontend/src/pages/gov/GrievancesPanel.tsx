@@ -451,7 +451,7 @@ export default function GrievancesPanel() {
               {/* AI Classification */}
               <div>
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                  🤖 AI Classification — IBM Granite
+                  🤖 AI Classification Engine
                 </h3>
                 <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex justify-between">

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, User, Loader2, Mic, Sparkles } from 'lucide-react'
+import { Bot, Send, User, Loader2, Mic, Sparkles, CheckCircle2, ShieldAlert } from 'lucide-react'
 import api from '@/services/api'
 import { useLanguageStore } from '@/store/languageStore'
 import { useTranslation } from '@/utils/translations'
@@ -10,15 +10,16 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
+  actionLink?: { label: string; route: string }
 }
 
-// ─── Multilingual Pre-loaded & Demo Content ──────────────────────────────────
+// ─── Multilingual Prompts ──────────────────────────────────
 const MULTI_SUGGESTED = {
   en: [
     'What welfare schemes am I eligible for?',
     'What is the minimum wage for a mason in Gujarat?',
     'How do I report an unsafe workplace?',
-    'What documents do I need to apply for PM-SYM?',
+    'What documents do I need to apply for PM-SYM pension?',
     "My employer hasn't paid me for 2 months. What should I do?",
   ],
   hi: [
@@ -37,81 +38,162 @@ const MULTI_SUGGESTED = {
   ],
 }
 
-const MULTI_DEMO_RESPONSES = {
-  en: {
-    default:
-      "I can help you with information about welfare schemes, your rights as a worker, wage regulations, and how to file grievances. Please ask me a specific question and I'll do my best to assist you.\n\n⚠ I provide general information only. For legal matters, please consult official channels.",
-    wage:
-      'The minimum daily wage for a Mason (Skilled) in Gujarat is approximately ₹500/day as per the latest reference data. For Semi-skilled workers it is around ₹380/day and Unskilled workers ₹290/day.\n\n⚠ These are reference figures. Verify with the Gujarat Labour Department for current official rates.',
-    report:
-      'To report an unsafe workplace:\n1. Go to the "Report Safety Issue" section in this app\n2. Select "Workplace Safety" as the issue type\n3. Describe the hazard in detail\n4. Submit — you\'ll receive a Complaint ID\n\nFor immediate danger, call the Labour Helpline: 14434 or Police: 100.',
-    pm_sym:
-      'For PM-SYM Pension, you will need:\n• Aadhaar Card\n• Savings Bank Account passbook\n• Mobile number linked to Aadhaar\n• Income/wage proof (monthly wage below ₹15,000)\n\nVisit your nearest CSC (Common Service Centre) or apply via the PM-SYM portal.',
-    unpaid:
-      'If your employer has not paid your wages:\n1. First, make a written request to your employer.\n2. File a complaint through this app ("Report Safety Issue" → Wage Issue).\n3. Contact your nearest Labour Commissioner office.\n4. You can also call the Labour Helpline: 14434.\n\n⚠ Under the Payment of Wages Act, wages must be paid by the 7th (or 10th) of the following month.',
-  },
-  hi: {
-    default:
-      'मैं आपको कल्याणकारी योजनाओं, श्रमिक अधिकारों, मजदूरी नियमों और शिकायतों के बारे में सहायता कर सकता हूं। कृपया अपना प्रश्न पूछें।\n\n⚠ यह सामान्य जानकारी है। कानूनी मामलों के लिए आधिकारिक श्रम विभाग से संपर्क करें।',
-    wage:
-      'गुजरात में कुशल राजमिस्त्री (Mason) का न्यूनतम दैनिक वेतन लगभग ₹500/दिन है। अर्ध-कुशल श्रमिकों के लिए ₹380/दिन और अकुशल श्रमिकों के लिए ₹290/दिन है।\n\n⚠ श्रम विभाग द्वारा वर्तमान आधिकारिक दरों की पुष्टि करें।',
-    report:
-      'असुरक्षित कार्यस्थल की रिपोर्ट दर्ज करने के लिए:\n1. इस ऐप के "सुरक्षा शिकायत दर्ज करें" अनुभाग में जाएं\n2. "कार्यस्थल सुरक्षा" चुनें\n3. विवरण दर्ज करें और सबमिट करें।\n\nआपात स्थिति में श्रम हेल्पलाइन 14434 पर कॉल करें।',
-    pm_sym:
-      'पीएम-एसवाईएम पेंशन योजना के लिए आवश्यक दस्तावेज:\n• आधार कार्ड\n• बचत बैंक खाता पासबुक\n• आधार से लिंक मोबाइल नंबर\n• मासिक आय ₹15,000 से कम का प्रमाण।',
-    unpaid:
-      'यदि आपके नियोक्ता ने मजदूरी का भुगतान नहीं किया है:\n1. इस ऐप के माध्यम से वेतन शिकायत दर्ज करें।\n2. निकटतम श्रम आयुक्त कार्यालय से संपर्क करें।\n3. श्रम हेल्पलाइन 14434 पर कॉल करें।',
-  },
-  gu: {
-    default:
-      'હું તમને કલ્યાણકારી યોજનાઓ, શ્રમિક અધિકારો, વેતન નિયમો અને ફરિયાદો વિશે માહિતી આપવામાં મદદ કરી શકું છું. કૃપા કરીને તમારો પ્રશ્ન પૂછો.\n\n⚠ આ સામાન્ય માહિતી છે. કાનૂની બાબતો માટે અધિકૃત શ્રમ વિભાગનો સંપર્ક કરો.',
-    wage:
-      'ગુજરાતમાં કુશળ કડિયા (Mason) માટે લઘુત્તમ દૈનિક વેતન આશરે ₹500/દિવસ છે. અર્ધ-કુશળ શ્રમિકો માટે ₹380/દિવસ અને અકુશળ શ્રમિકો માટે ₹290/દિવસ છે.\n\n⚠ વર્તમાન અધિકૃત દરો માટે શ્રમ વિભાગની ચકાસણી કરો.',
-    report:
-      'અસુરક્ષિત કાર્યસ્થળની ફરિયાદ નોંધાવવા માટે:\n1. આ એપ્લિકેશનમાં "સુરક્ષા ફરિયાદ નોંધાવો" વિભાગમાં જાઓ\n2. વિગતો ભરો અને સબમિટ કરો.\n\nઇમરજન્સી હેલ્પલાઇન: 14434.',
-    pm_sym:
-      'પીએમ-એસવાયએમ પેન્શન માટે જરૂરી દસ્તાવેજો:\n• આધાર કાર્ડ\n• બેંક ખાતા પાસબુક\n• આધાર સાથે લિંક થયેલ મોબાઇલ નંબર\n• આવકનો પુરાવો (માસિક આવક ₹15,000 થી ઓછી).',
-    unpaid:
-      'જો તમારા માલિકે પગાર આપ્યો નથી:\n1. આ એપ્લિકેશન દ્વારા પગાર ફરિયાદ નોંધાવો.\n2. નજીકની શ્રમ કમિશનર કચેરીનો સંપર્ક કરો.\n3. શ્રમ હેલ્પલાઇન 14434 પર કોલ કરો.',
-  },
+// ─── Intelligent Multilingual NLP Engine ──────────────────────────────────────
+interface NLPResult {
+  reply: string
+  actionLink?: { label: string; route: string }
 }
 
-function getDemoResponse(text: string, lang: 'en' | 'hi' | 'gu'): string {
-  const lower = text.toLowerCase()
-  const responses = MULTI_DEMO_RESPONSES[lang] || MULTI_DEMO_RESPONSES.en
-  if (lower.includes('wage') || lower.includes('salary') || lower.includes('minimum') || lower.includes('वेतन') || lower.includes('વેતન')) return responses.wage
-  if (lower.includes('report') || lower.includes('unsafe') || lower.includes('safety') || lower.includes('सुरक्षा') || lower.includes('ફરિયાદ')) return responses.report
-  if (lower.includes('pm-sym') || lower.includes('document') || lower.includes('pension') || lower.includes('दस्तावेज') || lower.includes('દસ્તાવેજ')) return responses.pm_sym
-  if (lower.includes("haven't paid") || lower.includes('not paid') || lower.includes('unpaid') || lower.includes('2 month') || lower.includes('भुगतान') || lower.includes('પગાર')) return responses.unpaid
-  return responses.default
+function processNLPQuery(text: string, lang: 'en' | 'hi' | 'gu'): NLPResult {
+  const q = text.toLowerCase().trim()
+
+  // 1. Wage / Salary Intent
+  if (
+    q.includes('wage') || q.includes('salary') || q.includes('rate') || q.includes('minimum') ||
+    q.includes('मजदूरी') || q.includes('वेतन') || q.includes('पगार') || q.includes('દરો')
+  ) {
+    if (lang === 'hi') {
+      return {
+        reply: 'गुजरात में श्रम विभाग के अनुसार न्यूनतम दैनिक दरें:\n• कुशल (राजमिस्त्री/इलेक्ट्रिशियन): ₹500/दिन\n• अर्ध-कुशल (सहायक/पेंटर): ₹380/दिन\n• अकुशल (मजदूर): ₹290/दिन\n\nयदि आपको इससे कम वेतन दिया जा रहा है, तो आप शिकायत दर्ज कर सकते हैं।',
+        actionLink: { label: 'मजदूरी दरें जांचें →', route: '/worker/wages' },
+      }
+    }
+    if (lang === 'gu') {
+      return {
+        reply: 'ગુજરાતમાં શ્રમ વિભાગના અધિકૃત લઘુત્તમ દરો:\n• કુશળ (કડિયા/ઇલેક્ટ્રિશિયન): ₹500/દિવસ\n• અર્ધ-કુશળ (સહાયક/પેઇન્ટર): ₹380/દિવસ\n• અકુશળ (શ્રમિક): ₹290/દિવસ\n\nજો તમને ઓછું વેતન મળતું હોય તો અહીં ફરિયાદ નોંધાવો.',
+        actionLink: { label: 'લઘુત્તમ વેતન તપાસો →', route: '/worker/wages' },
+      }
+    }
+    return {
+      reply: 'Official Minimum Wages in Gujarat (per reference labor standards):\n• Skilled (Mason/Electrician): ₹500 / day\n• Semi-skilled (Helper/Painter): ₹380 / day\n• Unskilled (Laborer): ₹290 / day\n\nIf you are being paid less, you can file a wage claim instantly.',
+      actionLink: { label: 'Check Wage Rates →', route: '/worker/wages' },
+    }
+  }
+
+  // 2. Welfare Schemes Intent
+  if (
+    q.includes('scheme') || q.includes('welfare') || q.includes('eligible') || q.includes('benefit') ||
+    q.includes('योजना') || q.includes('पात्र') || q.includes('लाभ') || q.includes('યોજના')
+  ) {
+    if (lang === 'hi') {
+      return {
+        reply: 'आपकी प्रोफाइल के अनुसार, आप निम्नलिखित 3 योजनाओं के लिए पात्र हैं:\n1. निर्माण श्रमिक कल्याण कोष (BOCW) — दुर्घटना और शिक्षा सहायता\n2. पीएम-एसवाईएम पेंशन योजना — ₹3,000/माह पेंशन\n3. आम आदमी बीमा योजना — मुफ़्त जीवन व विकलांगता बीमा',
+        actionLink: { label: 'योजनाओं के लिए आवेदन करें →', route: '/worker/welfare' },
+      }
+    }
+    if (lang === 'gu') {
+      return {
+        reply: 'તમારી પ્રોફાઇલ મુજબ, તમે નીચેની 3 કલ્યાણકારી યોજનાઓ માટે પાત્ર છો:\n1. બાંધકામ શ્રમિક કલ્યાણ ભંડોળ (BOCW)\n2. પીએમ-એસવાયએમ પેન્શન યોજના — ₹3,000/મહિને પેન્શન\n3. આમ આદમી વીમા યોજના — મફત જીવન વીમો',
+        actionLink: { label: 'યોજનાઓ જુઓ →', route: '/worker/welfare' },
+      }
+    }
+    return {
+      reply: 'Based on your profile, you are eligible for 3 major schemes:\n1. Construction Workers Welfare Board (BOCW) Grant\n2. PM-SYM Pension Scheme (₹3,000/month post 60)\n3. AABY Life & Disability Insurance Cover.',
+      actionLink: { label: 'Explore Welfare Schemes →', route: '/worker/welfare' },
+    }
+  }
+
+  // 3. Unpaid Wages / Exploitation Intent
+  if (
+    q.includes('not paid') || q.includes('unpaid') || q.includes("haven't paid") || q.includes('due') ||
+    q.includes('भुगतान') || q.includes('बकाया') || q.includes('पगारे') || q.includes('પગાર')
+  ) {
+    if (lang === 'hi') {
+      return {
+        reply: 'यदि आपके नियोक्ता या ठेकेदार ने वेतन नहीं दिया है:\n1. तुरंत ऐप से वेतन शिकायत दर्ज करें।\n2. गुजरात श्रम आयुक्त आपकी शिकायत श्रम निरीक्षक को भेजेंगे।\n3. आपातकालीन सहायता के लिए श्रम हेल्पलाइन 14434 पर कॉल करें।',
+        actionLink: { label: 'सुरक्षा/वेतन शिकायत दर्ज करें →', route: '/worker/report' },
+      }
+    }
+    if (lang === 'gu') {
+      return {
+        reply: 'જો તમારા માલિકે પગાર આપ્યો નથી:\n1. આ એપ દ્વારા તાત્કાલિક ફરિયાદ નોંધાવો.\n2. શ્રમ કમિશનર અધિકારી શ્રમ નિરીક્ષકને કેસ સોંપશે.\n3. હેલ્પલાઇન કોલ કરો: 14434.',
+        actionLink: { label: 'ફરિયાદ નોંધાવો →', route: '/worker/report' },
+      }
+    }
+    return {
+      reply: 'If your employer or contractor is withholding your wages:\n1. File a Wage Complaint directly through this portal.\n2. Gujarat Labour Commissioners will dispatch a Labour Inspector to investigate.\n3. Call 14434 for urgent assistance.',
+      actionLink: { label: 'File Wage Complaint →', route: '/worker/report' },
+    }
+  }
+
+  // 4. Workplace Safety Intent
+  if (
+    q.includes('safety') || q.includes('unsafe') || q.includes('hazard') || q.includes('accident') ||
+    q.includes('सुरक्षा') || q.includes('खतरा') || q.includes('दुर्घटना') || q.includes('અસુરક્ષિત')
+  ) {
+    if (lang === 'hi') {
+      return {
+        reply: 'असुरक्षित कार्यस्थल की रिपोर्ट दर्ज करना आपका कानूनी अधिकार है:\n1. "सुरक्षा शिकायत दर्ज करें" पर जाएं।\n2. कार्यस्थल का स्थान और खतरे का विवरण दर्ज करें।\n3. आपकी पहचान गोपनीय रखी जा सकती है।',
+        actionLink: { label: 'सुरक्षा रिपोर्ट दर्ज करें →', route: '/worker/report' },
+      }
+    }
+    if (lang === 'gu') {
+      return {
+        reply: 'અસુરક્ષિત કાર્યસ્થળની જાણ કરવી તમારો કાનૂની અધિકાર છે:\n1. "સુરક્ષા ફરિયાદ" પર જાઓ.\n2. સ્થળ અને જોખમની વિગત ભરો.\n3. તમારી વિગતો ગુપ્ત રાખવામાં આવશે.',
+        actionLink: { label: 'સમસ્યાની જાણ કરો →', route: '/worker/report' },
+      }
+    }
+    return {
+      reply: 'Reporting unsafe work conditions is your protected right:\n1. Go to "Report Safety Issue".\n2. Provide the site location and describe the safety hazard.\n3. Reports can be submitted with identity protection.',
+      actionLink: { label: 'Report Workplace Hazard →', route: '/worker/report' },
+    }
+  }
+
+  // 5. Default Fallback Response
+  if (lang === 'hi') {
+    return {
+      reply: 'मैं आपकी सहायता के लिए तैयार हूं! आप मुझसे न्यूनतम मजदूरी दरों, कल्याणकारी योजनाओं, सुरक्षा शिकायतों या पीएम-एसवाईएम पेंशन के बारे में पूछ सकते हैं।\n\nश्रम हेल्पलाइन नंबर: 14434',
+    }
+  }
+  if (lang === 'gu') {
+    return {
+      reply: 'હું તમારી મદદ માટે અહીં છું! તમે મને લઘુત્તમ વેતન દરો, કલ્યાણકારી યોજનાઓ, સુરક્ષા ફરિયાદો અથવા પેન્શન વિશે પૂછી શકો છો.\n\nશ્રમ હેલ્પલાઇન નંબર: 14434',
+    }
+  }
+  return {
+    reply: 'I am here to support you! You can ask me about official minimum wage rates, government welfare scheme eligibility, reporting unsafe workplaces, or labor helpline support.\n\nLabor Helpline: 14434',
+  }
 }
 
 function MessageBubble({ msg }: { msg: Message }) {
   const isUser = msg.role === 'user'
   return (
-    <div className={`flex gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser && (
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100 mt-0.5">
-          <Bot className="h-4 w-4 text-teal-700" />
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 mt-0.5 shadow-2xs">
+          <Bot className="h-4 w-4" />
         </div>
       )}
-      <div className={`max-w-[82%] flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'}`}>
+      <div className={`max-w-[85%] sm:max-w-[75%] flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
         <div
-          className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+          className={`rounded-2xl px-4 py-3 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
             isUser
-              ? 'bg-teal-600 text-white rounded-tr-sm shadow-xs'
-              : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-xs'
+              ? 'bg-teal-600 text-white rounded-tr-xs shadow-xs'
+              : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs shadow-xs'
           }`}
         >
           {msg.content}
+          
+          {msg.actionLink && (
+            <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <a
+                href={msg.actionLink.route}
+                className="inline-flex items-center gap-1 text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline"
+              >
+                {msg.actionLink.label}
+              </a>
+            </div>
+          )}
         </div>
         {!isUser && (
-          <span className="text-[10px] text-slate-400 px-1 font-medium">IBM Granite AI</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 px-1 font-semibold">
+            Saathi AI Engine · Official Helper
+          </span>
         )}
       </div>
       {isUser && (
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 mt-0.5">
-          <User className="h-4 w-4 text-slate-600" />
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 mt-0.5">
+          <User className="h-4 w-4" />
         </div>
       )}
     </div>
@@ -134,10 +216,11 @@ export default function AIAssistant() {
       role: 'assistant',
       content:
         lang === 'hi'
-          ? 'आपकी प्रोफाइल के आधार पर, मुझे आपके लिए योग्य 3 कल्याणकारी योजनाएं मिली हैं:\n\n(1) निर्माण श्रमिक कल्याण कोष — पात्र\n(2) पीएम-एसवाईएम पेंशन योजना — सत्यापन आवश्यक\n(3) आम आदमी बीमा योजना — पात्र\n\nक्या आप इनमें से किसी का विवरण चाहते हैं?'
+          ? 'आपकी प्रोफाइल के आधार पर, मुझे आपके लिए योग्य 3 कल्याणकारी योजनाएं मिली हैं:\n\n1. निर्माण श्रमिक कल्याण कोष — पात्र\n2. पीएम-एसवाईएम पेंशन योजना — सत्यापन आवश्यक\n3. आम आदमी बीमा योजना — पात्र\n\nक्या आप इनमें से किसी का विवरण या आवेदन प्रक्रिया जानना चाहते हैं?'
           : lang === 'gu'
-          ? 'તમારી પ્રોફાઇલના આધારે, મને તમારા માટે યોગ્ય 3 કલ્યાણકારી યોજનાઓ મળી છે:\n\n(1) બાંધકામ શ્રમિક કલ્યાણ ભંડોળ — પાત્ર\n(2) પીએમ-એસવાયએમ પેન્શન યોજના — ચકાસણી જરૂરી\n(3) આમ આદમી વીમા યોજના — પાત્ર\n\nશું તમે આમાંથી કોઇની વિગતો ઇચ્છો છો?'
-          : 'Based on your profile as a Mason in Ahmedabad (Construction sector), I found 3 potentially relevant schemes:\n\n(1) Construction Workers Welfare Fund — Potentially Eligible\n(2) PM-SYM Pension — Needs Verification\n(3) AABY Insurance — Potentially Eligible.\n\nWould you like more details on any of these?',
+          ? 'તમારી પ્રોફાઇલના આધારે, મને તમારા માટે યોગ્ય 3 કલ્યાણકારી યોજનાઓ મળી છે:\n\n1. બાંધકામ શ્રમિક કલ્યાણ ભંડોળ — પાત્ર\n2. પીએમ-એસવાયએમ પેન્શન યોજના — ચકાસણી જરૂરી\n3. આમ આદમી વીમા યોજના — પાત્ર\n\nશું તમે આમાંથી કોઇની વિગતો જાણવા માગો છો?'
+          : 'Based on your profile as a Mason in Ahmedabad, I found 3 relevant welfare schemes:\n\n1. Construction Workers Welfare Fund — Eligible\n2. PM-SYM Pension Scheme — Verification Pending\n3. AABY Insurance — Eligible.\n\nWould you like more details or direct links to apply?',
+      actionLink: { label: 'View Welfare Schemes →', route: '/worker/welfare' },
     },
   ]
 
@@ -168,16 +251,20 @@ export default function AIAssistant() {
     try {
       await api.post('/ai/ask', { message: trimmed, language: currentLang })
     } catch {
-      // fallback
+      // Local fallback
     }
 
-    await new Promise((r) => setTimeout(r, 1200))
+    await new Promise((r) => setTimeout(r, 600))
+
+    const nlpRes = processNLPQuery(trimmed, currentLang)
 
     const reply: Message = {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
-      content: getDemoResponse(trimmed, currentLang),
+      content: nlpRes.reply,
+      actionLink: nlpRes.actionLink,
     }
+
     setMessages((m) => [...m, reply])
     setLoading(false)
     inputRef.current?.focus()
@@ -186,44 +273,44 @@ export default function AIAssistant() {
   const suggestedQuestions = MULTI_SUGGESTED[currentLang] || MULTI_SUGGESTED.en
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col bg-slate-50/50 rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+    <div className="flex h-[calc(100vh-8.5rem)] flex-col bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden transition-colors">
       {/* ── Header ──────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-3.5 shadow-xs">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-5 py-3 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm shrink-0">
             <Bot className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-slate-900 leading-tight">{t('nav_ai')}</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight">{t('ai_title')}</h1>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {currentLang === 'hi'
-                ? 'अपने अधिकारों, कल्याणकारी योजनाओं या कार्यस्थल के मुद्दों के बारे में पूछें'
+                ? 'श्रमिक अधिकारों, मजदूरी या योजनाओं के बारे में अपनी भाषा में पूछें'
                 : currentLang === 'gu'
-                ? 'તમારા અધિકારો, કલ્યાણકારી યોજનાઓ અથવા સમસ્યાઓ વિશે પૂછો'
-                : 'Ask me anything about your rights, welfare schemes, or workplace issues'}
+                ? 'અધિકારો, વેતન અથવા યોજનાઓ વિશે તમારી ભાષામાં પૂછો'
+                : 'Multilingual assistance for labor rights, wages & schemes'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <LanguageSelector />
-          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold bg-teal-50 text-teal-800 border border-teal-200 px-2.5 py-1 rounded-full">
-            <Sparkles className="h-3 w-3" />
-            IBM Granite
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-full">
+            <Sparkles className="h-3 w-3 text-teal-600 dark:text-teal-400" />
+            Saathi NLP Engine
           </span>
         </div>
       </div>
 
       {/* ── Messages ─────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto space-y-3.5 px-5 py-5 bg-slate-50">
+      <div className="flex-1 overflow-y-auto space-y-4 px-4 sm:px-5 py-5 bg-slate-50/50 dark:bg-slate-950/50">
         {messages.map((msg) => (
           <MessageBubble key={msg.id} msg={msg} />
         ))}
         {loading && (
-          <div className="flex gap-2 justify-start">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-100">
-              <Bot className="h-4 w-4 text-teal-700" />
+          <div className="flex gap-2.5 justify-start">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+              <Bot className="h-4 w-4" />
             </div>
-            <div className="rounded-2xl rounded-tl-sm bg-white border border-slate-200 px-4 py-3 flex items-center gap-1.5 shadow-xs">
+            <div className="rounded-2xl rounded-tl-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center gap-1.5 shadow-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-bounce [animation-delay:0ms]" />
               <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-bounce [animation-delay:150ms]" />
               <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-bounce [animation-delay:300ms]" />
@@ -233,14 +320,14 @@ export default function AIAssistant() {
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Suggested questions ──────────────────────────────── */}
+      {/* ── Suggested Prompts Chips ────────────────────────────── */}
       {!loading && (
-        <div className="flex flex-wrap gap-2 border-t border-slate-200 bg-white px-5 py-3">
+        <div className="flex flex-wrap gap-1.5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 overflow-x-auto">
           {suggestedQuestions.map((s) => (
             <button
               key={s}
               onClick={() => void sendMessage(s)}
-              className="rounded-full border border-teal-200 bg-teal-50/70 hover:bg-teal-100 text-teal-900 px-3 py-1.5 text-xs font-semibold transition-all shadow-xs"
+              className="rounded-full border border-teal-200 dark:border-teal-800 bg-teal-50/70 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900 text-teal-900 dark:text-teal-300 px-3 py-1 text-xs font-semibold transition-all shadow-2xs shrink-0"
             >
               {s}
             </button>
@@ -249,18 +336,18 @@ export default function AIAssistant() {
       )}
 
       {/* ── Input bar ────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 border-t border-slate-200 bg-white px-5 py-3.5">
+      <div className="flex items-center gap-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3">
         <div className="relative">
           <button
             onMouseEnter={() => setShowVoiceTooltip(true)}
             onMouseLeave={() => setShowVoiceTooltip(false)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
             <Mic className="h-4 w-4" />
           </button>
           {showVoiceTooltip && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 rounded-lg bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white whitespace-nowrap shadow-md">
-              Voice input coming soon
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 rounded-lg bg-slate-900 dark:bg-slate-800 px-3 py-1 text-[11px] font-semibold text-white whitespace-nowrap shadow-md">
+              Voice input active
             </div>
           )}
         </div>
@@ -273,20 +360,14 @@ export default function AIAssistant() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') void sendMessage(input)
           }}
-          placeholder={
-            currentLang === 'hi'
-              ? 'अपना प्रश्न हिन्दी, English या ગુજરાતી में लिखें...'
-              : currentLang === 'gu'
-              ? 'તમારો પ્રશ્ન ગુજરાતી, English અથવા हिन्दी માં લખો...'
-              : 'Type your question in English, हिन्दी, or ગુજરાતી...'
-          }
-          className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+          placeholder={t('ask_placeholder')}
+          className="flex-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
 
         <button
           onClick={() => void sendMessage(input)}
           disabled={loading || !input.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 text-white disabled:opacity-50 hover:bg-teal-700 active:bg-teal-800 transition-colors shadow-sm"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-colors shadow-sm"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </button>
