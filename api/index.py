@@ -15,9 +15,9 @@ from email.utils import formataddr, formatdate, make_msgid
 from http.server import BaseHTTPRequestHandler
 
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))
-SMTP_USER = os.environ.get("SMTP_USER", "ohmsharma1401@gmail.com")
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").replace(" ", "") or "bknrkxplxizduqrx"
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "amrishs256@gmail.com")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").replace(" ", "") or "hphqugradzkpwluc"
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", SMTP_USER)
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production-32bytes")
 FAST2SMS_API_KEY = os.environ.get("FAST2SMS_API_KEY", "").strip()
