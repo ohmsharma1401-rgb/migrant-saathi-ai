@@ -62,13 +62,17 @@ async def send_otp(payload: SendOTPRequest, db: AsyncSession = Depends(get_db)):
     if email:
         delivered = await send_email_otp(email, otp)
         if not delivered:
-            logger.info("[FALLBACK OTP] Email delivery unavailable for %s; using simulated OTP: %s", email, otp)
-            mock_otp = otp
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to dispatch real OTP email to {email} via Gmail SMTP. Please check that Gmail SMTP App Password is valid."
+            )
     else:
         delivered = await send_sms_otp(mobile, otp)
         if not delivered:
-            logger.info("[FALLBACK OTP] SMS delivery unavailable for %s; using simulated OTP: %s", mobile, otp)
-            mock_otp = otp
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to deliver SMS OTP to {mobile}."
+            )
 
     otp_hash = hash_otp(otp)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.OTP_EXPIRE_MINUTES)
