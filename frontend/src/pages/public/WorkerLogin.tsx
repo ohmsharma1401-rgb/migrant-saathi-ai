@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2, Building2, MapPin, Briefcase } from 'lucide-react'
+import { Shield, ArrowLeft, Loader2, Mail, Phone, CheckCircle2, Building2, MapPin, Briefcase, AlertTriangle } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 import LanguageSelector from '@/components/LanguageSelector'
