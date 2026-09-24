@@ -1,426 +1,490 @@
 import { useState } from 'react'
-import { Users, Search, Eye, Download, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react'
+import { Search, Plus, Filter, Download, MoreHorizontal, Building2, Users, ChevronRight, FileText, CheckCircle2 } from 'lucide-react'
+import { useTranslation } from '@/utils/translations'
 
-// ─── DEMO DATA ──────────────────────────────────────────────────────────────
-interface Worker {
-  id: string
-  name: string
-  occupation: string
-  sector: string
-  location: string
-  originState: string
-  skills: string[]
-  registered: string
-}
-
-const DEMO_WORKERS: Worker[] = [
-  { id: 'W-0001', name: 'Ramesh Kumar',   occupation: 'Mason',              sector: 'Construction', location: 'Ahmedabad', originState: 'Bihar',     skills: ['Masonry', 'Carpentry'],        registered: '15 Jan 2024' },
-  { id: 'W-0002', name: 'Suresh Yadav',   occupation: 'Weaver',             sector: 'Textiles',     location: 'Surat',     originState: 'Uttar Pradesh', skills: ['Textile Weaving'],            registered: '20 Jan 2024' },
-  { id: 'W-0003', name: 'Arjun Singh',    occupation: 'Diamond Polisher',   sector: 'Diamond',      location: 'Surat',     originState: 'Rajasthan', skills: ['Polishing', 'Sorting'],      registered: '22 Jan 2024' },
-  { id: 'W-0004', name: 'Mohammad Khan',  occupation: 'Electrician',        sector: 'Construction', location: 'Vadodara',  originState: 'Madhya Pradesh', skills: ['Electrical Wiring'],         registered: '28 Jan 2024' },
-  { id: 'W-0005', name: 'Ravi Patel',     occupation: 'Machine Operator',   sector: 'Manufacturing',location: 'Rajkot',    originState: 'Gujarat',   skills: ['CNC Machine Op.'],           registered: '5 Feb 2024'  },
-  { id: 'W-0006', name: 'Santosh Kumar',  occupation: 'Plumber',            sector: 'Construction', location: 'Ahmedabad', originState: 'Bihar',     skills: ['Plumbing & Sanitation'],     registered: '10 Feb 2024' },
-  { id: 'W-0007', name: 'Pradeep Mishra', occupation: 'Carpenter',          sector: 'Construction', location: 'Surat',     originState: 'Uttar Pradesh', skills: ['Carpentry & Shuttering'],  registered: '14 Feb 2024' },
-  { id: 'W-0008', name: 'Anita Devi',     occupation: 'Embroidery Worker',  sector: 'Textiles',     location: 'Surat',     originState: 'Rajasthan', skills: ['Embroidery', 'Tailoring'],   registered: '18 Feb 2024' },
-  { id: 'W-0009', name: 'Vikram Sahni',   occupation: 'Welder',             sector: 'Manufacturing',location: 'Vadodara',  originState: 'Jharkhand', skills: ['Arc & TIG Welding'],       registered: '24 Feb 2024' },
-  { id: 'W-0010', name: 'Sunil Paswan',   occupation: 'Mason',              sector: 'Construction', location: 'Ahmedabad', originState: 'Bihar',     skills: ['Masonry Work'],              registered: '01 Mar 2024' },
-  { id: 'W-0011', name: 'Dinesh Mahato',  occupation: 'Crane Operator',     sector: 'Construction', location: 'Rajkot',    originState: 'Odisha',    skills: ['Heavy Equipment'],           registered: '10 Mar 2024' },
-  { id: 'W-0012', name: 'Gopal Verma',    occupation: 'Textile Spinner',    sector: 'Textiles',     location: 'Surat',     originState: 'West Bengal', skills: ['Textile Spinning'],         registered: '18 Mar 2024' },
+const WORKER_REGISTRY = [
+  { id: '#GR-24841', issue: 'Unpaid wages', worker: 'Ramesh Kumar', district: 'Surat', company: 'Shree Construction Ltd.', priority: 'High', priorityBg: 'bg-red-50 text-red-700 border-red-200' },
+  { id: '#GR-24836', issue: 'Unsafe workplace', worker: 'Mohd. Irfan', district: 'Ahmedabad', company: 'Reliance Textile Unit', priority: 'High', priorityBg: 'bg-red-50 text-red-700 border-red-200' },
+  { id: '#GR-24819', issue: 'Scheme access', worker: 'Sunita Devi', district: 'Vadodara', company: 'L&T Project Site #4', priority: 'Medium', priorityBg: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { id: '#GR-24804', issue: 'ID verification', worker: 'Ajay Munda', district: 'Rajkot', company: 'Rajkot Auto Components', priority: 'Normal', priorityBg: 'bg-sky-50 text-sky-700 border-sky-200' },
+  { id: '#GR-24792', issue: 'Overtime pay theft', worker: 'Rajesh Sharma', district: 'Surat', company: 'Surat Diamond Craft', priority: 'High', priorityBg: 'bg-red-50 text-red-700 border-red-200' },
+  { id: '#GR-24785', issue: 'BOCW registration', worker: 'Kavita Patel', district: 'Ahmedabad', company: 'Shree Construction Ltd.', priority: 'Normal', priorityBg: 'bg-sky-50 text-sky-700 border-sky-200' },
 ]
 
-const DISTRICT_OPTIONS = ['All Districts', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar']
-const SECTOR_OPTIONS   = ['All Sectors', 'Construction', 'Textiles', 'Diamond', 'Manufacturing']
-
-const SECTOR_BADGE: Record<string, string> = {
-  Construction: 'bg-blue-100 text-blue-800',
-  Textiles:     'bg-purple-100 text-purple-800',
-  Diamond:      'bg-amber-100 text-amber-800',
-  Manufacturing:'bg-teal-100 text-teal-800',
+interface RegisteredCompany {
+  id: string
+  code: string
+  name: string
+  district: string
+  sector: string
+  registeredEmployees: number
+  complianceScore: number
+  safetyRating: string
+  contactPerson: string
+  address: string
+  sampleWorkers: string[]
 }
 
+const REGISTERED_COMPANIES: RegisteredCompany[] = [
+  {
+    id: 'c1',
+    code: 'CMP-GJ-0481',
+    name: 'Shree Construction Ltd.',
+    district: 'Surat',
+    sector: 'Construction',
+    registeredEmployees: 1420,
+    complianceScore: 98,
+    safetyRating: 'A+ Verified',
+    contactPerson: 'Rajesh Shah (HR Head)',
+    address: 'Plot 42, GIDC Industrial Estate, Hazira, Surat',
+    sampleWorkers: ['Ramesh Kumar (Mason)', 'Kavita Patel (Supervisor)', 'Vikram Singh (Steel Fixer)'],
+  },
+  {
+    id: 'c2',
+    code: 'CMP-GJ-0112',
+    name: 'Reliance Textile & Fabrics Unit',
+    district: 'Ahmedabad',
+    sector: 'Textiles',
+    registeredEmployees: 1180,
+    complianceScore: 95,
+    safetyRating: 'A Verified',
+    contactPerson: 'Viren Patel (Operations Director)',
+    address: 'Naroda GIDC Phase 3, Ahmedabad',
+    sampleWorkers: ['Mohd. Irfan (Weaver)', 'Sunita Devi (Spinner)', 'Animesh Roy (Dyer)'],
+  },
+  {
+    id: 'c3',
+    code: 'CMP-GJ-0923',
+    name: 'L&T Infrastructure Project Site #4',
+    district: 'Vadodara',
+    sector: 'Construction',
+    registeredEmployees: 950,
+    complianceScore: 96,
+    safetyRating: 'A+ Verified',
+    contactPerson: 'Sanjay Verma (Site Manager)',
+    address: 'Makarpura Industrial Zone, Vadodara',
+    sampleWorkers: ['Sunita Devi (Fitter)', 'Pradeep Mishra (Operator)', 'Dinesh Sahu (Welder)'],
+  },
+  {
+    id: 'c4',
+    code: 'CMP-GJ-0544',
+    name: 'Surat Diamond Craft Industries',
+    district: 'Surat',
+    sector: 'Diamond',
+    registeredEmployees: 840,
+    complianceScore: 92,
+    safetyRating: 'B+ Monitored',
+    contactPerson: 'Ketan Dholakia (Owner)',
+    address: 'Katargam Diamond Hub, Surat',
+    sampleWorkers: ['Rajesh Sharma (Polisher)', 'Mahesh Solanki (Cutter)', 'Arjun Meena (Packer)'],
+  },
+  {
+    id: 'c5',
+    code: 'CMP-GJ-0782',
+    name: 'Adani Logistics & Manufacturing Port Unit',
+    district: 'Kutch',
+    sector: 'Manufacturing',
+    registeredEmployees: 760,
+    complianceScore: 99,
+    safetyRating: 'A+ Verified',
+    contactPerson: 'Anil Mehta (EHS Manager)',
+    address: 'Mundra Port SEZ Sector 2, Kutch',
+    sampleWorkers: ['Suresh Yadav (Rig Driver)', 'Pankaj Kumar (Loader)', 'Devendra Paul (Technician)'],
+  },
+  {
+    id: 'c6',
+    code: 'CMP-GJ-0319',
+    name: 'Rajkot Auto Components Ltd.',
+    district: 'Rajkot',
+    sector: 'Manufacturing',
+    registeredEmployees: 520,
+    complianceScore: 91,
+    safetyRating: 'A Verified',
+    contactPerson: 'Pravin Randeria (GM)',
+    address: 'Metoda GIDC Industrial Area, Rajkot',
+    sampleWorkers: ['Ajay Munda (Lathe Operator)', 'Birendra Sah (Toolroom Assistant)'],
+  },
+]
+
 export default function WorkerDirectory() {
-  const [search, setSearch]                   = useState('')
-  const [appliedSearch, setAppliedSearch]     = useState('')
-  const [district, setDistrict]               = useState('All Districts')
-  const [appliedDistrict, setAppliedDistrict] = useState('All Districts')
-  const [sector, setSector]                   = useState('All Sectors')
-  const [appliedSector, setAppliedSector]     = useState('All Sectors')
-  const [selectedWorker, setSelectedWorker]   = useState<Worker | null>(null)
-  
-  // Dynamic Pagination State
-  const [currentPage, setCurrentPage]         = useState(1)
-  const itemsPerPage = 5
+  const { t, lang } = useTranslation()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<'workers' | 'companies'>('companies')
+  const [selectedCompany, setSelectedCompany] = useState<RegisteredCompany | null>(null)
 
-  // Read newly registered worker from localStorage
-  const getWorkersList = (): Worker[] => {
-    try {
-      const customStr = localStorage.getItem('saathi-custom-worker')
-      if (customStr) {
-        const c = JSON.parse(customStr)
-        const customWorker: Worker = {
-          id: c.id || 'W-9999',
-          name: c.full_name || 'Registered Worker',
-          occupation: c.occupation || 'Mason',
-          sector: c.sector || 'Construction',
-          location: c.current_district || 'Ahmedabad',
-          originState: c.origin_state || 'Bihar',
-          skills: Array.isArray(c.skills) ? c.skills : [c.occupation || 'Mason'],
-          registered: 'Just Now (Live)',
-        }
-        return [customWorker, ...DEMO_WORKERS]
-      }
-    } catch {
-      // Fallback
+  function getSectorName(sec: string) {
+    if (lang === 'hi') {
+      if (sec === 'Construction') return 'निर्माण'
+      if (sec === 'Textiles') return 'कपड़ा'
+      if (sec === 'Diamond') return 'हीरा'
+      if (sec === 'Manufacturing') return 'विनिर्माण'
+      return sec
     }
-    return DEMO_WORKERS
+    if (lang === 'gu') {
+      if (sec === 'Construction') return 'બાંધકામ'
+      if (sec === 'Textiles') return 'ટેક્સટાઇલ'
+      if (sec === 'Diamond') return 'હીરા'
+      if (sec === 'Manufacturing') return 'મેન્યુફેક્ચરિંગ'
+      return sec
+    }
+    return sec
   }
 
-  const allWorkers = getWorkersList()
-
-  const handleApplyFilter = () => {
-    setAppliedSearch(search)
-    setAppliedDistrict(district)
-    setAppliedSector(sector)
-    setCurrentPage(1) // Reset to page 1 on filter
+  function getIssueText(issue: string) {
+    if (lang === 'hi') {
+      if (issue === 'Unpaid wages') return 'अवैतनिक मजदूरी'
+      if (issue === 'Unsafe workplace') return 'असुरक्षित कार्यस्थल'
+      if (issue === 'Scheme access') return 'योजना पहुंच'
+      if (issue === 'ID verification') return 'आईडी सत्यापन'
+      if (issue === 'Overtime pay theft') return 'ओवरटाइम वेतन चोरी'
+      if (issue === 'BOCW registration') return 'BOCW पंजीकरण'
+      return issue
+    }
+    if (lang === 'gu') {
+      if (issue === 'Unpaid wages') return 'અણચૂકવાયેલ વેતન'
+      if (issue === 'Unsafe workplace') return 'અસુરક્ષિત કાર્યસ્થળ'
+      if (issue === 'Scheme access') return 'યોજના સુવિધા'
+      if (issue === 'ID verification') return 'આઇડી ચકાસણી'
+      if (issue === 'Overtime pay theft') return 'ઓવરટાઇમ વેતન ચોરી'
+      if (issue === 'BOCW registration') return 'BOCW નોંધણી'
+      return issue
+    }
+    return issue
   }
 
-  const handleResetFilters = () => {
-    setSearch('')
-    setAppliedSearch('')
-    setDistrict('All Districts')
-    setAppliedDistrict('All Districts')
-    setSector('All Sectors')
-    setAppliedSector('All Sectors')
-    setCurrentPage(1)
+  function getPriorityText(pri: string) {
+    if (lang === 'hi') {
+      if (pri === 'High') return 'उच्च'
+      if (pri === 'Medium') return 'मध्यम'
+      if (pri === 'Normal') return 'सामान्य'
+      return pri
+    }
+    if (lang === 'gu') {
+      if (pri === 'High') return 'ઉચ્ચ'
+      if (pri === 'Medium') return 'મધ્યમ'
+      if (pri === 'Normal') return 'સામાન્ય'
+      return pri
+    }
+    return pri
   }
 
-  const filtered = allWorkers.filter((w) => {
-    const q = (appliedSearch || search).toLowerCase().trim()
-    const matchSearch =
-      !q ||
-      w.name.toLowerCase().includes(q) ||
-      w.occupation.toLowerCase().includes(q) ||
-      w.location.toLowerCase().includes(q) ||
-      w.originState.toLowerCase().includes(q) ||
-      w.skills.some((s) => s.toLowerCase().includes(q))
-
-    const matchDistrict = appliedDistrict === 'All Districts' || w.location === appliedDistrict
-    const matchSector   = appliedSector   === 'All Sectors'  || w.sector   === appliedSector
-    return matchSearch && matchDistrict && matchSector
-  })
-
-  // Pagination calculation
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
-  const safeCurrentPage = Math.min(currentPage, totalPages)
-  const startIndex = (safeCurrentPage - 1) * itemsPerPage
-  const paginatedWorkers = filtered.slice(startIndex, startIndex + itemsPerPage)
-
-  const handleExportCSV = () => {
-    const headers = ['ID', 'Name', 'Occupation', 'Sector', 'Location', 'Origin State', 'Skills', 'Registered']
-    const rows = filtered.map((w) => [
-      w.id,
-      `"${w.name}"`,
-      `"${w.occupation}"`,
-      `"${w.sector}"`,
-      `"${w.location}"`,
-      `"${w.originState}"`,
-      `"${w.skills.join(', ')}"`,
-      `"${w.registered}"`,
-    ])
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `migrant_workers_${new Date().toISOString().slice(0, 10)}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  function getRatingText(rating: string) {
+    if (lang === 'hi') {
+      if (rating.includes('Verified')) return rating.replace('Verified', 'सत्यापित')
+      if (rating.includes('Monitored')) return rating.replace('Monitored', 'निगरानी में')
+      return rating
+    }
+    if (lang === 'gu') {
+      if (rating.includes('Verified')) return rating.replace('Verified', 'ચકાસાયેલ')
+      if (rating.includes('Monitored')) return rating.replace('Monitored', 'મોનિટર થયેલ')
+      return rating
+    }
+    return rating
   }
+
+  const filteredWorkers = WORKER_REGISTRY.filter(
+    (row) =>
+      row.worker.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.id.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const filteredCompanies = REGISTERED_COMPANIES.filter(
+    (comp) =>
+      comp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      comp.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      comp.district.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      comp.sector.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const totalRegisteredMigrants = REGISTERED_COMPANIES.reduce((sum, c) => sum + c.registeredEmployees, 0)
 
   return (
-    <div className="space-y-6 text-slate-900 dark:text-slate-100">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+      {/* ── Header Row ── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-400">
-              <Users className="h-6 w-6" />
-            </div>
-            Worker Directory
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#FF6B53] mb-1">
+            <span className="w-4 h-[2px] bg-[#FF6B53]" />
+            GOVERNMENT WORKFORCE &amp; COMPANY REPOSITORY
+          </div>
+          <h1 className="text-3xl font-normal text-[#0C2D27] tracking-tight">
+            {t('nav_gov_workers')}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Search, filter, and manage registered migrant workers across Gujarat corridors.
+          <p className="text-xs sm:text-sm text-[#52605D] mt-0.5 font-normal">
+            {lang === 'hi'
+              ? 'गुजरात भर में पंजीकृत कंपनियों, कुल कर्मचारियों की संख्या और डिजिटल श्रमिक पहचान का ऑडिट करें।'
+              : lang === 'gu'
+              ? 'ગુજરાતમાં નોંધાયેલ કંપનીઓ, કુલ શ્રમિકોની સંખ્યા અને ડિજિટલ શ્રમિક આઇડીનું ઓડિટ કરો.'
+              : 'Audit registered companies, total employee counts, and portable worker identities across Gujarat.'}
           </p>
         </div>
+
         <button
-          onClick={handleExportCSV}
-          className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all"
+          onClick={() => alert('Opening Employer Company / Worker Registration Dialog...')}
+          className="figma-btn-coral py-3 px-5 text-xs font-bold flex items-center gap-2 cursor-pointer shrink-0"
         >
-          <Download className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-          Export Directory (CSV)
+          <Plus className="h-4 w-4" />
+          <span>{lang === 'hi' ? 'नियोक्ता / श्रमिक पंजीकृत करें' : lang === 'gu' ? 'માલિક / શ્રમિક નોંધો' : 'Register Employer / Worker'}</span>
         </button>
       </div>
 
-      {/* Search + Filter Bar */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 sm:p-5 transition-colors">
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[220px] flex flex-col gap-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Search Query</label>
-            <div className="relative">
-              <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by name, skill, occupation, or location..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleApplyFilter() }}
-                className="w-full border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-slate-700">Work District</label>
-            <select
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              className="border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
-            >
-              {DISTRICT_OPTIONS.map((d) => <option key={d}>{d}</option>)}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-slate-700">Sector</label>
-            <select
-              value={sector}
-              onChange={(e) => setSector(e.target.value)}
-              className="border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
-            >
-              {SECTOR_OPTIONS.map((s) => <option key={s}>{s}</option>)}
-            </select>
-          </div>
-
-          <button
-            onClick={handleApplyFilter}
-            className="bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-xs"
-          >
-            Apply Filters &amp; Search
-          </button>
-
-          {(appliedSearch || appliedDistrict !== 'All Districts' || appliedSector !== 'All Sectors') && (
-            <button
-              onClick={handleResetFilters}
-              className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2.5 rounded-xl transition-all"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset Filters
-            </button>
-          )}
+      {/* ── Mode Switcher & Stats ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-3xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+          <span className="text-[10px] font-bold text-[#52605D] uppercase block">
+            {lang === 'hi' ? 'पंजीकृत उद्यम' : lang === 'gu' ? 'નોંધાયેલ સાહસો' : 'REGISTERED ENTERPRISES'}
+          </span>
+          <b className="text-2xl font-black text-[#0C2D27]">
+            {REGISTERED_COMPANIES.length} {lang === 'hi' ? 'कंपनियां' : lang === 'gu' ? 'કંપનીઓ' : 'Companies'}
+          </b>
         </div>
-
-        <div className="flex items-center justify-between mt-3 text-xs text-slate-500 pt-2 border-t border-slate-100">
-          <span>
-            Showing <strong className="text-slate-800 font-bold">{filtered.length}</strong> matched workers (Page {safeCurrentPage} of {totalPages})
+        <div className="p-4 rounded-3xl bg-[#0C2D27] text-white shadow-2xs space-y-1">
+          <span className="text-[10px] font-bold text-[#C0E862] uppercase block">
+            {lang === 'hi' ? 'कुल पंजीकृत कर्मचारी' : lang === 'gu' ? 'કુલ નોંધાયેલ શ્રમિકો' : 'TOTAL REGISTERED EMPLOYEES'}
           </span>
-          <span className="text-[11px] text-teal-700 font-medium">
-            ⚡ Live Database Synchronization Active
+          <b className="text-2xl font-black text-white">
+            {totalRegisteredMigrants.toLocaleString()} {lang === 'hi' ? 'श्रमिक' : lang === 'gu' ? 'શ્રમિકો' : 'Workers'}
+          </b>
+        </div>
+        <div className="p-4 rounded-3xl bg-emerald-50 border border-emerald-200 shadow-2xs space-y-1">
+          <span className="text-[10px] font-bold text-emerald-800 uppercase block">
+            {lang === 'hi' ? 'औसत मजदूरी अनुपालन' : lang === 'gu' ? 'સરેરાશ વેતન પાલન' : 'AVERAGE WAGE COMPLIANCE'}
           </span>
+          <b className="text-2xl font-black text-emerald-950">
+            95.3% {lang === 'hi' ? 'उत्तीर्ण' : lang === 'gu' ? 'પાસ' : 'Passed'}
+          </b>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left text-xs font-bold text-slate-600 border-b border-slate-200 bg-slate-100/60">
-                <th className="px-4 py-3.5">Name</th>
-                <th className="px-4 py-3.5">Occupation</th>
-                <th className="px-4 py-3.5">Sector</th>
-                <th className="px-4 py-3.5">Work Location</th>
-                <th className="px-4 py-3.5">Origin State</th>
-                <th className="px-4 py-3.5">Skills</th>
-                <th className="px-4 py-3.5">Registered</th>
-                <th className="px-4 py-3.5 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {paginatedWorkers.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
-                    <div className="max-w-xs mx-auto space-y-2">
-                      <p className="text-base font-bold text-slate-800">No workers matched your criteria</p>
-                      <p className="text-xs text-slate-400">Try adjusting your search query, sector, or district filters.</p>
-                      <button
-                        onClick={handleResetFilters}
-                        className="mt-2 inline-flex items-center gap-1.5 bg-teal-50 text-teal-700 border border-teal-200 font-bold px-3 py-1.5 rounded-xl text-xs hover:bg-teal-100"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                        Clear All Filters
-                      </button>
-                    </div>
-                  </td>
+      {/* ── Search & Filter Control Bar ── */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={
+              activeTab === 'companies'
+                ? (lang === 'hi' ? 'कंपनी का नाम, जिला, क्षेत्र द्वारा खोजें...' : lang === 'gu' ? 'કંપનીનું નામ, જિલ્લો, ક્ષેત્ર વડે શોધો...' : 'Search company name, GIDC district, sector...')
+                : (lang === 'hi' ? 'श्रमिक का नाम, कंपनी, साथी आईडी द्वारा खोजें...' : lang === 'gu' ? 'શ્રમિકનું નામ, કંપની, સાથી આઇડી વડે શોધો...' : 'Search worker name, company, Saathi ID...')
+            }
+            className="w-full pl-11 pr-4 py-3 text-xs sm:text-sm rounded-2xl bg-white border border-slate-200 text-[#0C2D27] placeholder:text-slate-400 focus:outline-none focus:border-[#FF6B53]"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+          <button className="flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-[#0C2D27] hover:bg-slate-50 transition-colors cursor-pointer">
+            <Filter className="h-3.5 w-3.5" />
+            <span>{lang === 'hi' ? 'फ़िल्टर' : lang === 'gu' ? 'ફિલ્ટર્સ' : 'Filters'}</span>
+          </button>
+          <button className="flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-[#0C2D27] hover:bg-slate-50 transition-colors cursor-pointer">
+            <Download className="h-3.5 w-3.5" />
+            <span>{lang === 'hi' ? 'CSV निर्यात' : lang === 'gu' ? 'CSV નિકાસ' : 'Export CSV'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Main Data Table Card ── */}
+      <div className="rounded-3xl bg-white border border-slate-200/80 p-6 shadow-2xs space-y-6">
+        {/* Table View Switcher Tabs */}
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-3">
+          <div className="flex items-center gap-6 text-xs font-bold">
+            <button
+              onClick={() => setActiveTab('companies')}
+              className={`pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+                activeTab === 'companies'
+                  ? 'border-[#FF6B53] text-[#FF6B53]'
+                  : 'border-transparent text-[#52605D] hover:text-[#0C2D27]'
+              }`}
+            >
+              <Building2 className="h-4 w-4" />
+              <span>
+                {lang === 'hi' ? 'कंपनी कर्मचारी विवरण' : lang === 'gu' ? 'કંપની શ્રમિક વિગતો' : 'Company Employee Breakdown'} ({filteredCompanies.length})
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('workers')}
+              className={`pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
+                activeTab === 'workers'
+                  ? 'border-[#FF6B53] text-[#FF6B53]'
+                  : 'border-transparent text-[#52605D] hover:text-[#0C2D27]'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              <span>
+                {lang === 'hi' ? 'श्रमिक केस निर्देशिका' : lang === 'gu' ? 'શ્રમિક કેસ ડિરેક્ટરી' : 'Worker Case Directory'} ({filteredWorkers.length})
+              </span>
+            </button>
+          </div>
+
+          <span className="text-xs text-slate-400 font-medium">
+            {lang === 'hi' ? 'सत्यापित सरकारी पोर्टल रिकॉर्ड · लाइव सिंक' : lang === 'gu' ? 'ચકાસાયેલ સરકારી પોર્ટલ રેકોર્ડ્સ · લાઇવ સિંક' : 'Verified Govt Portal Records · Live Sync'}
+          </span>
+        </div>
+
+        {/* Tab 1: Company Employee Registry */}
+        {activeTab === 'companies' && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-100 text-[10px] uppercase tracking-wider text-[#52605D] font-bold">
+                  <th className="py-3 px-4">{lang === 'hi' ? 'कंपनी कोड' : lang === 'gu' ? 'કંપની કોડ' : 'COMPANY CODE'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'कंपनी का नाम' : lang === 'gu' ? 'કંપનીનું નામ' : 'COMPANY NAME'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'क्षेत्र' : lang === 'gu' ? 'ક્ષેત્ર' : 'SECTOR'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'जिला' : lang === 'gu' ? 'જિલ્લો' : 'DISTRICT'}</th>
+                  <th className="py-3 px-4 text-center">{lang === 'hi' ? 'पंजीकृत कर्मचारी' : lang === 'gu' ? 'નોંધાયેલ શ્રમિકો' : 'REGISTERED EMPLOYEES'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'अनुपालन स्कोर' : lang === 'gu' ? 'પાલન સ્કોર' : 'COMPLIANCE SCORE'}</th>
+                  <th className="py-3 px-4 text-right">{lang === 'hi' ? 'कार्रवाई' : lang === 'gu' ? 'કાર્યવાહી' : 'ACTION'}</th>
                 </tr>
-              ) : (
-                paginatedWorkers.map((w, idx) => (
-                  <tr
-                    key={w.id}
-                    className={`hover:bg-teal-50/30 transition-colors ${idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'}`}
-                  >
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-teal-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0 shadow-xs">
-                          {w.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-900">{w.name}</p>
-                          <p className="text-[10px] text-slate-400 font-mono">{w.id}</p>
-                        </div>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {filteredCompanies.map((comp) => (
+                  <tr key={comp.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-4 px-4 font-mono font-bold text-[#0C2D27]">{comp.code}</td>
+                    <td className="py-4 px-4">
+                      <b className="font-bold text-[#0C2D27] block">{comp.name}</b>
+                      <span className="text-[10px] text-slate-400 font-normal">{comp.contactPerson}</span>
                     </td>
-                    <td className="px-4 py-3.5 font-semibold text-slate-800">{w.occupation}</td>
-                    <td className="px-4 py-3.5">
-                      <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${SECTOR_BADGE[w.sector] ?? 'bg-slate-100 text-slate-700'}`}>
-                        {w.sector}
+                    <td className="py-4 px-4">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-[#0C2D27] text-[10px] font-bold">
+                        {getSectorName(comp.sector)}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 font-medium text-slate-700">{w.location}</td>
-                    <td className="px-4 py-3.5 text-slate-700 font-medium">{w.originState}</td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex flex-wrap gap-1">
-                        {w.skills.map((sk) => (
-                          <span key={sk} className="text-[10px] font-semibold bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md">
-                            {sk}
-                          </span>
-                        ))}
-                      </div>
+                    <td className="py-4 px-4 text-[#52605D]">{comp.district}</td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="px-3 py-1 rounded-full bg-[#0C2D27] text-white font-extrabold text-xs inline-block">
+                        {comp.registeredEmployees.toLocaleString()} {lang === 'hi' ? 'श्रमिक' : lang === 'gu' ? 'શ્રમિકો' : 'Workers'}
+                      </span>
                     </td>
-                    <td className="px-4 py-3.5 text-slate-500 whitespace-nowrap">
-                      {w.registered.includes('Live') ? (
-                        <span className="inline-flex items-center gap-1 font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
-                          <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
-                          {w.registered}
-                        </span>
-                      ) : (
-                        w.registered
-                      )}
+                    <td className="py-4 px-4">
+                      <span className="text-emerald-700 font-extrabold flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        {comp.complianceScore}% ({getRatingText(comp.safetyRating)})
+                      </span>
                     </td>
-                    <td className="px-4 py-3.5 text-center">
+                    <td className="py-4 px-4 text-right">
                       <button
-                        onClick={() => setSelectedWorker(w)}
-                        className="inline-flex items-center gap-1 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold px-3 py-1.5 rounded-xl transition-all"
+                        onClick={() => setSelectedCompany(comp)}
+                        className="figma-btn-coral py-1.5 px-3 text-[11px] font-bold cursor-pointer"
                       >
-                        <Eye className="h-3.5 w-3.5" />
-                        View Profile
+                        {lang === 'hi' ? 'रोस्टर निरीक्षण करें' : lang === 'gu' ? 'રોસ્ટર ચકાસો' : 'Inspect Roster'}
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Dynamic Pagination Bar */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-200 bg-slate-50">
-          <p className="text-xs font-medium text-slate-500">
-            Page <strong className="text-slate-800">{safeCurrentPage}</strong> of <strong className="text-slate-800">{totalPages}</strong>
-          </p>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={safeCurrentPage === 1}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-100 transition-all shadow-xs cursor-pointer"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => setCurrentPage(p)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                  p === safeCurrentPage
-                    ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={safeCurrentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-700 disabled:opacity-40 hover:bg-slate-100 transition-all shadow-xs cursor-pointer"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </button>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        )}
+
+        {/* Tab 2: Worker Case Directory */}
+        {activeTab === 'workers' && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-100 text-[10px] uppercase tracking-wider text-[#52605D] font-bold">
+                  <th className="py-3 px-4">{lang === 'hi' ? 'केस आईडी' : lang === 'gu' ? 'કેસ આઇડી' : 'CASE ID'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'श्रमिक' : lang === 'gu' ? 'શ્રમિક' : 'WORKER'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'नियोक्ता कंपनी' : lang === 'gu' ? 'માલિક કંપની' : 'EMPLOYER COMPANY'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'समस्या / रिकॉर्ड' : lang === 'gu' ? 'સમસ્યા / રેકોર્ડ' : 'ISSUE / RECORD'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'जिला' : lang === 'gu' ? 'જિલ્લો' : 'DISTRICT'}</th>
+                  <th className="py-3 px-4">{lang === 'hi' ? 'स्थिति' : lang === 'gu' ? 'સ્થિતિ' : 'STATUS'}</th>
+                  <th className="py-3 px-4 text-right">{lang === 'hi' ? 'कार्रवाई' : lang === 'gu' ? 'કાર્યવાહી' : 'ACTION'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {filteredWorkers.map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-bold text-[#0C2D27]">{row.id}</td>
+                    <td className="py-3.5 px-4 font-semibold text-[#0C2D27]">{row.worker}</td>
+                    <td className="py-3.5 px-4 text-[#0C2D27] font-medium">{row.company}</td>
+                    <td className="py-3.5 px-4 text-[#52605D]">{getIssueText(row.issue)}</td>
+                    <td className="py-3.5 px-4 text-[#52605D]">{row.district}</td>
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${row.priorityBg}`}>
+                        {getPriorityText(row.priority)}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right text-slate-400">
+                      <button className="p-1 hover:text-[#0C2D27] rounded cursor-pointer">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Worker Profile Detail Modal */}
-      {selectedWorker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 border border-slate-200">
-            <div className="flex items-start justify-between border-b pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-600 text-white font-extrabold flex items-center justify-center text-sm shadow-md">
-                  {selectedWorker.name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900">{selectedWorker.name}</h3>
-                  <p className="text-xs text-slate-500 font-mono">ID: {selectedWorker.id}</p>
-                </div>
+      {/* ── Company Employee Roster Inspection Modal ── */}
+      {selectedCompany && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="relative w-full max-w-xl bg-white rounded-3xl p-6 shadow-2xl space-y-5 border border-slate-200">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-[#FF6B53] uppercase block">
+                  {selectedCompany.code} · {lang === 'hi' ? 'कर्मचारी रोस्टर निरीक्षण' : lang === 'gu' ? 'શ્રમિક રોસ્ટર ચકાસણી' : 'EMPLOYEE ROSTER INSPECTION'}
+                </span>
+                <h3 className="text-xl font-bold text-[#0C2D27] leading-snug">
+                  {selectedCompany.name}
+                </h3>
+                <p className="text-xs text-[#52605D]">{selectedCompany.address}</p>
               </div>
               <button
-                onClick={() => setSelectedWorker(null)}
-                className="text-slate-400 hover:text-slate-700 font-bold p-1 rounded-lg hover:bg-slate-100"
+                onClick={() => setSelectedCompany(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-[#0C2D27] hover:bg-slate-100 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <div>
-                <span className="text-slate-400 font-medium block">Primary Occupation</span>
-                <span className="font-bold text-slate-800">{selectedWorker.occupation}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block">Sector</span>
-                <span className="font-bold text-slate-800">{selectedWorker.sector}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block">Work Location</span>
-                <span className="font-bold text-slate-800">{selectedWorker.location}, Gujarat</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-medium block">Origin State</span>
-                <span className="font-bold text-slate-800">{selectedWorker.originState}</span>
-              </div>
-            </div>
-
-            <div>
-              <span className="text-xs font-bold text-slate-700 block mb-1.5">Registered Skills &amp; Certifications</span>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedWorker.skills.map((sk) => (
-                  <span key={sk} className="text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200 px-2.5 py-1 rounded-lg">
-                    ✓ {sk}
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-[#0C2D27] text-white flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-emerald-200 uppercase font-bold block">
+                    {lang === 'hi' ? 'पंजीकृत प्रवासी श्रमिक' : lang === 'gu' ? 'નોંધાયેલ સ્થળાંતરિત શ્રમિકો' : 'REGISTERED MIGRANT WORKERS'}
                   </span>
-                ))}
+                  <b className="text-2xl font-black text-white">
+                    {selectedCompany.registeredEmployees.toLocaleString()} {lang === 'hi' ? 'कर्मचारी' : lang === 'gu' ? 'શ્રમિકો' : 'Employees'}
+                  </b>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-emerald-200 uppercase font-bold block">
+                    {lang === 'hi' ? 'ऑडिट रेटिंग' : lang === 'gu' ? 'ઓડિટ રેટિંગ' : 'AUDIT RATING'}
+                  </span>
+                  <b className="text-sm font-bold text-[#C0E862]">{getRatingText(selectedCompany.safetyRating)}</b>
+                </div>
+              </div>
+
+              {/* Sample Workers Breakdown */}
+              <div className="space-y-2">
+                <b className="text-xs font-bold text-[#0C2D27] block">
+                  {lang === 'hi' ? 'पंजीकृत मुख्य कर्मचारी व श्रमिक:' : lang === 'gu' ? 'નોંધાયેલ શ્રમિકો અને સ્ટાફ:' : 'Registered Key Staff & Workers:'}
+                </b>
+                <div className="space-y-2">
+                  {selectedCompany.sampleWorkers.map((w, i) => (
+                    <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-semibold text-[#0C2D27]">
+                      <span>👤 {w}</span>
+                      <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px]">
+                        {lang === 'hi' ? 'सत्यापित आईडी' : lang === 'gu' ? 'ચકાસાયેલ આઇડી' : 'Verified ID'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="pt-2 flex justify-end">
               <button
-                onClick={() => setSelectedWorker(null)}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-xs"
+                onClick={() => setSelectedCompany(null)}
+                className="figma-btn-coral py-2.5 px-6 text-xs font-bold cursor-pointer"
               >
-                Close Profile
+                {lang === 'hi' ? 'निरीक्षण पूर्ण' : lang === 'gu' ? 'ચકાસણી પૂર્ણ' : 'Done Inspecting'}
               </button>
             </div>
           </div>

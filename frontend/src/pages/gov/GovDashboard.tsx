@@ -188,78 +188,79 @@ export default function GovDashboard() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+    <div className="min-h-screen bg-slate-50/70 p-4 sm:p-6 space-y-6">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="saathi-badge-teal text-[11px] font-bold uppercase tracking-wider">
+              🏛️ Gujarat Labour &amp; Employment Department · Portal Operations Console
+            </span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
             {greeting}, {t('gov_greeting')} 👋
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">{dateStr}</p>
-          <p className="text-sm font-semibold text-indigo-600 mt-0.5 flex items-center gap-1.5">
-            <span className="inline-block w-2 h-2 rounded-full bg-indigo-500"></span>
-            {t('gov_subtitle')}
-          </p>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">{dateStr}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg px-3 py-2 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-xl px-3.5 py-2 transition-all shadow-2xs disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             {t('gov_refresh')}
           </button>
-          <div className="flex items-center gap-2 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2 shadow-2xs">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             {t('gov_live_connected')}
           </div>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
         <KpiCard
           label={t('gov_reg_workers')}
           value={liveOverview.total_workers ? liveOverview.total_workers.toLocaleString() : "12,847"}
           trend="↑ +234 this month"
-          trendColor="text-green-600"
-          icon={<div className="p-2 rounded-lg bg-blue-50"><Users className="h-4 w-4 text-blue-600" /></div>}
-          borderColor="border-l-blue-500"
-          description="Migrant workers registered"
+          trendColor="text-emerald-700 font-bold"
+          icon={<div className="p-2 rounded-xl bg-teal-50 text-teal-700"><Users className="h-4 w-4" /></div>}
+          borderColor="border-l-teal-600"
+          description="Registered migrant workers"
         />
         <KpiCard
           label={t('gov_welfare_coverage')}
           value={liveOverview.total_welfare_matches ? liveOverview.total_welfare_matches.toLocaleString() : "8,412"}
           trend="65.5% coverage"
-          trendColor="text-blue-600"
-          icon={<div className="p-2 rounded-lg bg-purple-50"><Heart className="h-4 w-4 text-purple-600" /></div>}
-          borderColor="border-l-purple-500"
+          trendColor="text-teal-700 font-bold"
+          icon={<div className="p-2 rounded-xl bg-purple-50 text-purple-700"><Heart className="h-4 w-4" /></div>}
+          borderColor="border-l-purple-600"
         />
         <KpiCard
           label={t('gov_wage_alerts')}
           value={liveOverview.total_wage_alerts ? liveOverview.total_wage_alerts.toLocaleString() : "1,203"}
           trend="↑ +89 this week"
-          trendColor="text-red-600"
-          icon={<div className="p-2 rounded-lg bg-amber-50"><AlertTriangle className="h-4 w-4 text-amber-600" /></div>}
-          borderColor="border-l-amber-500"
+          trendColor="text-amber-700 font-bold"
+          icon={<div className="p-2 rounded-xl bg-amber-50 text-amber-700"><AlertTriangle className="h-4 w-4" /></div>}
+          borderColor="border-l-amber-600"
           description="Potential wage discrepancies"
         />
         <KpiCard
           label={t('gov_open_grievances')}
           value={liveOverview.total_grievances ? liveOverview.total_grievances.toLocaleString() : "347"}
           trend="42 high priority"
-          trendColor="text-red-600"
-          icon={<div className="p-2 rounded-lg bg-red-50"><MessageSquare className="h-4 w-4 text-red-600" /></div>}
-          borderColor="border-l-red-400"
+          trendColor="text-red-700 font-bold"
+          icon={<div className="p-2 rounded-xl bg-red-50 text-red-700"><MessageSquare className="h-4 w-4" /></div>}
+          borderColor="border-l-red-500"
         />
         <KpiCard
           label={t('gov_high_priority')}
           value={liveOverview.high_priority_cases ? liveOverview.high_priority_cases.toLocaleString() : "42"}
           trend="Needs immediate review"
-          trendColor="text-red-700"
-          icon={<div className="p-2 rounded-lg bg-red-50"><ShieldAlert className="h-4 w-4 text-red-600" /></div>}
-          borderColor="border-l-red-600"
+          trendColor="text-red-800 font-bold"
+          icon={<div className="p-2 rounded-xl bg-red-100 text-red-800"><ShieldAlert className="h-4 w-4" /></div>}
+          borderColor="border-l-red-700"
         />
       </div>
 
@@ -281,7 +282,7 @@ export default function GovDashboard() {
           </div>
 
           {/* Styled map placeholder */}
-          <div className="relative rounded-lg bg-gradient-to-br from-sky-50 to-indigo-50 border border-sky-100 h-56 flex items-center justify-center overflow-hidden">
+          <div className="relative rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-[var(--rule)] h-56 flex items-center justify-center overflow-hidden">
             {/* Simple Gujarat silhouette as decorative SVG */}
             <svg viewBox="0 0 220 180" className="absolute inset-0 w-full h-full opacity-10" aria-hidden="true">
               <path

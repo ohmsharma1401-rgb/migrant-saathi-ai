@@ -75,12 +75,15 @@ export default function App() {
           }
         >
           <Route index element={<GovDashboard />} />
+          <Route path="analytics" element={<WelfareAnalytics />} />
           <Route path="map" element={<WorkerMap />} />
           <Route path="workers" element={<WorkerDirectory />} />
-          <Route path="welfare" element={<WelfareAnalytics />} />
+          <Route path="welfare" element={<SchemeManagement />} />
           <Route path="wages" element={<WageMonitoring />} />
           <Route path="grievances" element={<GrievancesPanel />} />
           <Route path="insights" element={<AIInsights />} />
+          <Route path="settings" element={<SystemSettings />} />
+          <Route path="help" element={<AIInsights />} />
         </Route>
 
         {/* Admin */}

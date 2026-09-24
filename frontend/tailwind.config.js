@@ -10,6 +10,20 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        saffron: {
+          DEFAULT: "#F5671A",
+          50: "#fff7ed",
+          100: "#ffedd5",
+          200: "#fed7aa",
+          500: "#F5671A",
+          600: "#ea580c",
+          700: "#c2410c",
+        },
+        or: "#F5671A",
+        ink: "var(--ink)",
+        surface: "var(--surface)",
+        hair: "var(--hair)",
+        rule: "var(--rule)",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -33,15 +47,9 @@ export default {
         brand: {
           50: "#eff6ff",
           100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
           500: "#3b82f6",
           600: "#2563eb",
           700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
-          950: "#172554",
         },
         teal: {
           50: "#f0fdfa",
@@ -56,7 +64,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["-apple-system", "BlinkMacSystemFont", '"Segoe UI"', "system-ui", "sans-serif"],
+        sans: ['"Hind"', '"Hind Vadodara"', '"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         card: "0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06)",

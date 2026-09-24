@@ -161,7 +161,12 @@ export default function WorkerLogin() {
       const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email })
       setEmailOtpToken(res.data.otp_token || '')
       setEmailOtpSent(true)
-      setEmailSuccessMsg(`📩 Verification OTP code sent to your Gmail (${email}). Please check your email inbox & spam folder.`)
+      if (res.data.mock_otp) {
+        setEmailOtpInput(res.data.mock_otp)
+        setEmailSuccessMsg(`📩 Verification OTP generated (${res.data.mock_otp}). Code auto-filled for instant verification.`)
+      } else {
+        setEmailSuccessMsg(res.data.message || `📩 Verification OTP code sent to your Gmail (${email}). Please check your inbox.`)
+      }
     } catch (err: any) {
       const errMsg = err?.response?.data?.detail || err?.message || 'Could not send email OTP. Ensure backend is running.'
       setApiError(`Email OTP Error: ${errMsg}`)
@@ -248,28 +253,34 @@ export default function WorkerLogin() {
 
     setSavingReg(false)
     setSignInInput(regForm.email)
-    setSignInSuccessMsg(`🎉 Registration successful for ${regForm.fullName}! Please sign in below using your verified email (${regForm.email}).`)
+    setSignInSuccessMsg(`🎉 Registration successful for ${regForm.fullName}! Please sign in below using your verified email or mobile (${regForm.email}).`)
     setAuthTab('signin')
   }
 
-  // Sign In for Existing Users (Email Verification Only)
+  // Sign In for Existing Users (Email or Mobile Number)
   async function handleSignInSendOTP(e: React.FormEvent) {
     e.preventDefault()
     setApiError('')
     setSignInSuccessMsg('')
-    const email = signInInput.trim().toLowerCase()
-    if (!email.includes('@')) {
-      setApiError('Enter a valid registered Gmail / Email address')
+    const inputVal = signInInput.trim()
+    if (!inputVal) {
+      setApiError('Enter your registered Email or Mobile Number')
       return
     }
     setSignInSending(true)
     try {
-      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', { email })
+      const payload = inputVal.includes('@') ? { email: inputVal } : { mobile_number: inputVal }
+      const res = await api.post<SendOTPResponse>('/auth/worker/send-otp', payload)
       setSignInOtpToken(res.data.otp_token || '')
       setSignInOtpSent(true)
-      setSignInSuccessMsg(`📩 Verification OTP code sent to your Gmail (${email}). Please check your email inbox & spam folder.`)
+      if (res.data.mock_otp) {
+        setSignInOtpInput(res.data.mock_otp)
+        setSignInSuccessMsg(`📩 Verification OTP generated (${res.data.mock_otp}). Code auto-filled for instant verification.`)
+      } else {
+        setSignInSuccessMsg(res.data.message || `📩 Verification OTP code sent to ${inputVal}. Please check your inbox / SMS.`)
+      }
     } catch (err: any) {
-      const errMsg = err?.response?.data?.detail || err?.message || 'Could not send Email OTP'
+      const errMsg = err?.response?.data?.detail || err?.message || 'Could not send OTP'
       setApiError(`OTP Error: ${errMsg}`)
     } finally {
       setSignInSending(false)
@@ -320,25 +331,25 @@ export default function WorkerLogin() {
       </div>
 
       {/* Main Card */}
-      <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 px-6 sm:px-8 py-8 transition-colors">
+      <div className="w-full max-w-xl rounded-2xl bg-white shadow-sm border border-slate-200/90 px-6 sm:px-8 py-8">
         {/* App Icon + Header */}
         <div className="flex flex-col items-center mb-6">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-600 shadow-lg shadow-teal-900/30 mb-3">
-            <Shield className="h-8 w-8 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-700 text-white shadow-xs mb-2.5">
+            <Shield className="h-6 w-6" />
           </div>
-          <span className="text-xs font-extrabold tracking-wider text-teal-600 dark:text-teal-400 uppercase">
-            Migrant Saathi AI · Worker Portal
+          <span className="text-xs font-bold tracking-tight text-teal-800 uppercase">
+            Migrant Saathi · Worker Portal
           </span>
         </div>
 
         {/* Tab Navigation: Sign Up First -> Then Sign In */}
-        <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-800 p-1 mb-6 border border-slate-200 dark:border-slate-700">
+        <div className="flex rounded-xl bg-slate-100 p-1 mb-6 border border-slate-200">
           <button
             type="button"
             onClick={() => { setAuthTab('signup'); setApiError('') }}
-            className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
               authTab === 'signup'
-                ? 'bg-teal-600 text-white shadow-md'
+                ? 'bg-teal-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -347,9 +358,9 @@ export default function WorkerLogin() {
           <button
             type="button"
             onClick={() => { setAuthTab('signin'); setApiError('') }}
-            className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
               authTab === 'signin'
-                ? 'bg-teal-600 text-white shadow-md'
+                ? 'bg-teal-700 text-white shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -359,22 +370,22 @@ export default function WorkerLogin() {
 
         {/* Global Error Banner */}
         {apiError && (
-          <div className="rounded-2xl bg-rose-50 border border-rose-300 p-3.5 text-xs font-bold text-rose-800 flex items-start gap-2.5 mb-5 shadow-xs animate-shake">
-            <AlertTriangle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-semibold text-rose-800 flex items-start gap-2.5 mb-5 shadow-xs">
+            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
             <div className="flex-1 text-left">
-              <span className="font-extrabold block text-sm text-rose-900">Verification Error</span>
+              <span className="font-bold block text-xs text-rose-900">Verification Alert</span>
               <span>{apiError}</span>
             </div>
           </div>
         )}
 
         {/* ========================================================= */}
-        {/* VIEW 1: SIGN UP WITH INDIVIDUAL PHONE & EMAIL VERIFICATION  */}
+        {/* VIEW 1: SIGN UP WITH INDIVIDUAL EMAIL VERIFICATION       */}
         {/* ========================================================= */}
         {authTab === 'signup' && (
           <form onSubmit={handleCompleteSignUp} className="space-y-4 text-left">
             <div className="text-center mb-2">
-              <h2 className="text-xl font-extrabold text-slate-900">Worker Registration &amp; Email Verification</h2>
+              <h2 className="text-lg font-bold text-slate-900">Worker Registration &amp; Email Verification</h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Create your worker account and verify your email address to access Gujarat state labor benefits &amp; welfare schemes.
               </p>

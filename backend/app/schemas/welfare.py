@@ -56,6 +56,8 @@ class SchemeMatchResponse(BaseModel):
     match_score: float
     missing_information: List[str] = []
     required_documents: List[Any] = []
+    application_url: Optional[str] = None
+    official_source: Optional[str] = None
     ai_explanation: Optional[str] = None
 
 

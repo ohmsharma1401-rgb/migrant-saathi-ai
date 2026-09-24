@@ -99,8 +99,8 @@ export default function OfficialLogin() {
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* ── Left panel (desktop only) ── */}
-      <div className="hidden lg:flex lg:w-5/12 xl:w-[42%] flex-col justify-between bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 px-12 py-14 text-white relative overflow-hidden border-r border-slate-800">
-        <div className="absolute inset-0 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+      <div className="hidden lg:flex lg:w-5/12 xl:w-[42%] flex-col justify-between bg-[#0F172A] px-12 py-14 text-white relative overflow-hidden border-r-2 border-[var(--rule)]">
+        <div className="absolute inset-0 bg-[#0F172A] pointer-events-none" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-16">
@@ -229,18 +229,18 @@ export default function OfficialLogin() {
               </div>
 
               {/* Demo Credentials Hint Box */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs space-y-1">
-                <p className="font-bold text-slate-700 dark:text-slate-300">💡 Demo Access Credentials:</p>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400">Email: <code className="font-bold text-indigo-600 dark:text-indigo-400">official@gujarat.gov.in</code></p>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400">Password: <code className="font-bold text-indigo-600 dark:text-indigo-400">Demo@1234</code></p>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+                <p className="font-bold text-slate-800">💡 Demo Access Credentials:</p>
+                <p className="text-[11px] text-slate-600">Email: <code className="font-bold text-teal-700">official@gujarat.gov.in</code></p>
+                <p className="text-[11px] text-slate-600">Password: <code className="font-bold text-teal-700">Demo@1234</code></p>
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold py-3 text-xs sm:text-sm transition-all shadow-md shadow-indigo-900/20 disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-bold py-3 text-xs sm:text-sm transition-all shadow-xs disabled:opacity-60"
               >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : null}
                 Sign In to Government Portal →
               </button>
             </form>

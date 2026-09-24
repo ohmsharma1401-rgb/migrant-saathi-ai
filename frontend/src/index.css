@@ -4,46 +4,245 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --bg: #F6F7F2;
+    --surface: #FFFFFF;
+    --forest: #0C2D27;
+    --coral: #FF6B53;
+    --coral-hover: #FF5A43;
+    --lime: #C0E862;
+    --teal: #4DB6AC;
+    --ink: #0C2D27;
+    --muted: #52605D;
+    --border: #E5E7EB;
+    --card-shadow: 0 4px 20px -2px rgba(12, 45, 39, 0.05);
+
+    --radius: 1.25rem;
+  }
+
+  :root[data-theme="dark"],
+  html.dark {
+    --bg: #0A1E1A;
+    --surface: #112A25;
+    --forest: #071916;
+    --coral: #FF6B53;
+    --coral-hover: #FF5A43;
+    --lime: #C0E862;
+    --teal: #4DB6AC;
+    --ink: #F0FDF4;
+    --muted: #94A3B8;
+    --border: #1E3A34;
+    --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    color-scheme: dark;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    box-sizing: border-box;
   }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Instrument Sans", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--coral);
+    outline-offset: 2px;
   }
 }
 
-@layer components {
-  .card-gradient {
-    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
+/* Global Dark Mode Overrides for High Contrast & Readability */
+:root[data-theme="dark"],
+html.dark {
+  --bg: #0A1E1A;
+  --surface: #112A25;
+  --forest: #071916;
+  --coral: #FF6B53;
+  --coral-hover: #FF5A43;
+  --lime: #C0E862;
+  --teal: #4DB6AC;
+  --ink: #FFFFFF;
+  --muted: #CBD5E1;
+  --border: #1E3A34;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+html.dark body,
+html.dark main,
+html.dark header,
+html.dark div.min-h-screen {
+  background-color: #0A1E1A !important;
+  color: #FFFFFF !important;
+}
+
+/* Headings and Bold Text */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark b,
+html.dark strong,
+html.dark th {
+  color: #FFFFFF !important;
+}
+
+/* Body Text, Paragraphs, Subtitles, Labels */
+html.dark p,
+html.dark span,
+html.dark label,
+html.dark td,
+html.dark li,
+html.dark small,
+html.dark sub,
+html.dark sup {
+  color: #E2E8F0;
+}
+
+/* Dark Green & Slate Text Overrides */
+html.dark .text-\[\#0C2D27\],
+html.dark .text-\[\#0C2D27\]\/70,
+html.dark .text-\[\#0C2D27\]\/80,
+html.dark .text-\[\#0C2D27\]\/90,
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #FFFFFF !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .text-\[\#52605D\],
+html.dark .text-\[\#52605D\]\/70,
+html.dark .text-\[\#52605D\]\/80,
+html.dark .text-\[\#52605D\]\/90 {
+  color: #CBD5E1 !important;
+}
+
+/* Surface backgrounds */
+html.dark .bg-white,
+html.dark .bg-white\/80,
+html.dark .bg-white\/90,
+html.dark .bg-white\/95 {
+  background-color: #112A25 !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-\[\#F6F7F2\] {
+  background-color: #0A1E1A !important;
+}
+
+/* Selected Tinted Cards in Dark Mode */
+html.dark .bg-\[\#E8F8F2\],
+html.dark .bg-\[\#E8F8F2\]\/40,
+html.dark .bg-\[\#E8F8F2\]\/50,
+html.dark .bg-\[\#E8F8F2\]\/60 {
+  background-color: #1A443B !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-teal-50,
+html.dark .bg-amber-50,
+html.dark .bg-blue-50,
+html.dark .bg-purple-50,
+html.dark .bg-red-50 {
+  background-color: #163831 !important;
+}
+
+/* Sidebar & Dark Header background */
+html.dark .bg-\[\#0C2D27\] {
+  background-color: #071916 !important;
+}
+
+/* Form Controls */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #0E2420 !important;
+  color: #FFFFFF !important;
+  border-color: #265248 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Borders & Dividers */
+html.dark .border-slate-200,
+html.dark .border-slate-100,
+html.dark .border-slate-300,
+html.dark .border-emerald-100,
+html.dark .border-emerald-200,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-200\/80,
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1E3A34 !important;
+}
+
+/* Hover States */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-emerald-50\/50:hover {
+  background-color: #1A3E37 !important;
+}
+
+/* Accent Buttons & Badges */
+html.dark .figma-btn-coral,
+html.dark .bg-\[\#FF6B53\],
+html.dark .bg-emerald-600,
+html.dark .bg-red-600,
+html.dark .bg-blue-600 {
+  color: #FFFFFF !important;
+}
+
+html.dark .text-\[\#FF6B53\],
+html.dark .text-coral {
+  color: #FF6B53 !important;
+}
+
+html.dark .text-\[\#C0E862\] {
+  color: #C0E862 !important;
+}
+
+@layer utilities {
+  .figma-card {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .glass-card {
-    backdrop-filter: blur(12px);
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+  .figma-btn-coral {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #FF6B53;
+    color: #FFFFFF;
+    border-radius: 1rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 14px 0 rgba(255, 107, 83, 0.35);
+  }
+  .figma-btn-coral:hover {
+    background: #FF5A43;
+    transform: translateY(-1px);
+  }
+  .figma-btn-coral:active {
+    transform: translateY(0);
   }
 }

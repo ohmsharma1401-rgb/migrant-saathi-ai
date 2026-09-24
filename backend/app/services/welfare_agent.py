@@ -79,6 +79,8 @@ class WelfareAgent:
                 match_score=round(score, 2),
                 missing_information=missing,
                 required_documents=scheme.required_documents or [],
+                application_url=scheme.application_url,
+                official_source=scheme.official_source,
                 ai_explanation=explanation,
             )
 

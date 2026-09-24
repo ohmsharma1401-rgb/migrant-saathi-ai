@@ -1,23 +1,42 @@
-import { LanguageCode } from '@/store/languageStore'
+import { LanguageCode, useLanguageStore } from '@/store/languageStore'
 
 export const translations: Record<LanguageCode, Record<string, string>> = {
   en: {
     // Nav & Common
     app_title: 'Migrant Saathi AI',
     app_name: 'Migrant Saathi AI',
-    nav_dashboard: 'Dashboard',
+    nav_dashboard: 'My Home',
     nav_profile: 'My Profile',
     nav_skills: 'My Skills',
-    nav_welfare: 'Welfare Schemes',
-    nav_wages: 'Wage Rate Check',
-    nav_report: 'Report Safety Issue',
-    nav_grievances: 'My Grievances',
-    nav_ai: 'AI Assistant',
-    nav_workers: 'Worker Directory',
+    nav_welfare: 'Welfare Benefits',
+    nav_wages: 'Fair Wages',
+    nav_report: 'Help & Support',
+    nav_grievances: 'My Requests',
+    nav_ai: 'Ask Saathi AI',
+    nav_workers: 'Worker Registry',
     nav_map: 'Worker Distribution Map',
     nav_insights: 'AI Insights',
-    nav_logout: 'Logout',
+    nav_logout: 'Switch Role / Sign Out',
     select_language: 'Language / भाषा / ભાષા',
+
+    // Govt Nav Labels
+    nav_gov_overview: 'Overview',
+    nav_gov_analytics: 'Workforce pulse',
+    nav_gov_welfare: 'Scheme delivery',
+    nav_gov_grievances: 'Grievances',
+    nav_gov_workers: 'Worker registry',
+    nav_gov_settings: 'System settings',
+    nav_gov_help: 'Help centre',
+
+    // Scheme Names & Descriptions
+    pmsym_name: 'Pradhan Mantri Shram Yogi Maandhan (PM-SYM)',
+    pmsym_desc: 'Assured minimum monthly pension of ₹3,000 after age 60 for unorganised workers.',
+    pmjay_name: 'Ayushman Bharat Pradhan Mantri Jan Arogya Yojana',
+    pmjay_desc: 'Free cashless health cover up to ₹5 Lakh per family per year at empaneled hospitals.',
+    bocw_name: 'Building & Other Construction Workers (BOCW) Welfare',
+    bocw_desc: 'Tool kit assistance, educational stipends, maternity benefits and accidental insurance.',
+    eshram_name: 'e-Shram National Database for Unorganised Workers',
+    eshram_desc: 'Universal 12-digit UAN Card with ₹2 Lakh accidental death/disability insurance.',
 
     // Worker Dashboard
     worker_greeting: 'Hello',
@@ -59,7 +78,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     skills_title: 'My Skills',
     skills_subtitle: 'Manage your trade skills and let AI extract your expertise from your story.',
     describe_skills_title: 'Describe Your Work & Experience',
-    describe_skills_placeholder: 'Example: I have 4 years of experience as a mason and tile layer in Surat. I am skilled in brickwork, tiling, and plastering...',
+    describe_skills_placeholder: 'Example: I have 4 years of experience as a mason and tile layer in Surat...',
     extract_skills_btn: 'Extract Skills with AI 🤖',
     extracting_skills: 'Extracting Skills...',
     current_skills: 'Current Registered Skills',
@@ -135,23 +154,43 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     gov_status_resolve: 'Resolve',
     gov_live_connected: 'Live Connected',
   },
+
   hi: {
     // Nav & Common
     app_title: 'माइग्रेंट साथी एआई',
     app_name: 'माइग्रेंट साथी एआई',
-    nav_dashboard: 'डैशबोर्ड',
+    nav_dashboard: 'मेरा होम',
     nav_profile: 'मेरी प्रोफाइल',
     nav_skills: 'मेरे कौशल',
-    nav_welfare: 'कल्याणकारी योजनाएं',
-    nav_wages: 'न्यूनतम मजदूरी जांच',
-    nav_report: 'सुरक्षा शिकायत दर्ज करें',
+    nav_welfare: 'कल्याण योजनाएं',
+    nav_wages: 'उचित मजदूरी',
+    nav_report: 'सहायता व समर्थन',
     nav_grievances: 'मेरी शिकायतें',
-    nav_ai: 'एआई सहायक',
+    nav_ai: 'साथी एआई से पूछें',
     nav_workers: 'श्रमिक निर्देशिका',
     nav_map: 'श्रमिक वितरण मानचित्र',
     nav_insights: 'एआई अंतर्दृष्टि',
-    nav_logout: 'लॉगआउट',
+    nav_logout: 'भूमिका बदलें / साइन आउट',
     select_language: 'भाषा चुनें',
+
+    // Govt Nav Labels
+    nav_gov_overview: 'अवलोकन',
+    nav_gov_analytics: 'श्रमिक पल्स',
+    nav_gov_welfare: 'योजना वितरण',
+    nav_gov_grievances: 'शिकायतें',
+    nav_gov_workers: 'श्रमिक रजिस्टर',
+    nav_gov_settings: 'सिस्टम सेटिंग्स',
+    nav_gov_help: 'सहायता केंद्र',
+
+    // Scheme Names & Descriptions
+    pmsym_name: 'प्रधानमंत्री श्रम योगी मानधन योजना (PM-SYM)',
+    pmsym_desc: 'असंगठित श्रमिकों के लिए 60 वर्ष की आयु के बाद ₹3,000 प्रतिमाह की सुनिश्चित न्यूनतम पेंशन।',
+    pmjay_name: 'आयुष्मान भारत प्रधानमंत्री जन आरोग्य योजना (PM-JAY)',
+    pmjay_desc: 'प्रतिबद्ध अस्पतालों में प्रति परिवार प्रति वर्ष ₹5 लाख तक का मुफ्त कैशलेस स्वास्थ्य बीमा।',
+    bocw_name: 'भवन एवं अन्य निर्माण श्रमिक (BOCW) कल्याण योजना',
+    bocw_desc: 'टूल किट सहायता, शैक्षणिक छात्रवृत्ति, मातृत्व लाभ और दुर्घटना बीमा।',
+    eshram_name: 'असंगठित श्रमिकों के लिए ई-श्रम राष्ट्रीय डेटाबेस',
+    eshram_desc: '₹2 लाख दुर्घटना मृत्यु/विकलांगता बीमा के साथ सार्वभौमिक 12-अंकीय यूएएन कार्ड।',
 
     // Worker Dashboard
     worker_greeting: 'नमस्ते',
@@ -269,23 +308,43 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     gov_status_resolve: 'समाधान करें',
     gov_live_connected: 'लाइव कनेक्टेड',
   },
+
   gu: {
     // Nav & Common
     app_title: 'માઇગ્રન્ટ સાથી એઆઇ',
     app_name: 'માઇગ્રન્ટ સાથી એઆઇ',
-    nav_dashboard: 'ડેશબોર્ડ',
+    nav_dashboard: 'મારું હોમ',
     nav_profile: 'મારી પ્રોફાઇલ',
     nav_skills: 'મારા કૌશલ્યો',
     nav_welfare: 'કલ્યાણકારી યોજનાઓ',
-    nav_wages: 'લઘુત્તમ વેતનની તપાસ',
-    nav_report: 'સુરક્ષા ફરિયાદ નોંધાવો',
-    nav_grievances: 'મારી ફરિયાદો',
-    nav_ai: 'એઆઇ સહાયક',
+    nav_wages: 'વાજબી વેતન',
+    nav_report: 'મદદ અને સહાય',
+    nav_grievances: 'મારી વિનંતીઓ',
+    nav_ai: 'સાથી એઆઇને પૂછો',
     nav_workers: 'શ્રમિક ડિરેક્ટરી',
     nav_map: 'શ્રમિક વિતરણ નકશો',
     nav_insights: 'એઆઇ આંતરદૃષ્ટિ',
-    nav_logout: 'લૉગઆઉટ',
+    nav_logout: 'ભૂમિકા બદલો / સાઇન આઉટ',
     select_language: 'ભાષા પસંદ કરો',
+
+    // Govt Nav Labels
+    nav_gov_overview: 'ઓવરવ્યૂ',
+    nav_gov_analytics: 'શ્રમિક પલ્સ',
+    nav_gov_welfare: 'યોજના વિતરણ',
+    nav_gov_grievances: 'ફરિયાદો',
+    nav_gov_workers: 'શ્રમિક રજિસ્ટર',
+    nav_gov_settings: 'સિસ્ટમ સેટિંગ્સ',
+    nav_gov_help: 'સહાયતા કેન્દ્ર',
+
+    // Scheme Names & Descriptions
+    pmsym_name: 'પ્રધાનમંત્રી શ્રમ યોગી માનધન યોજના (PM-SYM)',
+    pmsym_desc: 'અસંગઠિત શ્રમિકો માટે ૬૦ વર્ષ પછી દર મહિને ₹૩,૦૦૦નું નિશ્ચિત લઘુત્તમ પેન્શન.',
+    pmjay_name: 'આયુષ્માન ભારત પ્રધાનમંત્રી જન આરોગ્ય યોજના (PM-JAY)',
+    pmjay_desc: 'જોડાયેલ હોસ્પિટલોમાં પરિવાર દીઠ વાર્ષિક ₹૫ લાખ સુધીનું મફત કેશલેસ આરોગ્ય કવર.',
+    bocw_name: 'મકાન અને અન્ય બાંધકામ શ્રમિક (BOCW) કલ્યાણ યોજના',
+    bocw_desc: 'ટૂલ કિટ સહાય, શૈક્ષણિક શિષ્યવૃત્તિ, માતૃત્વ લાભો અને અકસ્માત વીમો.',
+    eshram_name: 'અસંગઠિત શ્રમિકો માટે ઇ-શ્રમ રાષ્ટ્રીય ડેટાબેઝ',
+    eshram_desc: '₹૨ લાખ અકસ્માત મૃત્યુ/અપંગતા વીમા સાથે સાર્વત્રિક ૧૨-અંકી યુએએન કાર્ડ.',
 
     // Worker Dashboard
     worker_greeting: 'નમસ્તે',
@@ -404,8 +463,6 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     gov_live_connected: 'લાઇવ કનેક્ટેડ',
   },
 }
-
-import { useLanguageStore } from '@/store/languageStore'
 
 export function useTranslation() {
   const store = useLanguageStore()

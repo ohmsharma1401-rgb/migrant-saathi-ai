@@ -103,29 +103,38 @@ export default function WageCheck() {
     setWageError('')
     setChecking(true)
 
-    const ref = SKILL_REF_MAP[skillLevel] ?? 550
-    const diff = ref - numericWage
-    const discPct = diff > 0 ? Math.round((diff / ref) * 100) : 0
+    // Lookup exact reference wage by selected occupation first
+    const occMatch = REFERENCE_WAGES.find(
+      (w) => w.occupation.toLowerCase().trim() === occupation.toLowerCase().trim()
+    )
+    const fallbackRef = occMatch ? occMatch.wage : (SKILL_REF_MAP[skillLevel] ?? 550)
 
+    let apiRef = fallbackRef
     try {
-      await api.post('/wages/check', {
+      const res = await api.post('/wages/check', {
         occupation,
         district,
         skill_level: skillLevel,
+        reported_daily_wage: numericWage,
         daily_wage: numericWage,
       })
+      if (res.data && res.data.reference_wage && res.data.reference_wage > 0) {
+        apiRef = res.data.reference_wage
+      }
     } catch {
       // Local fallback
     }
 
-    await new Promise((r) => setTimeout(r, 400))
+    const finalRef = apiRef
+    const diff = finalRef - numericWage
+    const discPct = diff > 0 ? Math.round((diff / finalRef) * 100) : 0
 
     setResult({
       occupation,
       district,
       skillLevel,
       yourWage: numericWage,
-      referenceWage: ref,
+      referenceWage: finalRef,
       discrepancy: Math.max(0, diff),
       discrepancyPct: discPct,
       status: diff > 0 ? 'discrepancy' : 'fair',

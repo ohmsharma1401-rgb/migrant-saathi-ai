@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useTranslation } from '@/utils/translations'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SchemeCategory = 'housing' | 'health' | 'insurance' | 'pension' | 'food' | 'skill_training' | 'other'
@@ -390,10 +391,73 @@ function ViewSchemeModal({ scheme, onClose }: { scheme: DemoScheme; onClose: () 
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function SchemeManagement() {
+  const { t, lang } = useTranslation()
   const [schemes, setSchemes] = useState<DemoScheme[]>(INITIAL_SCHEMES)
   const [showAdd, setShowAdd] = useState(false)
   const [editScheme, setEditScheme] = useState<DemoScheme | null>(null)
   const [viewScheme, setViewScheme] = useState<DemoScheme | null>(null)
+
+  function getSchemeTitle(code: string, defaultName: string) {
+    if (code.includes('BOCW-WF')) return t('bocw_name')
+    if (code.includes('PM-SYM')) return t('pmsym_name')
+    if (code.includes('BOCW-HEALTH')) return lang === 'hi' ? 'BOCW स्वास्थ्य बीमा योजना' : lang === 'gu' ? 'BOCW આરોગ્ય વીમા યોજના' : defaultName
+    if (code.includes('NFSA')) return lang === 'hi' ? 'राष्ट्रीय खाद्य सुरक्षा अधिनियम (NFSA)' : lang === 'gu' ? 'રાષ્ટ્રીય અન્ન સુરક્ષા કાયદો (NFSA)' : defaultName
+    if (code.includes('AABY')) return lang === 'hi' ? 'आम आदमी बीमा योजना (AABY)' : lang === 'gu' ? 'આમ આદમી વીમા યોજના (AABY)' : defaultName
+    return defaultName
+  }
+
+  function getCategoryText(cat: string) {
+    if (lang === 'hi') {
+      if (cat === 'health') return 'स्वास्थ्य'
+      if (cat === 'pension') return 'पेंशन'
+      if (cat === 'insurance') return 'बीमा'
+      if (cat === 'food') return 'खाद्य'
+      if (cat === 'housing') return 'आवास'
+      if (cat === 'skill_training') return 'कौशल प्रशिक्षण'
+      return 'अन्य'
+    }
+    if (lang === 'gu') {
+      if (cat === 'health') return 'આરોગ્ય'
+      if (cat === 'pension') return 'પેન્શન'
+      if (cat === 'insurance') return 'વીમો'
+      if (cat === 'food') return 'અન્ન'
+      if (cat === 'housing') return 'આવાસ'
+      if (cat === 'skill_training') return 'કૌશલ્ય તાલીમ'
+      return 'અન્ય'
+    }
+    return CATEGORY_LABEL[cat as keyof typeof CATEGORY_LABEL] || cat
+  }
+
+  function getSectorText(sec: string) {
+    if (lang === 'hi') {
+      if (sec === 'Construction') return 'निर्माण'
+      if (sec === 'Textiles') return 'कपड़ा'
+      if (sec === 'Diamond') return 'हीरा'
+      if (sec === 'Manufacturing') return 'विनिर्माण'
+      if (sec === 'Agriculture') return 'कृषि'
+      if (sec === 'Domestic') return 'घरेलू'
+      if (sec === 'All') return 'सभी'
+      return sec
+    }
+    if (lang === 'gu') {
+      if (sec === 'Construction') return 'બાંધકામ'
+      if (sec === 'Textiles') return 'ટેક્સટાઇલ'
+      if (sec === 'Diamond') return 'હીરા'
+      if (sec === 'Manufacturing') return 'મેન્યુફેક્ચરિંગ'
+      if (sec === 'Agriculture') return 'ખેતી'
+      if (sec === 'Domestic') return 'ઘરેલું'
+      if (sec === 'All') return 'તમામ'
+      return sec
+    }
+    return sec
+  }
+
+  function getStateText(st: string) {
+    if (st === 'All States') {
+      return lang === 'hi' ? 'सभी राज्य' : lang === 'gu' ? 'તમામ રાજ્યો' : 'All States'
+    }
+    return st
+  }
 
   function toggleActive(id: string) {
     setSchemes((s) => s.map((sc) => sc.id === id ? { ...sc, active: !sc.active } : sc))
@@ -422,18 +486,20 @@ export default function SchemeManagement() {
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Heart className="h-5 w-5 text-rose-500" />
-            Welfare Scheme Management
+            <span>{t('nav_gov_welfare')}</span>
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage welfare schemes and eligibility criteria</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            {lang === 'hi' ? 'कल्याणकारी योजनाओं और पात्रता मानदंडों को प्रबंधित करें' : lang === 'gu' ? 'કલ્યાણકારી યોજનાઓ અને પાત્રતા માનદંડ મેનેજ કરો' : 'Manage welfare schemes and eligibility criteria'}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="dark:border-slate-700 dark:text-slate-300">
             <Upload className="mr-1.5 h-4 w-4" />
-            Import from CSV
+            {lang === 'hi' ? 'CSV से आयात करें' : lang === 'gu' ? 'CSV થી આયાત કરો' : 'Import from CSV'}
           </Button>
-          <Button size="sm" onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+          <Button size="sm" onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
-            Add New Scheme
+            {lang === 'hi' ? 'नई योजना जोड़ें' : lang === 'gu' ? 'નવી યોજના ઉમેરો' : 'Add New Scheme'}
           </Button>
         </div>
       </div>
@@ -446,64 +512,64 @@ export default function SchemeManagement() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <CardTitle className="text-sm text-gray-900 leading-snug">{s.name}</CardTitle>
+                    <CardTitle className="text-sm text-gray-900 leading-snug">{getSchemeTitle(s.code, s.name)}</CardTitle>
                   </div>
                   <p className="text-xs font-mono text-gray-400">{s.code}</p>
                 </div>
                 <Badge variant={s.active ? 'success' : 'outline'} className="shrink-0">
-                  {s.active ? 'Active' : 'Inactive'}
+                  {s.active ? (lang === 'hi' ? 'सक्रिय' : lang === 'gu' ? 'સક્રિય' : 'Active') : (lang === 'hi' ? 'निष्क्रिय' : lang === 'gu' ? 'નિષ્ક્રિય' : 'Inactive')}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="flex-1 space-y-3">
               {/* Category */}
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${CATEGORY_STYLE[s.category]}`}>
-                {CATEGORY_LABEL[s.category]}
+                {getCategoryText(s.category)}
               </span>
 
               {/* States */}
               <div className="flex flex-wrap gap-1">
                 {s.states.slice(0, 3).map((st) => (
-                  <span key={st} className="rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-medium px-2 py-0.5">{st}</span>
+                  <span key={st} className="rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-medium px-2 py-0.5">{getStateText(st)}</span>
                 ))}
                 {s.states.length > 3 && (
-                  <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-medium px-2 py-0.5">+{s.states.length - 3} more</span>
+                  <span className="rounded-full bg-gray-100 text-gray-500 text-[10px] font-medium px-2 py-0.5">+{s.states.length - 3} {lang === 'hi' ? 'अधिक' : lang === 'gu' ? 'વધુ' : 'more'}</span>
                 )}
               </div>
 
               {/* Sectors */}
               <div className="flex flex-wrap gap-1">
                 {s.sectors.map((sec) => (
-                  <span key={sec} className="rounded-full bg-purple-50 text-purple-700 text-[10px] font-medium px-2 py-0.5">{sec}</span>
+                  <span key={sec} className="rounded-full bg-purple-50 text-purple-700 text-[10px] font-medium px-2 py-0.5">{getSectorText(sec)}</span>
                 ))}
               </div>
 
-              <p className="text-[10px] text-gray-400">Last verified: {s.lastVerified}</p>
+              <p className="text-[10px] text-gray-400">{lang === 'hi' ? 'अंतिम बार सत्यापित: ' : lang === 'gu' ? 'છેલ્લે ચકાસાયેલ: ' : 'Last verified: '}{s.lastVerified}</p>
 
               {/* DEMO label */}
               <div className="rounded bg-amber-50 border border-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-700 inline-block">
-                DEMO DATA
+                {lang === 'hi' ? 'डेमो डेटा' : lang === 'gu' ? 'ડેમો ડેટા' : 'DEMO DATA'}
               </div>
 
               {/* Actions */}
               <div className="flex items-center gap-1 pt-1 border-t border-gray-100">
                 <button
                   onClick={() => setViewScheme(s)}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   <Eye className="h-3.5 w-3.5" />
-                  View
+                  <span>{lang === 'hi' ? 'देखें' : lang === 'gu' ? 'જુઓ' : 'View'}</span>
                 </button>
                 <button
                   onClick={() => setEditScheme(s)}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   <Edit2 className="h-3.5 w-3.5" />
-                  Edit
+                  <span>{lang === 'hi' ? 'संपादित करें' : lang === 'gu' ? 'એડિટ' : 'Edit'}</span>
                 </button>
                 <button
                   onClick={() => toggleActive(s.id)}
-                  className="ml-auto flex items-center gap-1 text-gray-400 hover:text-primary transition-colors"
+                  className="ml-auto flex items-center gap-1 text-gray-400 hover:text-primary transition-colors cursor-pointer"
                   title={s.active ? 'Deactivate scheme' : 'Activate scheme'}
                 >
                   {s.active

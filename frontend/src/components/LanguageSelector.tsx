@@ -12,23 +12,26 @@ export default function LanguageSelector() {
     try {
       void i18n.changeLanguage(lang)
     } catch {
-      // ignore if i18n not configured
+      // ignore
     }
   }
 
   return (
-    <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-xs">
+    <div className="inline-flex items-center gap-1.5 bg-[var(--surface)] border-2 border-[var(--rule)] rounded-md p-1 transition-colors">
       <div className="flex items-center gap-1">
-        <Globe className="h-4 w-4 text-teal-600 dark:text-teal-400 ml-1 shrink-0" />
+        <div className="flex items-center justify-center pl-1.5 pr-0.5 text-[var(--ink)]">
+          <Globe className="h-4 w-4 text-[#F5671A]" />
+        </div>
         {(['en', 'hi', 'gu'] as const).map((code) => (
           <button
             key={code}
             type="button"
             onClick={() => handleLanguageChange(code)}
-            className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+            aria-pressed={language === code}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-sm transition-all ${
               language === code
-                ? 'bg-teal-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-[#F5671A] text-[#111111] font-bold border-1.5 border-[#111111]'
+                : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--hair)]'
             }`}
           >
             {code === 'en' ? 'English' : code === 'hi' ? 'हिन्दी' : 'ગુજરાતી'}
@@ -36,19 +39,18 @@ export default function LanguageSelector() {
         ))}
       </div>
 
-      <div className="h-4 w-[1px] bg-slate-300 dark:bg-slate-700 my-auto" />
+      <div className="h-4 w-[2px] bg-[var(--rule)]" />
 
-      {/* Theme Toggle */}
       <button
         type="button"
         onClick={toggleTheme}
         title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        className="flex items-center justify-center p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700 transition-colors"
+        className="flex items-center justify-center p-1.5 rounded-md text-[var(--ink)] hover:bg-[var(--hair)] transition-colors"
       >
         {theme === 'dark' ? (
-          <Sun className="h-4 w-4 text-amber-400" />
+          <Sun className="h-4 w-4 text-[#F5671A]" />
         ) : (
-          <Moon className="h-4 w-4 text-slate-700" />
+          <Moon className="h-4 w-4 text-[var(--ink)]" />
         )}
       </button>
     </div>
