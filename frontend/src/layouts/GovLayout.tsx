@@ -187,7 +187,9 @@ export default function GovLayout() {
               <Menu className="h-5 w-5" />
             </button>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#52605D] block">GOVERNMENT OFFICIAL WORKSPACE</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#52605D] block">
+                {user?.role === 'inspector' ? 'FIELD INSPECTION & SAFETY CONSOLE' : 'GOVERNMENT OFFICIAL WORKSPACE'}
+              </span>
               <h1 className="text-base font-bold text-[#0C2D27] leading-tight">{getPageTitle()}</h1>
             </div>
           </div>

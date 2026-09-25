@@ -16,6 +16,7 @@ import WageCheck from '@/pages/worker/WageCheck'
 import ReportSafety from '@/pages/worker/ReportSafety'
 import MyGrievances from '@/pages/worker/MyGrievances'
 import AIAssistant from '@/pages/worker/AIAssistant'
+import WorkPlus from '@/pages/worker/WorkPlus'
 
 // Government pages
 import GovLayout from '@/layouts/GovLayout'
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="report" element={<ReportSafety />} />
           <Route path="grievances" element={<MyGrievances />} />
           <Route path="ai" element={<AIAssistant />} />
+          <Route path="workplus" element={<WorkPlus />} />
         </Route>
 
         {/* Government */}

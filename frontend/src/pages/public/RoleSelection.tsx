@@ -4,17 +4,31 @@ import { User, ShieldCheck, ClipboardList, Settings, ArrowRight, CheckCircle2, C
 import LanguageSelector from '@/components/LanguageSelector'
 import BrandLogo from '@/components/ui/BrandLogo'
 import { useThemeStore } from '@/store/themeStore'
+import { useAuthStore } from '@/store/authStore'
 
 export default function RoleSelection() {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useThemeStore()
+  const { setAuth } = useAuthStore()
   const [selectedRole, setSelectedRole] = useState<'worker' | 'gov' | 'inspector' | 'admin'>('worker')
 
   function handleContinue() {
     if (selectedRole === 'worker') {
       navigate('/login/worker')
     } else if (selectedRole === 'admin') {
+      setAuth(
+        { id: 'demo-admin-id', role: 'admin', email: 'admin@gujarat.gov.in' },
+        'demo-access-token',
+        'demo-refresh-token'
+      )
       navigate('/admin')
+    } else if (selectedRole === 'inspector') {
+      setAuth(
+        { id: 'demo-inspector-id', role: 'inspector', email: 'inspector@gujarat.gov.in' },
+        'demo-access-token',
+        'demo-refresh-token'
+      )
+      navigate('/gov')
     } else {
       navigate('/login/official')
     }

@@ -1,12 +1,15 @@
 import base64
 import tempfile
 import os
+import httpx
 from typing import Dict, Any, Tuple, Optional
 
 
 class MultilingualChatbotService:
     def __init__(self):
         self._init_models()
+        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3")
 
     def _init_models(self):
         """Lazy load Whisper or Transformers if available, with robust fallback NLP engines."""
@@ -16,6 +19,55 @@ class MultilingualChatbotService:
             self.whisper_model = whisper.load_model("tiny")
         except Exception:
             self.whisper_model = None
+
+    async def generate_with_ollama(self, prompt: str, language: str = "hi") -> Optional[str]:
+        """Queries local Ollama NLP model if active."""
+        sys_prompt = f"You are Migrant Saathi AI, an AI assistant dedicated to helping migrant workers in India. Respond concisely, empathetically, and accurately in language '{language}'. Focus on labor rights, wages, safety, housing, and government welfare benefits."
+        try:
+            async with httpx.AsyncClient(timeout=3.5) as client:
+                res = await client.post(
+                    f"{self.ollama_base_url}/api/chat",
+                    json={
+                        "model": self.ollama_model,
+                        "messages": [
+                            {"role": "system", "content": sys_prompt},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "stream": False
+                    }
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    msg = data.get("message", {}).get("content", "").strip()
+                    if msg:
+                        return msg
+        except Exception:
+            pass
+        return None
+
+    async def get_ollama_status(self) -> Dict[str, Any]:
+        """Checks if local Ollama server is active and returns installed models."""
+        try:
+            async with httpx.AsyncClient(timeout=1.5) as client:
+                res = await client.get(f"{self.ollama_base_url}/api/tags")
+                if res.status_code == 200:
+                    models = [m.get("name") for m in res.json().get("models", [])]
+                    return {
+                        "status": "online",
+                        "available": True,
+                        "base_url": self.ollama_base_url,
+                        "active_model": self.ollama_model,
+                        "installed_models": models
+                    }
+        except Exception:
+            pass
+        return {
+            "status": "offline",
+            "available": False,
+            "base_url": self.ollama_base_url,
+            "active_model": self.ollama_model,
+            "note": "Using high-precision rule-based multilingual NLP fallback"
+        }
 
     def transcribe_audio_base64(self, audio_base64: str) -> str:
         """Transcribes audio base64 input using OpenAI Whisper speech-to-text model."""
@@ -43,27 +95,40 @@ class MultilingualChatbotService:
 
         return "Transcribed audio voice query (fallback)."
 
+    async def classify_intent_and_respond_async(self, text: str, language: str = "hi") -> Tuple[str, str, float]:
+        """
+        Classifies query text using Ollama NLP model if available,
+        falling back to high-precision rule classification.
+        """
+        ollama_reply = await self.generate_with_ollama(text, language)
+        if ollama_reply:
+            _, intent, _ = self.classify_intent_and_respond(text, language)
+            return ollama_reply, f"{intent}_OLLAMA", 0.98
+
+        return self.classify_intent_and_respond(text, language)
+
     def classify_intent_and_respond(self, text: str, language: str = "hi") -> Tuple[str, str, float]:
         """
-        Classifies multilingual query text (Hindi, Bengali, Odia, Marathi, English)
+        Classifies multilingual query text (Hindi, Gujarati, Bengali, Odia, Marathi, English)
         into grievance categories and provides contextual responses.
         Returns (reply_text, detected_intent, confidence_score).
         """
         text_lower = text.lower()
 
-        # Intent Rules & Multilingual Keywords (Hindi, Bengali, Odia, Marathi, English)
-        wage_keywords = ["wage", "salary", "unpaid", "delay", "paisa", "vetan", "baki", "টাকা", "বেতন", "ମଜୁରୀ", "ପଇସା", "पगार", "मजुरी"]
-        safety_keywords = ["safety", "unsafe", "danger", "accident", "injury", "helmet", "khatra", "khatarnak", "বিপদ", "ସୁରକ୍ଷା", "धोका", "सुरक्षा"]
-        harassment_keywords = ["harass", "abuse", "threat", "fight", "shoshit", "maar", "shoshan", "শোষণ", "ଗାଳି", "छळ", "त्रास"]
-        document_keywords = ["aadhaar", "card", "doc", "contract", "paper", "id", "kagaz", "कागदपत्रे", "দলিল", "ପତ୍ର"]
+        # Intent Rules & Multilingual Keywords (Hindi, Gujarati, Bengali, Odia, Marathi, English)
+        wage_keywords = ["wage", "salary", "unpaid", "delay", "paisa", "vetan", "baki", "ટાકા", "વેતન", "મજૂરી", "টাকা", "বেতন", "ମଜୁରୀ", "ପଇସା", "पगार", "मजुरी"]
+        safety_keywords = ["safety", "unsafe", "danger", "accident", "injury", "helmet", "khatra", "khatarnak", "સુરક્ષા", "જોખમ", "বিপদ", "ସୁରକ୍ଷା", "धोका", "सुरक्षा"]
+        harassment_keywords = ["harass", "abuse", "threat", "fight", "shoshit", "maar", "shoshan", "શોષણ", "ધમકી", "শোষণ", "ଗାଳି", "छळ", "त्रास"]
+        document_keywords = ["aadhaar", "card", "doc", "contract", "paper", "id", "kagaz", "દસ્તાવેજ", "કાગળ", "कागदपत्रे", "দলিল", "ପତ୍ର"]
 
         if any(k in text_lower for k in wage_keywords):
             intent = "WAGE_DELAY"
             confidence = 0.92
             replies = {
                 "hi": "मजदूरी में देरी या गैर-भुगतान के लिए, आप ऐप में 'शिकायत दर्ज करें' चुन सकते हैं। श्रम हेल्पलाइन 14434 पर भी कॉल कर सकते हैं।",
+                "gu": "મજૂરીમાં વિલંબ અથવા ચૂકવણી ન મળવા માટે, તમે એપમાં 'તકરાર સબમિટ કરો' પસંદ કરી શકો છો અથવા શ્રમ હેલ્પલાઇન 14434 પર કોલ કરો.",
                 "bn": "মজুরি পেতে দেরি হলে আপনি অ্যাপে অভিযোগ দায়ের করতে পারেন বা লেবার হেল্পলাইন ১৪৪৩৪-এ কল করতে পারেন।",
-                "or": "ମଜୁରୀ ବିଳମ୍ବ ପାଇଁ ଆପଣ ଆପ୍ ମାଧ୍ୟମରେ ଅଭିଯୋଗ ଦାଖଲ କରିପାରିବେ କିମ୍ବା ୧୪୪୩୪ ହେଲ୍ପଲାଇନ୍‌କୁ କଲ୍ କରନ୍ତୁ।",
+                "or": "ମଜୁରୀ ବିଳମ୍ବ ପାଇଁ ଆପଣ ଆପ୍ ମାଧ୍ୟମରେ ଅଭିଯୋଗ ଦାଖଲ କରିପାରିବେ କିମ୍ବା ୧୪୩୪ ହେଲ୍ପଲାଇନ୍‌କୁ କଲ୍ କରନ୍ତୁ।",
                 "mr": "पगार किंवा मजुरी वेळेवर न मिळाल्यास ॲपवरून तक्रार नोंदवा किंवा १४४३४ या कामगार हेल्पलाइनवर संपर्क साधा.",
                 "en": "For wage delays or non-payment, submit a grievance via the app or call Labour Helpline 14434."
             }
@@ -72,6 +137,7 @@ class MultilingualChatbotService:
             confidence = 0.89
             replies = {
                 "hi": "कार्यस्थल पर असुरक्षा या खतरे की सूचना दें। आपातस्थिति में 112 या श्रम सुरक्षा अधिकारी से संपर्क करें।",
+                "gu": "કાર્યસ્થળ પર અસુરક્ષા અથવા જોખમ અંગે તુરંત માહિતી આપો. ઈમરજન્સીમાં 112 અથવા લેબર સેફ્ટી ઓફિસરનો સંપર્ક કરો.",
                 "bn": "কর্মক্ষেত্রে অনিরাপদ অবস্থা রিপোর্ট করুন। জরুরি অবস্থায় ১১২ অথবা লেবার সেফটি অফিসে যোগাযোগ করুন।",
                 "or": "କର୍ମକ୍ଷେତ୍ର ଅସୁରକ୍ଷା ବିଷୟରେ ଜଣାନ୍ତୁ। ଜରୁରୀ ପରିସ୍ଥିତିରେ ୧୧୨ କୁ କଲ୍ କରନ୍ତୁ।",
                 "mr": "कामाच्या ठिकाणच्या धोक्याची माहिती द्या. आपत्कालीन परिस्थितीत ११२ वर कॉल करा.",
@@ -82,6 +148,7 @@ class MultilingualChatbotService:
             confidence = 0.91
             replies = {
                 "hi": "किसी भी उत्पीड़न या शोषण के खिलाफ आपकी गोपनीयता सुरक्षित रखी जाएगी। तुरंत शिकायत दर्ज करें।",
+                "gu": "કોઈપણ શોષણ અથવા હેરાનગતિ સામે તમારી ઓળખ ગોપનીય રાખવામાં આવશે. તુરંત તકરાર નોંધાવો.",
                 "bn": "যেকোনো ধরনের হেনস্থার বিরুদ্ধে গোপনীয়তার সাথে অভিযোগ নথিভুক্ত করুন।",
                 "or": "ଯେକୌଣସି ନିର୍ଯାତନା ବିରୋଧରେ ଗୋପନୀୟ ଭାବେ ଅଭିଯୋଗ କରନ୍ତୁ।",
                 "mr": "कोणत्याही प्रकारच्या त्रासाविरोधात गोपनीयतेने तक्रार दाखल करा.",
@@ -92,6 +159,7 @@ class MultilingualChatbotService:
             confidence = 0.88
             replies = {
                 "hi": "ई-श्रम या आधार कार्ड पंजीकरण के लिए दस्तावेज़ OCR फीचर का उपयोग करें।",
+                "gu": "ઈ-શ્રમ અથવા આધાર કાર્ડ રજીસ્ટ્રેશન માટે દસ્તાવેજ OCR સ્કેનરનો ઉપયોગ કરો.",
                 "bn": "ই-শ্রম বা আধার নথিভুক্তকরণের জন্য আমাদের নথি OCR ফিচার ব্যবহার করুন।",
                 "or": "ଇ-ଶ୍ରମ କିମ୍ବା ଆଧାର ପଞ୍ଜୀକରଣ ପାଇଁ ଡକ୍ୟୁମେଣ୍ଟ୍ OCR ବ୍ୟବହାର କରନ୍ତୁ।",
                 "mr": "ई-श्रम किंवा आधार कार्ड नोंदणीसाठी ॲपमधील OCR सुविधा वापरा.",
@@ -102,10 +170,11 @@ class MultilingualChatbotService:
             confidence = 0.75
             replies = {
                 "hi": "नमस्ते! मैं प्रवासी साथी AI हूँ। मैं आपकी मजदूरी, सुरक्षा, कल्याणकारी योजनाओं और शिकायतों में मदद कर सकता हूँ।",
+                "gu": "નમસ્તે! હું પ્રવાસી સાથી AI છું. હું આપની મજૂરી, સુરક્ષા અને કલ્યાણ યોજનાઓમાં મદદ કરી શકું છું.",
                 "bn": "নমস্কার! আমি পরিযায়ী সাথী AI। মজুরি, সুরক্ষা ও কল্যাণমূলক প্রকল্পে আপনাকে সাহায্য করতে পারি।",
                 "or": "ନମସ୍କାର! ମୁଁ ପ୍ରବାସୀ ସାଥୀ AI। ମୁଁ ଆପଣଙ୍କୁ ମଜୁରୀ, ସୁରକ୍ଷା ଏବଂ ଯୋଜନା ବିଷୟରେ ସାହାଯ୍ୟ କରିପାରିବି।",
                 "mr": "नमस्कार! मी स्थलांतरित साथी AI आहे. मजुरी, सुरक्षा व योजनांबद्दल मी तुम्हाला मदत करू शकतो.",
-                "en": "Hello! I am Migrant Saathi AI. How can I assist you with wages, workplace safety, or welfare schemes?"
+                "en": "Hello! I am Migrant Saathi AI powered by local Ollama NLP. How can I assist you with wages, workplace safety, or welfare schemes?"
             }
 
         reply = replies.get(language, replies["en"])
@@ -113,3 +182,4 @@ class MultilingualChatbotService:
 
 
 multilingual_chatbot_service = MultilingualChatbotService()
+

@@ -96,6 +96,16 @@ export default function OfficialLogin() {
     }
   }
 
+  function handleQuickFill(type: 'official' | 'inspector') {
+    const email = type === 'inspector' ? 'inspector@gujarat.gov.in' : 'official@gujarat.gov.in'
+    setAuth(
+      { id: `demo-${type}-id`, role: type, email },
+      'demo-access-token',
+      'demo-refresh-token'
+    )
+    navigate('/gov')
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* ── Left panel (desktop only) ── */}
@@ -228,11 +238,25 @@ export default function OfficialLogin() {
                 )}
               </div>
 
-              {/* Demo Credentials Hint Box */}
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
-                <p className="font-bold text-slate-800">💡 Demo Access Credentials:</p>
-                <p className="text-[11px] text-slate-600">Email: <code className="font-bold text-teal-700">official@gujarat.gov.in</code></p>
-                <p className="text-[11px] text-slate-600">Password: <code className="font-bold text-teal-700">Demo@1234</code></p>
+              {/* Demo Credentials Hint & 1-Click Buttons */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs space-y-2">
+                <b className="font-extrabold text-slate-800 dark:text-slate-100 block">⚡ Quick 1-Click Demo Login:</b>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill('official')}
+                    className="px-3 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs transition-all shadow-xs cursor-pointer"
+                  >
+                    Gov Official 🏛️
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickFill('inspector')}
+                    className="px-3 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs transition-all shadow-xs cursor-pointer"
+                  >
+                    Field Inspector 📋
+                  </button>
+                </div>
               </div>
 
               <button

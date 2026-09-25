@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  Briefcase,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
@@ -67,6 +68,7 @@ export default function WorkerLayout() {
 
   const navItems = [
     { to: '/worker', label: t('nav_dashboard'), icon: Home, end: true },
+    { to: '/worker/workplus', label: 'WorkPlus Shift', icon: Briefcase, badge: 'LIVE' },
     { to: '/worker/welfare', label: t('nav_welfare'), icon: Heart },
     { to: '/worker/skills', label: t('nav_skills'), icon: Wrench },
     { to: '/worker/wages', label: t('nav_wages'), icon: DollarSign },
@@ -79,6 +81,7 @@ export default function WorkerLayout() {
   // Map path to page title
   function getPageTitle() {
     if (location.pathname === '/worker') return t('nav_dashboard')
+    if (location.pathname.includes('/workplus')) return 'WorkPlus Shift Console'
     if (location.pathname.includes('/welfare')) return t('nav_welfare')
     if (location.pathname.includes('/skills')) return t('nav_skills')
     if (location.pathname.includes('/wages')) return t('nav_wages')
