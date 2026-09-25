@@ -17,6 +17,7 @@ class AIChatRequest(BaseModel):
 class AIChatResponse(BaseModel):
     reply: str
     language: str
+    provider: Optional[str] = "nlp_rules"
 
 
 @router.post("/extract-skills", response_model=NLSkillExtractResponse)
@@ -34,9 +35,17 @@ async def ask_ai(
     payload: AIChatRequest,
     current_user=Depends(get_current_user),
 ):
+    from app.services.ollama_service import ollama_service
     from app.services.watsonx_service import watsonx
 
     text = payload.message.strip()
+
+    # 1. Primary: Local Ollama LLM Service
+    ollama_reply = await ollama_service.generate_response(text, language=payload.language or "en")
+    if ollama_reply:
+        return AIChatResponse(reply=ollama_reply, language=payload.language or "en", provider="ollama")
+
+    # 2. Secondary: Watsonx Service
     if watsonx.is_available():
         prompt = (
             "You are Migrant Saathi AI, an assistant helping migrant workers in India.\n"
@@ -49,10 +58,11 @@ async def ask_ai(
         try:
             reply = watsonx.generate(prompt)
             if reply:
-                return AIChatResponse(reply=reply, language=payload.language or "en")
+                return AIChatResponse(reply=reply, language=payload.language or "en", provider="watsonx")
         except Exception:
             pass
 
+    # 3. Fallback: High-precision rule-based replies
     lower = text.lower()
     if any(k in lower for k in ["wage", "salary", "minimum"]):
         reply = (
@@ -89,14 +99,20 @@ async def ask_ai(
             "wage reference rates, and filing grievances. Please ask any specific question."
         )
 
-    return AIChatResponse(reply=reply, language=payload.language or "en")
+    return AIChatResponse(reply=reply, language=payload.language or "en", provider="rules")
 
 
 @router.get("/status")
 async def ai_status():
+    from app.services.ollama_service import ollama_service
     from app.services.watsonx_service import watsonx
 
+    st = await ollama_service.get_status()
     return {
+        "ollama_available": st["available"],
+        "ollama_model": st["active_model"],
         "watsonx_available": watsonx.is_available(),
         "model_id": watsonx.model_id,
+        "active_provider": "ollama" if st["available"] else ("watsonx" if watsonx.is_available() else "rules"),
+        "installed_models": st.get("installed_models", []),
     }

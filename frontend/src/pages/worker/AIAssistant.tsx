@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, User, Loader2, Mic, Sparkles, CheckCircle2, ShieldAlert } from 'lucide-react'
+import { Bot, Send, User, Loader2, Mic, Sparkles, CheckCircle2, ShieldAlert, Cpu } from 'lucide-react'
 import api from '@/services/api'
 import { useLanguageStore } from '@/store/languageStore'
 import { useTranslation } from '@/utils/translations'
@@ -228,8 +228,23 @@ export default function AIAssistant() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showVoiceTooltip, setShowVoiceTooltip] = useState(false)
+  const [ollamaStatus, setOllamaStatus] = useState<{ available: boolean; model?: string }>({ available: false })
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    async function checkStatus() {
+      try {
+        const res = await api.get('/api/ai/status')
+        if (res.data?.ollama_available) {
+          setOllamaStatus({ available: true, model: res.data.ollama_model || 'llama3' })
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    checkStatus()
+  }, [])
 
   useEffect(() => {
     setMessages(getInitialMessages(currentLang))
@@ -248,21 +263,29 @@ export default function AIAssistant() {
     setInput('')
     setLoading(true)
 
+    let replyText = ''
+    let actionLink: { label: string; route: string } | undefined
+
     try {
-      await api.post('/ai/ask', { message: trimmed, language: currentLang })
+      const res = await api.post('/api/ai/ask', { message: trimmed, language: currentLang })
+      if (res.data?.reply) {
+        replyText = res.data.reply
+      }
     } catch {
       // Local fallback
     }
 
-    await new Promise((r) => setTimeout(r, 600))
-
-    const nlpRes = processNLPQuery(trimmed, currentLang)
+    if (!replyText) {
+      const nlpRes = processNLPQuery(trimmed, currentLang)
+      replyText = nlpRes.reply
+      actionLink = nlpRes.actionLink
+    }
 
     const reply: Message = {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
-      content: nlpRes.reply,
-      actionLink: nlpRes.actionLink,
+      content: replyText,
+      actionLink,
     }
 
     setMessages((m) => [...m, reply])
@@ -294,8 +317,8 @@ export default function AIAssistant() {
         <div className="flex items-center gap-2">
           <LanguageSelector />
           <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-full">
-            <Sparkles className="h-3 w-3 text-teal-600 dark:text-teal-400" />
-            Saathi NLP Engine
+            <Cpu className="h-3 w-3 text-teal-600 dark:text-teal-400" />
+            {ollamaStatus.available ? `Ollama NLP (${ollamaStatus.model})` : 'Saathi NLP Engine'}
           </span>
         </div>
       </div>
