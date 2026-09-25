@@ -20,7 +20,7 @@ interface SchemeItem {
 }
 
 export default function WelfareBenefits() {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const [activeTab, setActiveTab] = useState<'recommended' | 'applications' | 'all'>('recommended')
   const [loading, setLoading] = useState(false)
   const [selectedScheme, setSelectedScheme] = useState<SchemeItem | null>(null)
