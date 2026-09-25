@@ -139,7 +139,50 @@ function processNLPQuery(text: string, lang: 'en' | 'hi' | 'gu'): NLPResult {
     }
   }
 
-  // 5. Default Fallback Response
+  // 5. Greetings & Small Talk Intent
+  if (
+    q === 'hi' || q === 'hello' || q === 'hey' || q === 'namaste' || q === 'kem cho' ||
+    q.includes('नमस्ते') || q.includes('નમસ્તે') || q.includes('હલો')
+  ) {
+    if (lang === 'hi') {
+      return {
+        reply: 'नमस्ते! मैं आपका प्रवासी साथी AI सहायक हूँ। मैं आपकी मजदूरी, योजनाओं, सुरक्षा शिकायतों और अधिकारों में सहायता कर सकता हूँ। आप मुझसे क्या पूछना चाहते हैं?',
+      }
+    }
+    if (lang === 'gu') {
+      return {
+        reply: 'નમસ્તે! હું તમારો પ્રવાસી સાથી AI સહાયક છું. હું આપને મજૂરી, યોજનાઓ અને સુરક્ષા ફરિયાદોમાં મદદ કરી શકું છું. આપ શું પૂછવા માગો છો?',
+      }
+    }
+    return {
+      reply: 'Hello! I am your Migrant Saathi AI assistant. I can help you with minimum wage rates, welfare scheme applications, workplace safety issues, and PM-SYM pensions. How can I assist you today?',
+    }
+  }
+
+  // 6. Application Features / What Can I Do Intent
+  if (
+    q.includes('application') || q.includes('app') || q.includes('what can i do') || q.includes('features') ||
+    q.includes('how to use') || q.includes('क्या कर सक') || q.includes('શું કરી શક') || q.includes('मदद')
+  ) {
+    if (lang === 'hi') {
+      return {
+        reply: 'प्रवासी साथी प्लेटफ़ॉर्म पर आप निम्नलिखित सेवाएं प्राप्त कर सकते हैं:\n\n1. 💼 WorkPlus Shift — बायोमेट्रिक व जीपीएस उपस्थिति चेक-इन करें\n2. 📜 कल्याणकारी योजनाएं — पीएम-एसवाईएम, पीएम-जय व बीओसीडब्ल्यू योजनाओं में आवेदन करें\n3. 💰 न्यूनतम मजदूरी जांच — गुजरात श्रम विभाग द्वारा निर्धारित आधिकारिक दरें देखें\n4. 🚨 सुरक्षा व वेतन शिकायत — कार्यस्थल की समस्या या बकाया वेतन की शिकायत दर्ज करें\n5. 🤖 AI साथी — किसी भी भाषा में तुरंत सहायता प्राप्त करें',
+        actionLink: { label: 'WorkPlus उपस्थिति देखें →', route: '/worker/workplus' },
+      }
+    }
+    if (lang === 'gu') {
+      return {
+        reply: 'પ્રવાસી સાથી પ્લેટફોર્મ પર તમે આ બધી સેવાઓ મેળવી શકો છો:\n\n1. 💼 WorkPlus Shift — બાયોમેટ્રિક અને GPS હાજરી ચેક-ઇન કરો\n2. 📜 કલ્યાણકારી યોજનાઓ — સરકારી કલ્યાણ યોજનાઓમાં અરજી કરો\n3. 💰 લઘુત્તમ વેતન — શ્રમ વિભાગના અધિકૃત વેતન દરો ચકાસો\n4. 🚨 તકરાર નોંધાવવી — બાકી પગાર અને સુરક્ષાની ફરિયાદ કરો\n5. 🤖 AI સાથી — 24/7 તાત્કાલિક માર્ગદર્શન મેળવો',
+        actionLink: { label: 'WorkPlus હાજરી જુઓ →', route: '/worker/workplus' },
+      }
+    }
+    return {
+      reply: 'Here is everything you can do on the Migrant Saathi platform:\n\n1. 💼 WorkPlus Shift — Log daily attendance with face recognition & GPS geofencing.\n2. 📜 Welfare Schemes — Discover and apply for PM-SYM Pension, PM-JAY Health & BOCW benefits.\n3. 💰 Wage Compliance — View official reference minimum wage rates for Gujarat.\n4. 🚨 Report Hazards / Unpaid Wages — File confidential complaints for Labour Inspector dispatch.\n5. 🤖 AI Assistant — Ask queries anytime in English, Hindi, or Gujarati.',
+      actionLink: { label: 'Explore WorkPlus Shift →', route: '/worker/workplus' },
+    }
+  }
+
+  // 7. Default Fallback Response
   if (lang === 'hi') {
     return {
       reply: 'मैं आपकी सहायता के लिए तैयार हूं! आप मुझसे न्यूनतम मजदूरी दरों, कल्याणकारी योजनाओं, सुरक्षा शिकायतों या पीएम-एसवाईएम पेंशन के बारे में पूछ सकते हैं।\n\nश्रम हेल्पलाइन नंबर: 14434',
@@ -235,7 +278,7 @@ export default function AIAssistant() {
   useEffect(() => {
     async function checkStatus() {
       try {
-        const res = await api.get('/api/ai/status')
+        const res = await api.get('/ai/status')
         if (res.data?.ollama_available) {
           setOllamaStatus({ available: true, model: res.data.ollama_model || 'llama3' })
         }
@@ -267,7 +310,7 @@ export default function AIAssistant() {
     let actionLink: { label: string; route: string } | undefined
 
     try {
-      const res = await api.post('/api/ai/ask', { message: trimmed, language: currentLang })
+      const res = await api.post('/ai/ask', { message: trimmed, language: currentLang })
       if (res.data?.reply) {
         replyText = res.data.reply
       }
