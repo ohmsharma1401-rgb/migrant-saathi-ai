@@ -16,3 +16,16 @@ pgvector==0.2.5
 python-dotenv==1.0.1
 tenacity==8.3.0
 structlog==24.1.0
+numpy==1.26.4
+scikit-learn==1.4.2
+geopy==2.4.1
+spacy==3.7.4
+opencv-python-headless==4.9.0.80
+mediapipe==0.10.14
+easyocr==1.7.1
+transformers==4.40.2
+openai-whisper==20231106
+twilio==9.0.5
+apscheduler==3.10.4
+Pillow==10.3.0
+

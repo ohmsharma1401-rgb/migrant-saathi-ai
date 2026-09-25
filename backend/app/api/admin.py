@@ -85,3 +85,59 @@ async def list_roles(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Role))
     roles = result.scalars().all()
     return [{"id": r.id, "name": r.name, "permissions": r.permissions} for r in roles]
+
+
+# ── Feature 3: Wage/Attendance Anomaly Detection ──────────────────────────────
+
+@router.get("/anomalies", dependencies=[Depends(require_admin)])
+async def list_anomalies(db: AsyncSession = Depends(get_db)):
+    from app.models.risk_and_anomaly import AnomalyRecord
+
+    result = await db.execute(select(AnomalyRecord).order_by(AnomalyRecord.detected_at.desc()))
+    anomalies = result.scalars().all()
+    return [
+        {
+            "id": str(a.id),
+            "worker_id": str(a.worker_id),
+            "employer_name": a.employer_name,
+            "anomaly_type": a.anomaly_type,
+            "severity": a.severity,
+            "details": a.details,
+            "resolved": a.resolved,
+            "detected_at": a.detected_at,
+        }
+        for a in anomalies
+    ]
+
+
+@router.post("/anomalies/run", dependencies=[Depends(require_admin)])
+async def trigger_anomaly_scan(db: AsyncSession = Depends(get_db)):
+    from app.services.anomaly_detection_service import anomaly_detection_service
+
+    anomalies = await anomaly_detection_service.run_anomaly_detection_job(db)
+    return {
+        "message": "Anomaly scan batch job executed successfully.",
+        "detected_anomalies_count": len(anomalies),
+    }
+
+
+# ── Feature 4: Predictive Risk Scoring ────────────────────────────────────────
+
+@router.get("/risk-score/{worker_id}", dependencies=[Depends(require_admin)])
+async def get_worker_risk_score(worker_id: str, db: AsyncSession = Depends(get_db)):
+    from app.services.risk_scoring_service import risk_scoring_service
+
+    try:
+        risk_record = await risk_scoring_service.compute_risk_score(worker_id, db)
+        return {
+            "id": str(risk_record.id),
+            "worker_id": str(risk_record.worker_id),
+            "employer_name": risk_record.employer_name,
+            "risk_score": risk_record.risk_score,
+            "risk_level": risk_record.risk_level,
+            "top_factors": risk_record.top_factors,
+            "calculated_at": risk_record.calculated_at,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+

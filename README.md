@@ -164,3 +164,47 @@ docker-compose exec backend python -m app.database.seed
 
 ## 📜 License
 This project is licensed under the [MIT License](LICENSE). Built for hackathon demonstration.
+
+---
+
+## 🚀 Advanced Features Setup & API Documentation
+
+### 1. Face-Based Attendance Verification
+- **Tech Stack**: MediaPipe FaceMesh / OpenCV, FastAPI (`POST /api/attendance/enroll-face`, `POST /api/attendance/verify`).
+- **Privacy & Security**: Stores 128-float normalized feature vectors in `face_embeddings` table; raw photos are never persisted. Includes Eye Aspect Ratio (EAR) liveness blink detection challenge.
+- **Offline Edge Cache**: Includes edge SQLite sync handler (`POST /api/attendance/sync-offline`).
+
+### 2. Geo-Fencing Verification
+- **Tech Stack**: Haversine distance calculator, FastAPI (`POST /api/attendance/geofences`).
+- **Validation**: Cross-checks worker device GPS lat/lng against worksite geofences (`worksite_geofences` table). Flags proxy attendance if location falls outside allowed radius.
+
+### 3. Wage & Attendance Anomaly Detection
+- **Tech Stack**: `scikit-learn` IsolationForest + Rule Engine (`GET /api/admin/anomalies`, `POST /api/admin/anomalies/run`).
+- **Flags**: Geo-mismatch, wage paid without attendance, repeated late clock-in, pattern deviation. Supports both scheduled background execution and on-demand admin scans.
+
+### 4. Predictive Risk Scoring
+- **Tech Stack**: `scikit-learn` Risk Model (`GET /api/admin/risk-score/{worker_id}`).
+- **Scoring**: Computes Low / Medium / High wage default & exploitation risk scores with human-readable top contributing risk factors stored in `risk_scores` table.
+
+### 5. Multilingual NLP Grievance & Chatbot + Whisper Voice
+- **Tech Stack**: IndicBERT / HuggingFace Transformers + OpenAI Whisper (`POST /api/chatbot/query`).
+- **Support**: Native multi-lingual intent classification across Hindi, Bengali, Odia, Marathi, and English, with base64 audio speech-to-text processing.
+
+### 6. Skill Extraction & Job Matching
+- **Tech Stack**: spaCy / Regex NER matcher (`POST /api/skills/extract-and-match`).
+- **Function**: Parses free-text worker experience descriptions into skill tags and matches them against existing job posting schemas.
+
+### 7. Document OCR Scanner
+- **Tech Stack**: EasyOCR / Tesseract (`POST /api/documents/ocr-extract`).
+- **Function**: Auto-extracts Name, ID number, DOB, Gender, and Address from photographed Labour Card / Aadhaar documents.
+
+### 8. WhatsApp / SMS Bot Fallback
+- **Tech Stack**: Twilio Inbound Webhook (`POST /api/whatsapp/webhook`).
+- **Flows**: Supports keyword/location commands (`attendance`, `wage`, `grievance`) routing cleanly to backend logic.
+- **Environment Variables Required**:
+  ```env
+  TWILIO_ACCOUNT_SID=your_twilio_account_sid
+  TWILIO_AUTH_TOKEN=your_twilio_auth_token
+  TWILIO_PHONE_NUMBER=whatsapp:+14155238886
+  ```
+

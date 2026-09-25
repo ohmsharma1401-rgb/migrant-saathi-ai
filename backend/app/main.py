@@ -12,6 +12,11 @@ from app.api.grievances import router as grievances_router
 from app.api.dashboard import router as dashboard_router
 from app.api.ai import router as ai_router
 from app.api.admin import router as admin_router
+from app.api.attendance import router as attendance_router
+from app.api.chatbot import router as chatbot_router
+from app.api.skills import router as skills_router
+from app.api.documents import router as documents_router
+from app.api.whatsapp import router as whatsapp_router
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +44,11 @@ app.include_router(grievances_router)
 app.include_router(dashboard_router)
 app.include_router(ai_router)
 app.include_router(admin_router)
+app.include_router(attendance_router)
+app.include_router(chatbot_router)
+app.include_router(skills_router)
+app.include_router(documents_router)
+app.include_router(whatsapp_router)
 
 
 # ── Health Check & Root ────────────────────────────────────────────────────────
@@ -61,3 +71,12 @@ async def health_check():
 @app.on_event("startup")
 async def on_startup():
     logger.info("Migrant Saathi AI backend started")
+    try:
+        from app.database.base import engine, Base
+        import app.models  # noqa: F401
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables initialized successfully")
+    except Exception as e:
+        logger.warning(f"Database initialization deferred: {e}")
+
