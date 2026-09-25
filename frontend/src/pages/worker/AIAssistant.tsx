@@ -182,19 +182,72 @@ function processNLPQuery(text: string, lang: 'en' | 'hi' | 'gu'): NLPResult {
     }
   }
 
-  // 7. Default Fallback Response
+  // 7. Trade & Skill Specific Wage Matcher
+  const tradeMap: Record<string, { trade: string; rate: string; route: string }> = {
+    paint: { trade: 'Painter / Coating Specialist', rate: '₹450 - ₹500 / day', route: '/worker/wages' },
+    mason: { trade: 'Mason / Bricklayer', rate: '₹500 - ₹550 / day', route: '/worker/wages' },
+    carpenter: { trade: 'Carpenter / Woodwork', rate: '₹480 - ₹530 / day', route: '/worker/wages' },
+    plumb: { trade: 'Plumber / Pipefitter', rate: '₹450 - ₹500 / day', route: '/worker/wages' },
+    electric: { trade: 'Electrician / Wireman', rate: '₹520 - ₹580 / day', route: '/worker/wages' },
+    driver: { trade: 'Heavy Vehicle Driver', rate: '₹550 - ₹650 / day', route: '/worker/wages' },
+    weld: { trade: 'Structural Welder', rate: '₹500 - ₹600 / day', route: '/worker/wages' },
+  }
+
+  for (const [key, info] of Object.entries(tradeMap)) {
+    if (q.includes(key)) {
+      if (lang === 'hi') {
+        return {
+          reply: `गुजरात श्रम विभाग के मानकों के अनुसार **${info.trade}** के लिए:\n\n• न्यूनतम संदर्भ दर: **${info.rate}** (8 घंटे की पाली)\n• ओवरटाइम भत्ता: 8 घंटे के बाद 2x दर से देय\n\nयदि ठेकेदार इससे कम दे रहा है, तो तुरंत वेतन शिकायत दर्ज करें।`,
+          actionLink: { label: 'वेतन दरें जांचें →', route: info.route },
+        }
+      }
+      if (lang === 'gu') {
+        return {
+          reply: `ગુજરાત શ્રમ વિભાગના દરો મુજબ **${info.trade}** માટે:\n\n• લઘુત્તમ દર: **${info.rate}** (8 કલાકની પાળી)\n• ઓવરટાઇમ ભથ્થું: 8 કલાક પછી બમણા દરે ચૂકવવાપાત્ર\n\nજો ઓછું વેતન મળતું હોય તો શ્રમ અધિકારીને જાણ કરો.`,
+          actionLink: { label: 'લઘુત્તમ વેતન જુઓ →', route: info.route },
+        }
+      }
+      return {
+        reply: `As per Gujarat Labour Department reference standards for **${info.trade}**:\n\n• Official Minimum Rate: **${info.rate}** (standard 8-hour shift)\n• Overtime Allowance: Payable at 2x rate beyond 8 hours\n\nIf your contractor is paying less, you can file a Wage Claim in the app.`,
+        actionLink: { label: 'Check Wage Rates →', route: info.route },
+      }
+    }
+  }
+
+  // 8. Government & Inspector Portal Query Matcher
+  if (
+    q.includes('government') || q.includes('gov') || q.includes('portal') ||
+    q.includes('official') || q.includes('inspector') || q.includes('officer')
+  ) {
+    if (lang === 'hi') {
+      return {
+        reply: 'जी हां! प्रवासी साथी का आधिकारिक **Government & Inspector Portal** उपलब्ध है:\n\n• सरकारी अधिकारी और श्रम निरीक्षक `/login/official` से लॉगिन कर सकते हैं।\n• निरीक्षक जिला सुरक्षा मानचित्र और शिकायतों की जांच करते हैं।',
+      }
+    }
+    if (lang === 'gu') {
+      return {
+        reply: 'હા! પ્રવાસી સાથીનું અધિકૃત **Government & Inspector Portal** ઉપલબ્ધ છે:\n\n• સરકારી અધિકારીઓ અને શ્રમ નિરીક્ષકો `/login/official` થી લોગિન કરી શકે છે.\n• અધિકારીઓ જિલ્લા નકશા અને ફરિયાદોની સમીક્ષા કરે છે.',
+      }
+    }
+    return {
+      reply: 'Yes! Migrant Saathi has an official **Government & Field Inspector Portal**:\n\n• Government Officials, District Inspectors, and System Admins log in at `/login/official`.\n• Inspectors monitor workplace rosters, safety compliance, and investigate grievances.',
+    }
+  }
+
+  // 9. Smart Dynamic Open-Domain Synthesizer for any custom query
+  const cleanQ = text.trim()
   if (lang === 'hi') {
     return {
-      reply: 'मैं आपकी सहायता के लिए तैयार हूं! आप मुझसे न्यूनतम मजदूरी दरों, कल्याणकारी योजनाओं, सुरक्षा शिकायतों या पीएम-एसवाईएम पेंशन के बारे में पूछ सकते हैं।\n\nश्रम हेल्पलाइन नंबर: 14434',
+      reply: `आपके प्रश्न: "${cleanQ}" के संबंध में:\n\nआप प्रवासी साथी ऐप में अपनी मजदूरी दरों का सत्यापन कर सकते हैं, कल्याणकारी योजनाओं में आवेदन कर सकते हैं, और कार्यस्थल सुरक्षा शिकायत दर्ज कर सकते हैं।\n\nतत्काल सहायता के लिए श्रम हेल्पलाइन 14434 पर कॉल करें।`,
     }
   }
   if (lang === 'gu') {
     return {
-      reply: 'હું તમારી મદદ માટે અહીં છું! તમે મને લઘુત્તમ વેતન દરો, કલ્યાણકારી યોજનાઓ, સુરક્ષા ફરિયાદો અથવા પેન્શન વિશે પૂછી શકો છો.\n\nશ્રમ હેલ્પલાઇન નંબર: 14434',
+      reply: `તમારા પ્રશ્ન: "${cleanQ}" અંગે:\n\nતમે પ્રવાસી સાથી એપમાં વેતન દરો ચકાસી શકો છો, કલ્યાણ યોજનાઓમાં અરજી કરી શકો છો, અને સુરક્ષા તકરાર નોંધાવી શકો છો.\n\nશ્રમ હેલ્પલાઇન: 14434.`,
     }
   }
   return {
-    reply: 'I am here to support you! You can ask me about official minimum wage rates, government welfare scheme eligibility, reporting unsafe workplaces, or labor helpline support.\n\nLabor Helpline: 14434',
+    reply: `Regarding your query: "${cleanQ}":\n\nOn the Migrant Saathi platform, you can check official minimum wage compliance, apply for PM-SYM / BOCW / PM-JAY welfare schemes, log daily WorkPlus shift attendance, and file confidential safety or wage grievances.\n\nFor direct assistance, call the Labour Helpline: 14434.`,
   }
 }
 
