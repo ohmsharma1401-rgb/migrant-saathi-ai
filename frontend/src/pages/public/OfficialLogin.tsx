@@ -60,6 +60,9 @@ export default function OfficialLogin() {
         password: values.password,
       })
       const data = res.data
+      if (!data || !data.role || !data.access_token) {
+        throw new Error('Invalid token response from server')
+      }
       const role = data.role as 'official' | 'inspector' | 'admin'
       setAuth(
         { id: data.user_id, role, email: data.email ?? values.email },

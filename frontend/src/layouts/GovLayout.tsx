@@ -19,6 +19,9 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  MapPin,
+  TrendingDown,
+  Sparkles,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
@@ -46,21 +49,28 @@ export default function GovLayout() {
 
   const navItems = [
     { to: '/gov', label: t('nav_gov_overview'), icon: Home, end: true },
+    { to: '/gov/map', label: 'Worker Map', icon: MapPin },
     { to: '/gov/analytics', label: t('nav_gov_analytics'), icon: BarChart2 },
+    { to: '/gov/wages', label: 'Wage Monitoring', icon: TrendingDown },
     { to: '/gov/welfare', label: t('nav_gov_welfare'), icon: Gift },
     { to: '/gov/grievances', label: t('nav_gov_grievances'), icon: MessageSquare, badge: '8' },
     { to: '/gov/workers', label: t('nav_gov_workers'), icon: Users },
+    { to: '/gov/insights', label: 'AI Insights', icon: Sparkles },
     { to: '/gov/settings', label: t('nav_gov_settings'), icon: Settings },
     { to: '/gov/help', label: t('nav_gov_help'), icon: HelpCircle },
   ]
 
   function getPageTitle() {
     if (location.pathname === '/gov') return t('nav_gov_overview')
+    if (location.pathname.includes('/map')) return 'Workforce Geographic Map'
     if (location.pathname.includes('/analytics')) return t('nav_gov_analytics')
+    if (location.pathname.includes('/wages')) return 'Fair Wage Monitoring & Enforcement'
     if (location.pathname.includes('/welfare')) return t('nav_gov_welfare')
     if (location.pathname.includes('/grievances')) return t('nav_gov_grievances')
     if (location.pathname.includes('/workers')) return t('nav_gov_workers')
+    if (location.pathname.includes('/insights')) return 'AI Risk Scoring & Predictive Insights'
     if (location.pathname.includes('/settings')) return t('nav_gov_settings')
+    if (location.pathname.includes('/help')) return 'Inspector Field Help & Assistance'
     return 'Government Official Workspace'
   }
 

@@ -1,8 +1,8 @@
 import api from './api'
 
 export interface FaceEnrollPayload {
-  worker_id: str
-  image_base64: str
+  worker_id: string
+  image_base64: string
 }
 
 export interface AttendanceVerifyPayload {
