@@ -71,6 +71,8 @@ export default function OfficialLogin() {
       )
       if (role === 'admin') {
         navigate('/admin')
+      } else if (role === 'inspector') {
+        navigate('/inspector')
       } else {
         navigate('/gov')
       }
@@ -92,7 +94,7 @@ export default function OfficialLogin() {
           'demo-access-token',
           'demo-refresh-token'
         )
-        navigate(fallbackRole === 'admin' ? '/admin' : '/gov')
+        navigate(fallbackRole === 'admin' ? '/admin' : fallbackRole === 'inspector' ? '/inspector' : '/gov')
         return
       }
       setApiError('Invalid credentials. Try Demo credentials or enter correct email.')
@@ -106,7 +108,7 @@ export default function OfficialLogin() {
       'demo-access-token',
       'demo-refresh-token'
     )
-    navigate('/gov')
+    navigate(type === 'inspector' ? '/inspector' : '/gov')
   }
 
   return (

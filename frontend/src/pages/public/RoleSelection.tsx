@@ -28,7 +28,7 @@ export default function RoleSelection() {
         'demo-access-token',
         'demo-refresh-token'
       )
-      navigate('/gov')
+      navigate('/inspector')
     } else {
       navigate('/login/official')
     }

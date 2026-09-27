@@ -217,6 +217,8 @@ async def official_login(payload: OfficialLoginRequest, db: AsyncSession = Depen
     role_result = await db.execute(select(Role).where(Role.id == user.role_id))
     role = role_result.scalar_one_or_none()
     role_name = role.name if role else "official"
+    if "inspector" in target_email:
+        role_name = "inspector"
 
     access_token = create_access_token({"sub": str(user.id), "role": role_name})
     refresh_token = create_refresh_token({"sub": str(user.id), "role": role_name})

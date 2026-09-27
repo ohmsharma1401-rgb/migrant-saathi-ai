@@ -8,6 +8,7 @@ interface Props {
 
 export default function ProtectedRoute({ roles, children }: Props) {
   const { isAuthenticated, user, setAuth } = useAuthStore()
+  const location = useLocation()
 
   if (!isAuthenticated || !user) {
     if (roles.includes('worker')) {
@@ -18,7 +19,15 @@ export default function ProtectedRoute({ roles, children }: Props) {
       )
       return <>{children}</>
     }
-    if (roles.includes('official') || roles.includes('inspector')) {
+    if (roles.includes('inspector') && (location.pathname.startsWith('/inspector') || !roles.includes('official'))) {
+      setAuth(
+        { id: 'demo-inspector-id', role: 'inspector', email: 'inspector@gujarat.gov.in' },
+        'demo-access-token',
+        'demo-refresh-token'
+      )
+      return <>{children}</>
+    }
+    if (roles.includes('official')) {
       setAuth(
         { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
         'demo-access-token',
@@ -30,7 +39,15 @@ export default function ProtectedRoute({ roles, children }: Props) {
   }
 
   if (!roles.includes(user.role)) {
-    if (roles.includes('official') || roles.includes('inspector')) {
+    if (roles.includes('inspector') && location.pathname.startsWith('/inspector')) {
+      setAuth(
+        { id: 'demo-inspector-id', role: 'inspector', email: 'inspector@gujarat.gov.in' },
+        'demo-access-token',
+        'demo-refresh-token'
+      )
+      return <>{children}</>
+    }
+    if (roles.includes('official') && location.pathname.startsWith('/gov')) {
       setAuth(
         { id: 'demo-official-id', role: 'official', email: 'official@gujarat.gov.in' },
         'demo-access-token',
@@ -49,7 +66,7 @@ export default function ProtectedRoute({ roles, children }: Props) {
     const redirectMap: Record<string, string> = {
       worker: '/worker',
       official: '/gov',
-      inspector: '/gov',
+      inspector: '/inspector',
       admin: '/admin',
     }
     return <Navigate to={redirectMap[user.role] ?? '/select-role'} replace />

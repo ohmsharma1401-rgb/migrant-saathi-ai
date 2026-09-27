@@ -22,6 +22,9 @@ import {
   MapPin,
   TrendingDown,
   Sparkles,
+  ShieldCheck,
+  FileText,
+  ArrowRightLeft,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
@@ -30,7 +33,7 @@ import GlobalSearchModal from '@/components/ui/GlobalSearchModal'
 import { useTranslation } from '@/utils/translations'
 
 export default function GovLayout() {
-  const { user, clearAuth } = useAuthStore()
+  const { user, clearAuth, setAuth } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
   const { t, lang, setLanguage } = useTranslation()
   const navigate = useNavigate()
@@ -44,6 +47,15 @@ export default function GovLayout() {
     navigate('/select-role')
   }
 
+  function handleSwitchToInspector() {
+    setAuth(
+      { id: 'demo-inspector-id', role: 'inspector', email: 'inspector@gujarat.gov.in' },
+      'demo-access-token',
+      'demo-refresh-token'
+    )
+    navigate('/inspector')
+  }
+
   const officialName = user?.email ? user.email.split('@')[0] : 'Ananya Rao'
   const initial = officialName.charAt(0).toUpperCase()
 
@@ -55,6 +67,8 @@ export default function GovLayout() {
     { to: '/gov/welfare', label: t('nav_gov_welfare'), icon: Gift },
     { to: '/gov/grievances', label: t('nav_gov_grievances'), icon: MessageSquare, badge: '8' },
     { to: '/gov/workers', label: t('nav_gov_workers'), icon: Users },
+    { to: '/gov/inspectors', label: 'Inspector Management', icon: ShieldCheck, badge: '4' },
+    { to: '/gov/reports', label: 'Policy & District Reports', icon: FileText },
     { to: '/gov/insights', label: 'AI Insights', icon: Sparkles },
     { to: '/gov/settings', label: t('nav_gov_settings'), icon: Settings },
     { to: '/gov/help', label: t('nav_gov_help'), icon: HelpCircle },
@@ -68,6 +82,8 @@ export default function GovLayout() {
     if (location.pathname.includes('/welfare')) return t('nav_gov_welfare')
     if (location.pathname.includes('/grievances')) return t('nav_gov_grievances')
     if (location.pathname.includes('/workers')) return t('nav_gov_workers')
+    if (location.pathname.includes('/inspectors')) return 'Field Inspector Management & Workload'
+    if (location.pathname.includes('/reports')) return 'District Labour & Compliance Reports'
     if (location.pathname.includes('/insights')) return 'AI Risk Scoring & Predictive Insights'
     if (location.pathname.includes('/settings')) return t('nav_gov_settings')
     if (location.pathname.includes('/help')) return 'Inspector Field Help & Assistance'
@@ -156,6 +172,18 @@ export default function GovLayout() {
 
         {/* Sidebar Footer */}
         <div className="p-3 border-t border-emerald-950 space-y-2">
+          {/* Switch to Inspector Console Button */}
+          <button
+            onClick={handleSwitchToInspector}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors font-semibold"
+          >
+            <div className="flex items-center gap-2">
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+              <span>Switch to Inspector Portal</span>
+            </div>
+            <ChevronRight className="h-3.5 w-3.5 text-amber-400" />
+          </button>
+
           <div className="p-3 rounded-2xl bg-emerald-950/60 dark:bg-[#122B24] border border-emerald-900/60 dark:border-[#1E483D] flex items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-emerald-900/80 flex items-center justify-center shrink-0">
               <PhoneCall className="h-4 w-4 text-[#C0E862]" />

@@ -28,6 +28,18 @@ import WelfareAnalytics from '@/pages/gov/WelfareAnalytics'
 import WageMonitoring from '@/pages/gov/WageMonitoring'
 import GrievancesPanel from '@/pages/gov/GrievancesPanel'
 import AIInsights from '@/pages/gov/AIInsights'
+import InspectorManagement from '@/pages/gov/InspectorManagement'
+import GovReports from '@/pages/gov/GovReports'
+
+// Inspector pages
+import InspectorLayout from '@/layouts/InspectorLayout'
+import InspectorDashboard from '@/pages/inspector/InspectorDashboard'
+import InspectionRoster from '@/pages/inspector/InspectionRoster'
+import InspectorCases from '@/pages/inspector/InspectorCases'
+import InspectorEvidence from '@/pages/inspector/InspectorEvidence'
+import InspectorReports from '@/pages/inspector/InspectorReports'
+import InspectorWorkplaces from '@/pages/inspector/InspectorWorkplaces'
+import InspectorHelp from '@/pages/inspector/InspectorHelp'
 
 // Admin pages
 import AdminLayout from '@/layouts/AdminLayout'
@@ -69,7 +81,7 @@ export default function App() {
           <Route path="news" element={<WorkerNews />} />
         </Route>
 
-        {/* Government */}
+        {/* Government Official Workspace */}
         <Route
           path="/gov"
           element={
@@ -82,12 +94,32 @@ export default function App() {
           <Route path="analytics" element={<WelfareAnalytics />} />
           <Route path="map" element={<WorkerMap />} />
           <Route path="workers" element={<WorkerDirectory />} />
+          <Route path="inspectors" element={<InspectorManagement />} />
+          <Route path="reports" element={<GovReports />} />
           <Route path="welfare" element={<SchemeManagement />} />
           <Route path="wages" element={<WageMonitoring />} />
           <Route path="grievances" element={<GrievancesPanel />} />
           <Route path="insights" element={<AIInsights />} />
           <Route path="settings" element={<SystemSettings />} />
           <Route path="help" element={<AIInsights />} />
+        </Route>
+
+        {/* Labour Inspector Workspace (Field Operations & On-Site Enforcement) */}
+        <Route
+          path="/inspector"
+          element={
+            <ProtectedRoute roles={['inspector', 'official']}>
+              <InspectorLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<InspectorDashboard />} />
+          <Route path="roster" element={<InspectionRoster />} />
+          <Route path="cases" element={<InspectorCases />} />
+          <Route path="evidence" element={<InspectorEvidence />} />
+          <Route path="reports" element={<InspectorReports />} />
+          <Route path="workplaces" element={<InspectorWorkplaces />} />
+          <Route path="help" element={<InspectorHelp />} />
         </Route>
 
         {/* Admin */}
