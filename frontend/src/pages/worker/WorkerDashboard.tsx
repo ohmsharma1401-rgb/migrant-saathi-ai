@@ -9,14 +9,17 @@ import {
   CheckCircle2,
   QrCode,
   Check,
+  ShieldCheck,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useTranslation } from '@/utils/translations'
+import FaceAttendanceModal from '@/components/ui/FaceAttendanceModal'
 
 export default function WorkerDashboard() {
   const { t } = useTranslation()
   const { user } = useAuthStore()
   const navigate = useNavigate()
+  const [attendanceModalOpen, setAttendanceModalOpen] = useState(false)
 
   const [workerDetails, setWorkerDetails] = useState({
     name: user?.email ? user.email.split('@')[0] : 'Ramesh Kumar',
@@ -81,17 +84,33 @@ export default function WorkerDashboard() {
             Your journey is moving forward. Here&apos;s what needs your attention today.
           </p>
 
-          {/* Ask Saathi Pill Button */}
-          <div
-            onClick={() => navigate('/worker/ai')}
-            className="inline-flex items-center gap-3 p-3 px-4 rounded-2xl bg-emerald-900/60 border border-emerald-800/80 hover:bg-emerald-900 transition-colors cursor-pointer text-xs font-medium text-white"
-          >
-            <div className="p-1.5 rounded-xl bg-[#C0E862] text-[#0C2D27]">
-              <Sparkles className="h-4 w-4" />
+          <div className="flex flex-wrap gap-3">
+            {/* Ask Saathi Button */}
+            <div
+              onClick={() => navigate('/worker/ai')}
+              className="inline-flex items-center gap-3 p-3 px-4 rounded-2xl bg-emerald-900/60 border border-emerald-800/80 hover:bg-emerald-900 transition-colors cursor-pointer text-xs font-medium text-white"
+            >
+              <div className="p-1.5 rounded-xl bg-[#C0E862] text-[#0C2D27]">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] text-emerald-200/70 block leading-tight font-semibold">Have a question?</span>
+                <b className="text-xs text-white block">Ask Saathi in your language →</b>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] text-emerald-200/70 block leading-tight font-semibold">Have a question?</span>
-              <b className="text-xs text-white block">Ask Saathi in your language →</b>
+
+            {/* Feature 1 & 2: Mark Face & Geo Attendance Button */}
+            <div
+              onClick={() => setAttendanceModalOpen(true)}
+              className="inline-flex items-center gap-3 p-3 px-4 rounded-2xl bg-[#FF6B53] hover:bg-orange-600 transition-colors cursor-pointer text-xs font-medium text-white shadow-md"
+            >
+              <div className="p-1.5 rounded-xl bg-white text-[#0C2D27]">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-[10px] text-orange-100 block leading-tight font-semibold">Worksite Attendance</span>
+                <b className="text-xs text-white block">Mark Face + Geo Check →</b>
+              </div>
             </div>
           </div>
         </div>
@@ -163,7 +182,7 @@ export default function WorkerDashboard() {
         </div>
       </div>
 
-      {/* ── 3. "Made for your journey" 3 Pastel Feature Cards ── */}
+      {/* ── 3. Pastel Feature Cards ── */}
       <div className="space-y-4">
         <div>
           <h2 className="text-xl font-bold text-[#0C2D27] tracking-tight">Made for your journey</h2>
@@ -171,8 +190,6 @@ export default function WorkerDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          
-          {/* Pastel Card 1: Benefits For You (Soft Peach #FFF0EB) */}
           <div
             onClick={() => navigate('/worker/welfare')}
             className="rounded-3xl bg-[#FFF0EB] border border-orange-100 p-6 flex flex-col justify-between space-y-6 cursor-pointer hover:shadow-md transition-all group"
@@ -191,13 +208,9 @@ export default function WorkerDashboard() {
                 </p>
               </div>
             </div>
-
-            <span className="text-xs font-bold text-[#FF6B53] flex items-center gap-1 pt-2">
-              View matches →
-            </span>
+            <span className="text-xs font-bold text-[#FF6B53] flex items-center gap-1 pt-2">View matches →</span>
           </div>
 
-          {/* Pastel Card 2: Fair Wage Check (Soft Mint #E8F8F2) */}
           <div
             onClick={() => navigate('/worker/wages')}
             className="rounded-3xl bg-[#E8F8F2] border border-emerald-100 p-6 flex flex-col justify-between space-y-6 cursor-pointer hover:shadow-md transition-all group"
@@ -216,22 +229,13 @@ export default function WorkerDashboard() {
                 </p>
               </div>
             </div>
-
-            <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 pt-2">
-              Check your rate →
-            </span>
+            <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 pt-2">Check your rate →</span>
           </div>
 
-          {/* Pastel Card 3: Your Request (Soft Lavender #F0ECFC) */}
           <div
             onClick={() => navigate('/worker/grievances')}
             className="rounded-3xl bg-[#F0ECFC] border border-purple-100 p-6 flex flex-col justify-between space-y-6 cursor-pointer hover:shadow-md transition-all group relative overflow-hidden"
           >
-            {/* Ribbon Badge */}
-            <div className="absolute top-4 right-[-35px] bg-purple-700 text-white text-[9px] font-extrabold uppercase tracking-widest py-1 px-8 rotate-45 shadow-2xs">
-              IN REVIEW
-            </div>
-
             <div className="space-y-4">
               <div className="p-3 rounded-2xl bg-white/80 w-fit text-purple-700 shadow-2xs">
                 <AlertTriangle className="h-6 w-6" />
@@ -241,20 +245,20 @@ export default function WorkerDashboard() {
                 <h3 className="text-lg font-bold text-[#0C2D27] group-hover:text-purple-700 transition-colors leading-snug">
                   Wage complaint is in review
                 </h3>
-                <p className="text-xs text-[#52605D] mt-1 font-normal">
-                  Updated today at 10:42 AM
-                </p>
+                <p className="text-xs text-[#52605D] mt-1 font-normal">Updated today at 10:42 AM</p>
               </div>
             </div>
-
-            <span className="text-xs font-bold text-purple-700 flex items-center gap-1 pt-2">
-              Track status →
-            </span>
+            <span className="text-xs font-bold text-purple-700 flex items-center gap-1 pt-2">Track status →</span>
           </div>
-
         </div>
       </div>
 
+      {/* Face Attendance Verification Modal */}
+      <FaceAttendanceModal
+        isOpen={attendanceModalOpen}
+        onClose={() => setAttendanceModalOpen(false)}
+        workerId="9f8b4c2e-1111-4a2b-9876-000000000001"
+      />
     </div>
   )
 }
