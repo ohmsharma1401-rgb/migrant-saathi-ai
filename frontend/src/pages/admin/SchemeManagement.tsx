@@ -9,6 +9,7 @@ import {
   ToggleRight,
   X,
   ChevronDown,
+  Download,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useTranslation } from '@/utils/translations'
+import { exportToCSV } from '@/utils/csvExport'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SchemeCategory = 'housing' | 'health' | 'insurance' | 'pension' | 'food' | 'skill_training' | 'other'
@@ -479,6 +481,23 @@ export default function SchemeManagement() {
     setEditScheme(null)
   }
 
+  function handleExportCSV() {
+    exportToCSV(
+      `welfare_schemes_directory_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: 'Scheme Code', key: 'code' },
+        { header: 'Scheme Name', key: 'name' },
+        { header: 'Category', key: 'category' },
+        { header: 'Status', key: (s) => (s.active ? 'Active' : 'Inactive') },
+        { header: 'Applicable States', key: (s) => s.states.join('; ') },
+        { header: 'Applicable Sectors', key: (s) => s.sectors.join('; ') },
+        { header: 'Benefit Summary', key: 'benefit' },
+        { header: 'Description', key: 'description' },
+      ],
+      schemes
+    )
+  }
+
   return (
     <div className="space-y-5">
       {/* ── Header ──────────────────────────────────────────── */}
@@ -493,9 +512,14 @@ export default function SchemeManagement() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="dark:border-slate-700 dark:text-slate-300">
-            <Upload className="mr-1.5 h-4 w-4" />
-            {lang === 'hi' ? 'CSV से आयात करें' : lang === 'gu' ? 'CSV થી આયાત કરો' : 'Import from CSV'}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="dark:border-slate-700 dark:text-slate-300 font-bold cursor-pointer"
+          >
+            <Download className="mr-1.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            {lang === 'hi' ? 'CSV निर्यात' : lang === 'gu' ? 'CSV નિકાસ' : 'Export CSV'}
           </Button>
           <Button size="sm" onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />

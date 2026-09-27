@@ -19,6 +19,7 @@ import {
   Check,
 } from 'lucide-react'
 import { useTranslation } from '@/utils/translations'
+import { downloadCSV } from '@/utils/csvExport'
 
 export interface WorkerRecord {
   id: string
@@ -499,15 +500,7 @@ export default function WorkerDirectory() {
   }
 
   function downloadFile(content: string, filename: string) {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.setAttribute('href', url)
-    link.setAttribute('download', filename)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    downloadCSV(filename, content)
   }
 
   // Handle Register Form Submission

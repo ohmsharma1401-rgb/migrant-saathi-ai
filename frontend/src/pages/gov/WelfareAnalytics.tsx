@@ -15,6 +15,7 @@ import {
   ExternalLink,
   ChevronRight
 } from 'lucide-react'
+import { downloadCSV } from '@/utils/csvExport'
 import {
   BarChart,
   Bar,
@@ -281,12 +282,7 @@ export default function WelfareAnalytics() {
     const rows = sch.districtDistribution.map((d) =>
       `"${d.district}",${d.matches},${d.enrolled},${d.matches - d.enrolled},${((d.enrolled / d.matches) * 100).toFixed(1)}`
     ).join('\n')
-    const blob = new Blob([headers + rows], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${sch.name.replace(/\s+/g, '_')}_Eligible_Roster_2026.csv`
-    a.click()
+    downloadCSV(`${sch.name.replace(/\s+/g, '_')}_Eligible_Roster_2026.csv`, headers + rows)
     setExportNotice(true)
     setTimeout(() => setExportNotice(false), 3000)
   }

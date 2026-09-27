@@ -18,6 +18,7 @@ import {
   Download,
   AlertCircle,
 } from 'lucide-react'
+import { exportToCSV } from '@/utils/csvExport'
 
 // ─── Default System Settings Schema ──────────────────────────────────────────
 interface SettingsState {
@@ -185,6 +186,21 @@ export default function SystemSettings() {
       l.action.toLowerCase().includes(auditQuery.toLowerCase()) ||
       l.id.toLowerCase().includes(auditQuery.toLowerCase())
   )
+
+  function handleExportAuditCSV() {
+    exportToCSV(
+      `system_audit_trail_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: 'Log ID', key: 'id' },
+        { header: 'Timestamp', key: 'timestamp' },
+        { header: 'Official', key: 'official' },
+        { header: 'Action Performed', key: 'action' },
+        { header: 'IP Address', key: 'ip' },
+        { header: 'Status', key: 'status' },
+      ],
+      filteredLogs.length > 0 ? filteredLogs : auditLogs
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
@@ -734,7 +750,7 @@ export default function SystemSettings() {
                     <p className="text-xs text-[#52605D] mt-0.5">Immutable record of government inspector actions and settings changes.</p>
                   </div>
                   <button
-                    onClick={() => alert('Exporting Official Audit Log CSV...')}
+                    onClick={handleExportAuditCSV}
                     className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[#0C2D27] hover:bg-slate-100 text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-colors"
                   >
                     <Download className="h-3.5 w-3.5" />

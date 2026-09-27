@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Users, Plus, Search, Edit2, X, ChevronDown } from 'lucide-react'
+import { Users, Plus, Search, Edit2, X, ChevronDown, Download } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
+import { exportToCSV } from '@/utils/csvExport'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Role = 'worker' | 'official' | 'inspector' | 'admin'
@@ -210,6 +211,21 @@ export default function UserManagement() {
     setEditUser(null)
   }
 
+  function handleExportCSV() {
+    exportToCSV(
+      `user_directory_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: 'User ID', key: 'id' },
+        { header: 'Full Name', key: 'name' },
+        { header: 'Credential / Contact', key: 'credential' },
+        { header: 'Role', key: 'role' },
+        { header: 'Status', key: (u) => (u.active ? 'Active' : 'Inactive') },
+        { header: 'Joined Date', key: 'joined' },
+      ],
+      filtered.length > 0 ? filtered : users
+    )
+  }
+
   const inputCls = 'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
   return (
@@ -223,10 +239,21 @@ export default function UserManagement() {
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Manage user accounts and roles across the platform</p>
         </div>
-        <Button size="sm" onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
-          <Plus className="mr-1.5 h-4 w-4" />
-          Add User
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="dark:border-slate-700 dark:text-slate-300 font-bold cursor-pointer"
+          >
+            <Download className="mr-1.5 h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            Export CSV
+          </Button>
+          <Button size="sm" onClick={() => setShowAdd(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold cursor-pointer">
+            <Plus className="mr-1.5 h-4 w-4" />
+            Add User
+          </Button>
+        </div>
       </div>
 
       {/* ── Stats row ───────────────────────────────────────── */}

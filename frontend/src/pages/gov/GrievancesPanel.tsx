@@ -17,10 +17,12 @@ import {
   Check,
   MapPin,
   Calendar,
-  FileText
+  FileText,
+  Download
 } from 'lucide-react'
 import { useTranslation } from '@/utils/translations'
 import { inspectionService } from '@/services/inspection.service'
+import { exportToCSV } from '@/utils/csvExport'
 
 export interface ProofMedia {
   id: string
@@ -563,6 +565,28 @@ export default function GrievancesPanel() {
   const review   = grievanceList.filter(g => g.status === 'Under Review').length
   const resolved = grievanceList.filter(g => g.status === 'Resolved').length
 
+  function handleExportCSV() {
+    exportToCSV(
+      `grievances_docket_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: 'Docket ID', key: 'id' },
+        { header: 'Category', key: 'category' },
+        { header: 'Worker Name', key: 'worker' },
+        { header: 'Complaint Description', key: 'description' },
+        { header: 'Location', key: 'location' },
+        { header: 'Priority', key: 'priority' },
+        { header: 'Status', key: 'status' },
+        { header: 'Assigned Inspector', key: 'inspector' },
+        { header: 'Inspector Badge', key: 'inspectorBadge' },
+        { header: 'Logged Date', key: 'date' },
+        { header: 'Official Notes', key: (g) => g.notes || '' },
+      ],
+      filtered.length > 0 ? filtered : grievanceList
+    )
+    setToastMessage(`Exported ${filtered.length > 0 ? filtered.length : grievanceList.length} grievances to CSV successfully.`)
+    setTimeout(() => setToastMessage(''), 3000)
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* ── Top Header ── */}
@@ -585,11 +609,21 @@ export default function GrievancesPanel() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-[#9DBBB2]">
-          <span>Active Inspectors:</span>
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-extrabold">
-            {inspectors.length} Officers on Duty
-          </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#1F4C3F] bg-white dark:bg-[#122A23] text-xs font-bold text-[#0C2D27] dark:text-[#9DBBB2] hover:bg-slate-50 dark:hover:bg-[#15342B] cursor-pointer shadow-xs transition-colors"
+            title="Export filtered grievances to CSV"
+          >
+            <Download className="h-3.5 w-3.5 text-amber-500" />
+            <span>{lang === 'hi' ? 'CSV निर्यात' : lang === 'gu' ? 'CSV નિકાસ' : 'Export CSV'}</span>
+          </button>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-[#9DBBB2]">
+            <span>Active Inspectors:</span>
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-extrabold">
+              {inspectors.length} Officers on Duty
+            </span>
+          </div>
         </div>
       </div>
 

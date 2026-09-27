@@ -1,4 +1,5 @@
-import { TrendingDown, CheckCircle, AlertTriangle, BarChart2 } from 'lucide-react'
+import { TrendingDown, CheckCircle, AlertTriangle, BarChart2, Download } from 'lucide-react'
+import { exportToCSV } from '@/utils/csvExport'
 
 // ─── DEMO DATA ──────────────────────────────────────────────────────────────
 interface WageRecord {
@@ -54,6 +55,36 @@ export default function WageMonitoring() {
   const monitorCount  = 892
   const discrepCount  = 311
 
+  function handleExportWageDiscrepancies() {
+    exportToCSV(
+      `wage_discrepancy_monitoring_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: 'Worker ID', key: 'workerId' },
+        { header: 'Occupation', key: 'occupation' },
+        { header: 'District', key: 'district' },
+        { header: 'Reported Monthly Wage (INR)', key: 'reportedWage' },
+        { header: 'Reference Monthly Wage (INR)', key: 'referenceWage' },
+        { header: 'Discrepancy Amount (INR)', key: 'discrepancyAmt' },
+        { header: 'Discrepancy Percentage (%)', key: 'discrepancyPct' },
+        { header: 'Risk Status', key: 'riskLevel' },
+      ],
+      WAGE_RECORDS
+    )
+  }
+
+  function handleExportReferenceWages() {
+    exportToCSV(
+      `gujarat_reference_wages_benchmark_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: 'Sector', key: 'sector' },
+        { header: 'Occupation', key: 'occupation' },
+        { header: 'Minimum Statutory Wage (INR/mo)', key: 'minWage' },
+        { header: 'Fair Reference Wage (INR/mo)', key: 'refWage' },
+      ],
+      REFERENCE_WAGES
+    )
+  }
+
   return (
     <div className="space-y-6 text-slate-900 dark:text-slate-100">
       {/* Header — pt-1 ensures title is never clipped below the sticky header */}
@@ -95,10 +126,22 @@ export default function WageMonitoring() {
 
       {/* ── Wage Comparison Table ── */}
       <div className="bg-white dark:bg-[#14312A] rounded-xl shadow-sm border border-gray-100 dark:border-[#244E43] overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-[#244E43] flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-[#FBBF24]" />
-          <h2 className="font-semibold text-gray-800 dark:text-white text-sm">Wage Comparison — Sample Records</h2>
-          <span className="ml-auto text-xs text-gray-400 dark:text-[#A3BDB5] font-medium">DEMO DATA</span>
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-[#244E43] flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-[#FBBF24]" />
+            <h2 className="font-semibold text-gray-800 dark:text-white text-sm">Wage Comparison — Sample Records</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportWageDiscrepancies}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-[#244E43] bg-gray-50 dark:bg-[#1A3F37] text-xs font-bold text-gray-700 dark:text-[#A8C7BE] hover:bg-gray-100 dark:hover:bg-[#204E44] cursor-pointer transition-colors shadow-xs"
+              title="Download wage comparison sample records as CSV"
+            >
+              <Download className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+              <span>Export CSV</span>
+            </button>
+            <span className="text-xs text-gray-400 dark:text-[#A3BDB5] font-medium hidden sm:inline">DEMO DATA</span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -158,12 +201,24 @@ export default function WageMonitoring() {
 
       {/* ── Reference Wage Table ── */}
       <div className="bg-white dark:bg-[#14312A] rounded-xl shadow-sm border border-gray-100 dark:border-[#244E43] overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-[#244E43] flex items-center gap-2">
-          <BarChart2 className="h-4 w-4 text-indigo-500 dark:text-[#818CF8]" />
-          <h2 className="font-semibold text-gray-800 dark:text-white text-sm">Reference Wage Table — Gujarat</h2>
-          <span className="ml-auto text-xs font-medium text-amber-600 dark:text-[#FCD34D] bg-amber-50 dark:bg-[#3D3216] border border-amber-200 dark:border-[#695320] rounded px-2 py-0.5">
-            DEMO DATA
-          </span>
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-[#244E43] flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="h-4 w-4 text-indigo-500 dark:text-[#818CF8]" />
+            <h2 className="font-semibold text-gray-800 dark:text-white text-sm">Reference Wage Table — Gujarat</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportReferenceWages}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-[#244E43] bg-gray-50 dark:bg-[#1A3F37] text-xs font-bold text-gray-700 dark:text-[#A8C7BE] hover:bg-gray-100 dark:hover:bg-[#204E44] cursor-pointer transition-colors shadow-xs"
+              title="Download reference wage benchmarks as CSV"
+            >
+              <Download className="h-3.5 w-3.5 text-indigo-500 dark:text-[#818CF8]" />
+              <span>Export CSV</span>
+            </button>
+            <span className="text-xs font-medium text-amber-600 dark:text-[#FCD34D] bg-amber-50 dark:bg-[#3D3216] border border-amber-200 dark:border-[#695320] rounded px-2 py-0.5 hidden sm:inline">
+              DEMO DATA
+            </span>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

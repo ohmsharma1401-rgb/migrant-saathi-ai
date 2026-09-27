@@ -13,6 +13,7 @@ import {
   Users,
   ShieldCheck
 } from 'lucide-react'
+import { downloadCSV } from '@/utils/csvExport'
 
 export default function GovReports() {
   const [selectedQuarter, setSelectedQuarter] = useState('Q3 (Jul - Sep 2026)')
@@ -31,12 +32,7 @@ export default function GovReports() {
     const rows = SECTOR_METRICS.map(
       (s) => `"${s.sector}",${s.inspected},${s.complianceRate},"${s.arrearsRecovered}",${s.openViolations}`
     ).join('\n')
-    const blob = new Blob([headers + rows], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `District_Labour_Compliance_Report_${selectedDistrict}_2026.csv`
-    a.click()
+    downloadCSV(`District_Labour_Compliance_Report_${selectedDistrict}_2026.csv`, headers + rows)
   }
 
   function handlePrint() {

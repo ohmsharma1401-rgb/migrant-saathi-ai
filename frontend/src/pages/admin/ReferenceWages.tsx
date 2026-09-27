@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { DollarSign, Plus, Edit2, RefreshCw, X, Loader2, Trash2, CheckCircle2 } from 'lucide-react'
+import { DollarSign, Plus, Edit2, RefreshCw, X, Loader2, Trash2, CheckCircle2, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import api from '@/services/api'
+import { exportToCSV } from '@/utils/csvExport'
 
 interface WageEntry {
   id: string
@@ -203,6 +204,24 @@ export default function ReferenceWages() {
     }
   }
 
+  function handleExportCSV() {
+    exportToCSV(
+      `reference_minimum_wages_${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: 'State', key: 'state' },
+        { header: 'District', key: (w) => w.district || 'All' },
+        { header: 'Sector', key: 'sector' },
+        { header: 'Occupation', key: 'occupation' },
+        { header: 'Skill Level', key: 'skill_level' },
+        { header: 'Daily Wage (INR)', key: 'daily_wage' },
+        { header: 'Monthly Equivalent (INR)', key: 'monthly_wage' },
+        { header: 'Effective Date', key: 'effective_date' },
+        { header: 'Source', key: 'source' },
+      ],
+      wages
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* ── Header ──────────────────────────────────────────── */}
@@ -214,6 +233,15 @@ export default function ReferenceWages() {
           <p className="text-sm text-slate-500 dark:text-slate-400">Minimum wage reference data by state, sector, and skill level</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="dark:border-slate-700 dark:text-slate-300 font-bold cursor-pointer"
+          >
+            <Download className="mr-1.5 h-4 w-4 text-teal-600 dark:text-teal-400" />
+            Export CSV
+          </Button>
           <Button variant="outline" size="sm" onClick={handleSyncGovt} disabled={isSyncing} className="dark:border-slate-700 dark:text-slate-300">
             {isSyncing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4 text-teal-600 dark:text-teal-400" />}
             Sync from Govt
