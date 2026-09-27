@@ -32,38 +32,6 @@ async def extract_skills(
     return await skill_agent.extract_skills_from_text(payload.text)
 
 
-@router.post("/ask", response_model=AIChatResponse)
-async def ask_ai(
-    payload: AIChatRequest,
-    current_user=Depends(get_current_user),
-):
-    from app.services.ollama_service import ollama_service
-    from app.services.watsonx_service import watsonx
-
-    text = payload.message.strip()
-
-    # 1. Primary: Local Ollama LLM Service
-    ollama_reply = await ollama_service.generate_response(text, language=payload.language or "en")
-    if ollama_reply:
-        return AIChatResponse(reply=ollama_reply, language=payload.language or "en", provider="ollama")
-
-    # 2. Secondary: Watsonx Service
-    if watsonx.is_available():
-        prompt = (
-            "You are Migrant Saathi AI, an assistant helping migrant workers in India.\n"
-            f"Answer the worker's query clearly and concisely in language code '{payload.language}'.\n"
-            "Use cautious language ('potentially eligible', 'needs verification', 'reference rates').\n"
-            "Do not make legal conclusions.\n\n"
-            f"Worker Question: {text}\n\n"
-            "Answer:"
-        )
-        try:
-            reply = watsonx.generate(prompt)
-            if reply:
-                return AIChatResponse(reply=reply, language=payload.language or "en", provider="watsonx")
-        except Exception:
-            pass
-
 def synthesize_nlp_response(text: str, language: str = "en") -> str:
     lower = text.lower()
 

@@ -19,7 +19,14 @@ class ConversationService:
         language: str = "en"
     ) -> Conversation:
         """Finds active conversation owned by user or creates a new one."""
-        u_uuid = uuid.UUID(str(user_id)) if not isinstance(user_id, uuid.UUID) else user_id
+        if isinstance(user_id, uuid.UUID):
+            u_uuid = user_id
+        else:
+            try:
+                u_uuid = uuid.UUID(str(user_id))
+            except (ValueError, TypeError, AttributeError):
+                u_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, str(user_id))
+
         if conversation_id:
             try:
                 c_uuid = uuid.UUID(str(conversation_id))
@@ -55,7 +62,13 @@ class ConversationService:
         language: str = "en"
     ) -> Conversation:
         """Explicitly starts a brand new conversation context for the worker."""
-        u_uuid = uuid.UUID(str(user_id)) if not isinstance(user_id, uuid.UUID) else user_id
+        if isinstance(user_id, uuid.UUID):
+            u_uuid = user_id
+        else:
+            try:
+                u_uuid = uuid.UUID(str(user_id))
+            except (ValueError, TypeError, AttributeError):
+                u_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, str(user_id))
         new_conv = Conversation(
             id=uuid.uuid4(),
             user_id=u_uuid,

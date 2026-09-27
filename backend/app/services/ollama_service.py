@@ -102,12 +102,12 @@ class OllamaService:
 
                 if res.status_code == 200:
                     data = res.json()
-                    has_message = "message" in data
-                    msg_obj = data.get("message", {})
-                    content = msg_obj.get("content", "").strip()
+                    has_message = isinstance(data, dict) and "message" in data
+                    msg_obj = data.get("message", {}) if isinstance(data, dict) else {}
+                    content = msg_obj.get("content", "").strip() if isinstance(msg_obj, dict) else ""
 
-                    logger.info(f"[AskSaathi/Ollama] Response keys: {list(data.keys())}")
-                    logger.info(f"[AskSaathi/Ollama] message exists: {has_message}, role: {msg_obj.get('role')}")
+                    logger.info(f"[AskSaathi/Ollama] Response keys: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+                    logger.info(f"[AskSaathi/Ollama] message exists: {has_message}, role: {msg_obj.get('role') if isinstance(msg_obj, dict) else None}")
                     logger.info(f"[AskSaathi/Ollama] Answer content length: {len(content)}")
 
                     if content:
@@ -120,6 +120,20 @@ class OllamaService:
             logger.error(f"[AskSaathi/Ollama] Exception during chat_completion: {e}", exc_info=True)
 
         return None
+
+    async def generate_response(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        language: str = "en",
+        model: Optional[str] = None
+    ) -> Optional[str]:
+        """Convenience method for single prompt query."""
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        return await self.chat_completion(messages, model=model)
 
 
 ollama_service = OllamaService()

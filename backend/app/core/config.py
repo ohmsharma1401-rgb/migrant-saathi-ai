@@ -6,9 +6,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
+_DEFAULT_DB_PATH = (_BACKEND_ROOT / "saathi.db").as_posix()
+
+
 class Settings(BaseSettings):
-    DATABASE_URL: str = "sqlite+aiosqlite:///./saathi.db"
-    SYNC_DATABASE_URL: str = "sqlite:///./saathi.db"
+    DATABASE_URL: str = f"sqlite+aiosqlite:///{_DEFAULT_DB_PATH}"
+    SYNC_DATABASE_URL: str = f"sqlite:///{_DEFAULT_DB_PATH}"
     REDIS_URL: str = "redis://localhost:6379/0"
     SECRET_KEY: str = "dev-secret-key-change-in-production-32bytes"
     ALGORITHM: str = "HS256"
