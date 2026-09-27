@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, User, Loader2, Mic, Sparkles, CheckCircle2, ShieldAlert, Cpu } from 'lucide-react'
+import { Bot, Send, User, Loader2, Mic, Cpu, PlusCircle, ShieldCheck } from 'lucide-react'
 import api from '@/services/api'
 import { useLanguageStore } from '@/store/languageStore'
 import { useTranslation } from '@/utils/translations'
@@ -10,10 +10,12 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
+  sources?: string[]
+  classification?: string
   actionLink?: { label: string; route: string }
 }
 
-// ─── Multilingual Prompts ──────────────────────────────────
+// ─── Multilingual Suggested Prompts ──────────────────────────────────────────
 const MULTI_SUGGESTED = {
   en: [
     'What welfare schemes am I eligible for?',
@@ -38,219 +40,6 @@ const MULTI_SUGGESTED = {
   ],
 }
 
-// ─── Intelligent Multilingual NLP Engine ──────────────────────────────────────
-interface NLPResult {
-  reply: string
-  actionLink?: { label: string; route: string }
-}
-
-function processNLPQuery(text: string, lang: 'en' | 'hi' | 'gu'): NLPResult {
-  const q = text.toLowerCase().trim()
-
-  // 1. Wage / Salary Intent
-  if (
-    q.includes('wage') || q.includes('salary') || q.includes('rate') || q.includes('minimum') ||
-    q.includes('मजदूरी') || q.includes('वेतन') || q.includes('पगार') || q.includes('દરો')
-  ) {
-    if (lang === 'hi') {
-      return {
-        reply: 'गुजरात में श्रम विभाग के अनुसार न्यूनतम दैनिक दरें:\n• कुशल (राजमिस्त्री/इलेक्ट्रिशियन): ₹500/दिन\n• अर्ध-कुशल (सहायक/पेंटर): ₹380/दिन\n• अकुशल (मजदूर): ₹290/दिन\n\nयदि आपको इससे कम वेतन दिया जा रहा है, तो आप शिकायत दर्ज कर सकते हैं।',
-        actionLink: { label: 'मजदूरी दरें जांचें →', route: '/worker/wages' },
-      }
-    }
-    if (lang === 'gu') {
-      return {
-        reply: 'ગુજરાતમાં શ્રમ વિભાગના અધિકૃત લઘુત્તમ દરો:\n• કુશળ (કડિયા/ઇલેક્ટ્રિશિયન): ₹500/દિવસ\n• અર્ધ-કુશળ (સહાયક/પેઇન્ટર): ₹380/દિવસ\n• અકુશળ (શ્રમિક): ₹290/દિવસ\n\nજો તમને ઓછું વેતન મળતું હોય તો અહીં ફરિયાદ નોંધાવો.',
-        actionLink: { label: 'લઘુત્તમ વેતન તપાસો →', route: '/worker/wages' },
-      }
-    }
-    return {
-      reply: 'Official Minimum Wages in Gujarat (per reference labor standards):\n• Skilled (Mason/Electrician): ₹500 / day\n• Semi-skilled (Helper/Painter): ₹380 / day\n• Unskilled (Laborer): ₹290 / day\n\nIf you are being paid less, you can file a wage claim instantly.',
-      actionLink: { label: 'Check Wage Rates →', route: '/worker/wages' },
-    }
-  }
-
-  // 2. Welfare Schemes Intent
-  if (
-    q.includes('scheme') || q.includes('welfare') || q.includes('eligible') || q.includes('benefit') ||
-    q.includes('योजना') || q.includes('पात्र') || q.includes('लाभ') || q.includes('યોજના')
-  ) {
-    if (lang === 'hi') {
-      return {
-        reply: 'आपकी प्रोफाइल के अनुसार, आप निम्नलिखित 3 योजनाओं के लिए पात्र हैं:\n1. निर्माण श्रमिक कल्याण कोष (BOCW) — दुर्घटना और शिक्षा सहायता\n2. पीएम-एसवाईएम पेंशन योजना — ₹3,000/माह पेंशन\n3. आम आदमी बीमा योजना — मुफ़्त जीवन व विकलांगता बीमा',
-        actionLink: { label: 'योजनाओं के लिए आवेदन करें →', route: '/worker/welfare' },
-      }
-    }
-    if (lang === 'gu') {
-      return {
-        reply: 'તમારી પ્રોફાઇલ મુજબ, તમે નીચેની 3 કલ્યાણકારી યોજનાઓ માટે પાત્ર છો:\n1. બાંધકામ શ્રમિક કલ્યાણ ભંડોળ (BOCW)\n2. પીએમ-એસવાયએમ પેન્શન યોજના — ₹3,000/મહિને પેન્શન\n3. આમ આદમી વીમા યોજના — મફત જીવન વીમો',
-        actionLink: { label: 'યોજનાઓ જુઓ →', route: '/worker/welfare' },
-      }
-    }
-    return {
-      reply: 'Based on your profile, you are eligible for 3 major schemes:\n1. Construction Workers Welfare Board (BOCW) Grant\n2. PM-SYM Pension Scheme (₹3,000/month post 60)\n3. AABY Life & Disability Insurance Cover.',
-      actionLink: { label: 'Explore Welfare Schemes →', route: '/worker/welfare' },
-    }
-  }
-
-  // 3. Unpaid Wages / Exploitation Intent
-  if (
-    q.includes('not paid') || q.includes('unpaid') || q.includes("haven't paid") || q.includes('due') ||
-    q.includes('भुगतान') || q.includes('बकाया') || q.includes('पगारे') || q.includes('પગાર')
-  ) {
-    if (lang === 'hi') {
-      return {
-        reply: 'यदि आपके नियोक्ता या ठेकेदार ने वेतन नहीं दिया है:\n1. तुरंत ऐप से वेतन शिकायत दर्ज करें।\n2. गुजरात श्रम आयुक्त आपकी शिकायत श्रम निरीक्षक को भेजेंगे।\n3. आपातकालीन सहायता के लिए श्रम हेल्पलाइन 14434 पर कॉल करें।',
-        actionLink: { label: 'सुरक्षा/वेतन शिकायत दर्ज करें →', route: '/worker/report' },
-      }
-    }
-    if (lang === 'gu') {
-      return {
-        reply: 'જો તમારા માલિકે પગાર આપ્યો નથી:\n1. આ એપ દ્વારા તાત્કાલિક ફરિયાદ નોંધાવો.\n2. શ્રમ કમિશનર અધિકારી શ્રમ નિરીક્ષકને કેસ સોંપશે.\n3. હેલ્પલાઇન કોલ કરો: 14434.',
-        actionLink: { label: 'ફરિયાદ નોંધાવો →', route: '/worker/report' },
-      }
-    }
-    return {
-      reply: 'If your employer or contractor is withholding your wages:\n1. File a Wage Complaint directly through this portal.\n2. Gujarat Labour Commissioners will dispatch a Labour Inspector to investigate.\n3. Call 14434 for urgent assistance.',
-      actionLink: { label: 'File Wage Complaint →', route: '/worker/report' },
-    }
-  }
-
-  // 4. Workplace Safety Intent
-  if (
-    q.includes('safety') || q.includes('unsafe') || q.includes('hazard') || q.includes('accident') ||
-    q.includes('सुरक्षा') || q.includes('खतरा') || q.includes('दुर्घटना') || q.includes('અસુરક્ષિત')
-  ) {
-    if (lang === 'hi') {
-      return {
-        reply: 'असुरक्षित कार्यस्थल की रिपोर्ट दर्ज करना आपका कानूनी अधिकार है:\n1. "सुरक्षा शिकायत दर्ज करें" पर जाएं।\n2. कार्यस्थल का स्थान और खतरे का विवरण दर्ज करें।\n3. आपकी पहचान गोपनीय रखी जा सकती है।',
-        actionLink: { label: 'सुरक्षा रिपोर्ट दर्ज करें →', route: '/worker/report' },
-      }
-    }
-    if (lang === 'gu') {
-      return {
-        reply: 'અસુરક્ષિત કાર્યસ્થળની જાણ કરવી તમારો કાનૂની અધિકાર છે:\n1. "સુરક્ષા ફરિયાદ" પર જાઓ.\n2. સ્થળ અને જોખમની વિગત ભરો.\n3. તમારી વિગતો ગુપ્ત રાખવામાં આવશે.',
-        actionLink: { label: 'સમસ્યાની જાણ કરો →', route: '/worker/report' },
-      }
-    }
-    return {
-      reply: 'Reporting unsafe work conditions is your protected right:\n1. Go to "Report Safety Issue".\n2. Provide the site location and describe the safety hazard.\n3. Reports can be submitted with identity protection.',
-      actionLink: { label: 'Report Workplace Hazard →', route: '/worker/report' },
-    }
-  }
-
-  // 5. Greetings & Small Talk Intent
-  if (
-    q === 'hi' || q === 'hello' || q === 'hey' || q === 'namaste' || q === 'kem cho' ||
-    q.includes('नमस्ते') || q.includes('નમસ્તે') || q.includes('હલો')
-  ) {
-    if (lang === 'hi') {
-      return {
-        reply: 'नमस्ते! मैं आपका प्रवासी साथी AI सहायक हूँ। मैं आपकी मजदूरी, योजनाओं, सुरक्षा शिकायतों और अधिकारों में सहायता कर सकता हूँ। आप मुझसे क्या पूछना चाहते हैं?',
-      }
-    }
-    if (lang === 'gu') {
-      return {
-        reply: 'નમસ્તે! હું તમારો પ્રવાસી સાથી AI સહાયક છું. હું આપને મજૂરી, યોજનાઓ અને સુરક્ષા ફરિયાદોમાં મદદ કરી શકું છું. આપ શું પૂછવા માગો છો?',
-      }
-    }
-    return {
-      reply: 'Hello! I am your Migrant Saathi AI assistant. I can help you with minimum wage rates, welfare scheme applications, workplace safety issues, and PM-SYM pensions. How can I assist you today?',
-    }
-  }
-
-  // 6. Application Features / What Can I Do Intent
-  if (
-    q.includes('application') || q.includes('app') || q.includes('what can i do') || q.includes('features') ||
-    q.includes('how to use') || q.includes('क्या कर सक') || q.includes('શું કરી શક') || q.includes('मदद')
-  ) {
-    if (lang === 'hi') {
-      return {
-        reply: 'प्रवासी साथी प्लेटफ़ॉर्म पर आप निम्नलिखित सेवाएं प्राप्त कर सकते हैं:\n\n1. 💼 WorkPlus Shift — बायोमेट्रिक व जीपीएस उपस्थिति चेक-इन करें\n2. 📜 कल्याणकारी योजनाएं — पीएम-एसवाईएम, पीएम-जय व बीओसीडब्ल्यू योजनाओं में आवेदन करें\n3. 💰 न्यूनतम मजदूरी जांच — गुजरात श्रम विभाग द्वारा निर्धारित आधिकारिक दरें देखें\n4. 🚨 सुरक्षा व वेतन शिकायत — कार्यस्थल की समस्या या बकाया वेतन की शिकायत दर्ज करें\n5. 🤖 AI साथी — किसी भी भाषा में तुरंत सहायता प्राप्त करें',
-        actionLink: { label: 'WorkPlus उपस्थिति देखें →', route: '/worker/workplus' },
-      }
-    }
-    if (lang === 'gu') {
-      return {
-        reply: 'પ્રવાસી સાથી પ્લેટફોર્મ પર તમે આ બધી સેવાઓ મેળવી શકો છો:\n\n1. 💼 WorkPlus Shift — બાયોમેટ્રિક અને GPS હાજરી ચેક-ઇન કરો\n2. 📜 કલ્યાણકારી યોજનાઓ — સરકારી કલ્યાણ યોજનાઓમાં અરજી કરો\n3. 💰 લઘુત્તમ વેતન — શ્રમ વિભાગના અધિકૃત વેતન દરો ચકાસો\n4. 🚨 તકરાર નોંધાવવી — બાકી પગાર અને સુરક્ષાની ફરિયાદ કરો\n5. 🤖 AI સાથી — 24/7 તાત્કાલિક માર્ગદર્શન મેળવો',
-        actionLink: { label: 'WorkPlus હાજરી જુઓ →', route: '/worker/workplus' },
-      }
-    }
-    return {
-      reply: 'Here is everything you can do on the Migrant Saathi platform:\n\n1. 💼 WorkPlus Shift — Log daily attendance with face recognition & GPS geofencing.\n2. 📜 Welfare Schemes — Discover and apply for PM-SYM Pension, PM-JAY Health & BOCW benefits.\n3. 💰 Wage Compliance — View official reference minimum wage rates for Gujarat.\n4. 🚨 Report Hazards / Unpaid Wages — File confidential complaints for Labour Inspector dispatch.\n5. 🤖 AI Assistant — Ask queries anytime in English, Hindi, or Gujarati.',
-      actionLink: { label: 'Explore WorkPlus Shift →', route: '/worker/workplus' },
-    }
-  }
-
-  // 7. Trade & Skill Specific Wage Matcher
-  const tradeMap: Record<string, { trade: string; rate: string; route: string }> = {
-    paint: { trade: 'Painter / Coating Specialist', rate: '₹450 - ₹500 / day', route: '/worker/wages' },
-    mason: { trade: 'Mason / Bricklayer', rate: '₹500 - ₹550 / day', route: '/worker/wages' },
-    carpenter: { trade: 'Carpenter / Woodwork', rate: '₹480 - ₹530 / day', route: '/worker/wages' },
-    plumb: { trade: 'Plumber / Pipefitter', rate: '₹450 - ₹500 / day', route: '/worker/wages' },
-    electric: { trade: 'Electrician / Wireman', rate: '₹520 - ₹580 / day', route: '/worker/wages' },
-    driver: { trade: 'Heavy Vehicle Driver', rate: '₹550 - ₹650 / day', route: '/worker/wages' },
-    weld: { trade: 'Structural Welder', rate: '₹500 - ₹600 / day', route: '/worker/wages' },
-  }
-
-  for (const [key, info] of Object.entries(tradeMap)) {
-    if (q.includes(key)) {
-      if (lang === 'hi') {
-        return {
-          reply: `गुजरात श्रम विभाग के मानकों के अनुसार **${info.trade}** के लिए:\n\n• न्यूनतम संदर्भ दर: **${info.rate}** (8 घंटे की पाली)\n• ओवरटाइम भत्ता: 8 घंटे के बाद 2x दर से देय\n\nयदि ठेकेदार इससे कम दे रहा है, तो तुरंत वेतन शिकायत दर्ज करें।`,
-          actionLink: { label: 'वेतन दरें जांचें →', route: info.route },
-        }
-      }
-      if (lang === 'gu') {
-        return {
-          reply: `ગુજરાત શ્રમ વિભાગના દરો મુજબ **${info.trade}** માટે:\n\n• લઘુત્તમ દર: **${info.rate}** (8 કલાકની પાળી)\n• ઓવરટાઇમ ભથ્થું: 8 કલાક પછી બમણા દરે ચૂકવવાપાત્ર\n\nજો ઓછું વેતન મળતું હોય તો શ્રમ અધિકારીને જાણ કરો.`,
-          actionLink: { label: 'લઘુત્તમ વેતન જુઓ →', route: info.route },
-        }
-      }
-      return {
-        reply: `As per Gujarat Labour Department reference standards for **${info.trade}**:\n\n• Official Minimum Rate: **${info.rate}** (standard 8-hour shift)\n• Overtime Allowance: Payable at 2x rate beyond 8 hours\n\nIf your contractor is paying less, you can file a Wage Claim in the app.`,
-        actionLink: { label: 'Check Wage Rates →', route: info.route },
-      }
-    }
-  }
-
-  // 8. Government & Inspector Portal Query Matcher
-  if (
-    q.includes('government') || q.includes('gov') || q.includes('portal') ||
-    q.includes('official') || q.includes('inspector') || q.includes('officer')
-  ) {
-    if (lang === 'hi') {
-      return {
-        reply: 'जी हां! प्रवासी साथी का आधिकारिक **Government & Inspector Portal** उपलब्ध है:\n\n• सरकारी अधिकारी और श्रम निरीक्षक `/login/official` से लॉगिन कर सकते हैं।\n• निरीक्षक जिला सुरक्षा मानचित्र और शिकायतों की जांच करते हैं।',
-      }
-    }
-    if (lang === 'gu') {
-      return {
-        reply: 'હા! પ્રવાસી સાથીનું અધિકૃત **Government & Inspector Portal** ઉપલબ્ધ છે:\n\n• સરકારી અધિકારીઓ અને શ્રમ નિરીક્ષકો `/login/official` થી લોગિન કરી શકે છે.\n• અધિકારીઓ જિલ્લા નકશા અને ફરિયાદોની સમીક્ષા કરે છે.',
-      }
-    }
-    return {
-      reply: 'Yes! Migrant Saathi has an official **Government & Field Inspector Portal**:\n\n• Government Officials, District Inspectors, and System Admins log in at `/login/official`.\n• Inspectors monitor workplace rosters, safety compliance, and investigate grievances.',
-    }
-  }
-
-  // 9. Smart Dynamic Open-Domain Synthesizer for any custom query
-  const cleanQ = text.trim()
-  if (lang === 'hi') {
-    return {
-      reply: `आपके प्रश्न: "${cleanQ}" के संबंध में:\n\nआप प्रवासी साथी ऐप में अपनी मजदूरी दरों का सत्यापन कर सकते हैं, कल्याणकारी योजनाओं में आवेदन कर सकते हैं, और कार्यस्थल सुरक्षा शिकायत दर्ज कर सकते हैं।\n\nतत्काल सहायता के लिए श्रम हेल्पलाइन 14434 पर कॉल करें।`,
-    }
-  }
-  if (lang === 'gu') {
-    return {
-      reply: `તમારા પ્રશ્ન: "${cleanQ}" અંગે:\n\nતમે પ્રવાસી સાથી એપમાં વેતન દરો ચકાસી શકો છો, કલ્યાણ યોજનાઓમાં અરજી કરી શકો છો, અને સુરક્ષા તકરાર નોંધાવી શકો છો.\n\nશ્રમ હેલ્પલાઇન: 14434.`,
-    }
-  }
-  return {
-    reply: `Regarding your query: "${cleanQ}":\n\nOn the Migrant Saathi platform, you can check official minimum wage compliance, apply for PM-SYM / BOCW / PM-JAY welfare schemes, log daily WorkPlus shift attendance, and file confidential safety or wage grievances.\n\nFor direct assistance, call the Labour Helpline: 14434.`,
-  }
-}
-
 function MessageBubble({ msg }: { msg: Message }) {
   const isUser = msg.role === 'user'
   return (
@@ -269,7 +58,21 @@ function MessageBubble({ msg }: { msg: Message }) {
           }`}
         >
           {msg.content}
-          
+
+          {/* Sources badges if returned */}
+          {msg.sources && msg.sources.length > 0 && (
+            <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1 items-center">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3 text-teal-500" /> Verified Knowledge:
+              </span>
+              {msg.sources.map((src, idx) => (
+                <span key={idx} className="text-[10px] font-semibold bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 px-2 py-0.5 rounded-full">
+                  {src}
+                </span>
+              ))}
+            </div>
+          )}
+
           {msg.actionLink && (
             <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800">
               <a
@@ -283,7 +86,7 @@ function MessageBubble({ msg }: { msg: Message }) {
         </div>
         {!isUser && (
           <span className="text-[10px] text-slate-400 dark:text-slate-500 px-1 font-semibold">
-            Saathi AI Engine · Official Helper
+            Ask Saathi AI Engine · Official Helper
           </span>
         )}
       </div>
@@ -301,26 +104,21 @@ export default function AIAssistant() {
   const { language } = useLanguageStore()
   const currentLang = (language || 'en') as 'en' | 'hi' | 'gu'
 
-  const getInitialMessages = (lang: 'en' | 'hi' | 'gu'): Message[] => [
+  const getInitialWelcome = (lang: 'en' | 'hi' | 'gu'): Message[] => [
     {
-      id: '1',
-      role: 'user',
-      content: MULTI_SUGGESTED[lang]?.[0] || MULTI_SUGGESTED.en[0],
-    },
-    {
-      id: '2',
+      id: 'welcome',
       role: 'assistant',
       content:
         lang === 'hi'
-          ? 'आपकी प्रोफाइल के आधार पर, मुझे आपके लिए योग्य 3 कल्याणकारी योजनाएं मिली हैं:\n\n1. निर्माण श्रमिक कल्याण कोष — पात्र\n2. पीएम-एसवाईएम पेंशन योजना — सत्यापन आवश्यक\n3. आम आदमी बीमा योजना — पात्र\n\nक्या आप इनमें से किसी का विवरण या आवेदन प्रक्रिया जानना चाहते हैं?'
+          ? 'नमस्ते! मैं आपका **प्रवासी साथी AI** सहायक हूँ। मैं आपकी मजदूरी, योजनाओं, सुरक्षा शिकायतों और अधिकारों में सहायता कर सकता हूँ। आप मुझसे क्या पूछना चाहते हैं?'
           : lang === 'gu'
-          ? 'તમારી પ્રોફાઇલના આધારે, મને તમારા માટે યોગ્ય 3 કલ્યાણકારી યોજનાઓ મળી છે:\n\n1. બાંધકામ શ્રમિક કલ્યાણ ભંડોળ — પાત્ર\n2. પીએમ-એસવાયએમ પેન્શન યોજના — ચકાસણી જરૂરી\n3. આમ આદમી વીમા યોજના — પાત્ર\n\nશું તમે આમાંથી કોઇની વિગતો જાણવા માગો છો?'
-          : 'Based on your profile as a Mason in Ahmedabad, I found 3 relevant welfare schemes:\n\n1. Construction Workers Welfare Fund — Eligible\n2. PM-SYM Pension Scheme — Verification Pending\n3. AABY Insurance — Eligible.\n\nWould you like more details or direct links to apply?',
-      actionLink: { label: 'View Welfare Schemes →', route: '/worker/welfare' },
+          ? 'નમસ્તે! હું તમારો **પ્રવાસી સાથી AI** મદદનીશ છું. હું તમારા વેતન, કલ્યાણ યોજનાઓ, સુરક્ષા તકરારો અને અધિકારો અંગે મદદ કરી શકું છું.'
+          : 'Welcome to **Ask Saathi AI**! I am your verified assistant for migrant worker rights, minimum wages, welfare schemes (BOCW, PM-SYM, e-Shram), workplace safety, and grievances.',
     },
   ]
 
-  const [messages, setMessages] = useState<Message[]>(getInitialMessages(currentLang))
+  const [conversationId, setConversationId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<Message[]>(getInitialWelcome(currentLang))
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showVoiceTooltip, setShowVoiceTooltip] = useState(false)
@@ -331,62 +129,101 @@ export default function AIAssistant() {
   useEffect(() => {
     async function checkStatus() {
       try {
-        const res = await api.get('/ai/status')
-        if (res.data?.ollama_available) {
-          setOllamaStatus({ available: true, model: res.data.ollama_model || 'llama3' })
+        const res = await api.get('/ask-saathi/health')
+        if (res.data?.ollama) {
+          setOllamaStatus({ available: true, model: res.data.model || 'llama3' })
         }
       } catch {
-        // Fallback
+        // Fallback check
+        try {
+          const resFallback = await api.get('/ai/status')
+          if (resFallback.data?.ollama_available) {
+            setOllamaStatus({ available: true, model: resFallback.data.ollama_model || 'llama3' })
+          }
+        } catch {
+          // Keep offline state
+        }
       }
     }
     checkStatus()
   }, [])
 
   useEffect(() => {
-    setMessages(getInitialMessages(currentLang))
-  }, [currentLang])
-
-  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
+
+  async function handleNewConversation() {
+    setLoading(true)
+    try {
+      const res = await api.post('/ask-saathi/conversations/new', { language: currentLang })
+      if (res.data?.conversation_id) {
+        setConversationId(res.data.conversation_id)
+      }
+    } catch {
+      setConversationId(null)
+    }
+    setMessages(getInitialWelcome(currentLang))
+    setLoading(false)
+    inputRef.current?.focus()
+  }
 
   async function sendMessage(text: string) {
     const trimmed = text.trim()
     if (!trimmed || loading) return
 
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: trimmed }
+    const msgId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+    const userMsg: Message = { id: msgId, role: 'user', content: trimmed }
     setMessages((m) => [...m, userMsg])
     setInput('')
     setLoading(true)
 
-    let replyText = ''
-    let actionLink: { label: string; route: string } | undefined
-
     try {
-      const res = await api.post('/ai/ask', { message: trimmed, language: currentLang })
-      if (res.data?.reply) {
-        replyText = res.data.reply
+      const res = await api.post('/ask-saathi/chat', {
+        conversation_id: conversationId,
+        message_id: msgId,
+        message: trimmed,
+        language: currentLang,
+      })
+
+      if (res.data?.conversation_id) {
+        setConversationId(res.data.conversation_id)
       }
+
+      const replyMsg: Message = {
+        id: res.data.message_id || (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: res.data.answer || 'Response generated.',
+        classification: res.data.classification,
+        sources: res.data.sources || [],
+      }
+      setMessages((m) => [...m, replyMsg])
     } catch {
-      // Local fallback
+      // Fallback API endpoint
+      try {
+        const resFallback = await api.post('/ai/ask', { message: trimmed, language: currentLang })
+        const replyMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: resFallback.data?.reply || 'Saathi AI is ready.',
+        }
+        setMessages((m) => [...m, replyMsg])
+      } catch {
+        const errReply: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content:
+            currentLang === 'hi'
+              ? 'साथी एआई सेवा अस्थायी रूप से अनुपलब्ध है। कृपया कुछ देर बाद पुनः प्रयास करें।'
+              : currentLang === 'gu'
+              ? 'સાથી AI સેવા ક્ષણિક રીતે અનુપલબ્ધ છે. કૃપા કરીને થોડી ક્ષણો પછી ફરી પ્રયાસ કરો.'
+              : 'Saathi AI is temporarily unavailable. Please try again in a moment.',
+        }
+        setMessages((m) => [...m, errReply])
+      }
+    } finally {
+      setLoading(false)
+      inputRef.current?.focus()
     }
-
-    if (!replyText) {
-      const nlpRes = processNLPQuery(trimmed, currentLang)
-      replyText = nlpRes.reply
-      actionLink = nlpRes.actionLink
-    }
-
-    const reply: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: replyText,
-      actionLink,
-    }
-
-    setMessages((m) => [...m, reply])
-    setLoading(false)
-    inputRef.current?.focus()
   }
 
   const suggestedQuestions = MULTI_SUGGESTED[currentLang] || MULTI_SUGGESTED.en
@@ -410,11 +247,26 @@ export default function AIAssistant() {
             </p>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
+          {/* New Conversation Button */}
+          <button
+            onClick={handleNewConversation}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 rounded-xl hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors shadow-2xs cursor-pointer"
+            title="Start New Conversation"
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">
+              {currentLang === 'hi' ? 'नया चैट' : currentLang === 'gu' ? 'નવી વાતચીત' : 'New Chat'}
+            </span>
+          </button>
+
           <LanguageSelector />
-          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-full">
+
+          <span className="hidden lg:inline-flex items-center gap-1 text-[11px] font-bold bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-full">
             <Cpu className="h-3 w-3 text-teal-600 dark:text-teal-400" />
-            {ollamaStatus.available ? `Ollama NLP (${ollamaStatus.model})` : 'Saathi NLP Engine'}
+            {ollamaStatus.available ? `Ollama (${ollamaStatus.model})` : 'Saathi NLP'}
           </span>
         </div>
       </div>
@@ -446,7 +298,7 @@ export default function AIAssistant() {
             <button
               key={s}
               onClick={() => void sendMessage(s)}
-              className="rounded-full border border-teal-200 dark:border-teal-800 bg-teal-50/70 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900 text-teal-900 dark:text-teal-300 px-3 py-1 text-xs font-semibold transition-all shadow-2xs shrink-0"
+              className="rounded-full border border-teal-200 dark:border-teal-800 bg-teal-50/70 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900 text-teal-900 dark:text-teal-300 px-3 py-1 text-xs font-semibold transition-all shadow-2xs shrink-0 cursor-pointer"
             >
               {s}
             </button>
@@ -486,7 +338,7 @@ export default function AIAssistant() {
         <button
           onClick={() => void sendMessage(input)}
           disabled={loading || !input.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-colors shadow-sm"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </button>

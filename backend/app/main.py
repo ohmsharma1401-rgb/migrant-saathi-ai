@@ -17,6 +17,7 @@ from app.api.chatbot import router as chatbot_router
 from app.api.skills import router as skills_router
 from app.api.documents import router as documents_router
 from app.api.whatsapp import router as whatsapp_router
+from app.api.ask_saathi import router as ask_saathi_router
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ app.include_router(wages_router)
 app.include_router(grievances_router)
 app.include_router(dashboard_router)
 app.include_router(ai_router)
+app.include_router(ask_saathi_router)
 app.include_router(admin_router)
 app.include_router(attendance_router)
 app.include_router(chatbot_router)

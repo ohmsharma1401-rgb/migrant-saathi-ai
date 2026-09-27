@@ -57,64 +57,68 @@ class OllamaService:
             "message": "Ollama server offline or not running at http://127.0.0.1:11434."
         }
 
-    async def generate_response(
+    async def chat_completion(
         self,
-        prompt: str,
-        system_prompt: Optional[str] = None,
-        language: str = "en",
-        model: Optional[str] = None
+        messages: List[Dict[str, str]],
+        model: Optional[str] = None,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+        repeat_penalty: float = 1.1,
+        keep_alive: str = "30m",
+        timeout: float = 60.0
     ) -> Optional[str]:
-        """Queries local Ollama chat/generate API for AI response with 60s timeout for cold start."""
+        """
+        Sends structured message history to Ollama POST /api/chat.
+        Returns message.content or None if Ollama is unreachable.
+        """
         status = await self.get_status()
         if not status["available"]:
+            logger.warning("Ollama server is unavailable")
             return None
 
         target_url = status["base_url"]
         target_model = model or status["active_model"]
 
-        sys_msg = system_prompt or (
-            "You are Migrant Saathi AI, an empathetic, highly knowledgeable AI assistant dedicated to helping "
-            "migrant workers and government labor officials in India. You provide clear, accurate guidance on "
-            "labor rights, minimum wages, safety regulations, e-Shram, BOCW schemes, and grievance reporting. "
-            f"Always reply clearly and accurately in language '{language}'."
-        )
+        payload = {
+            "model": target_model,
+            "messages": messages,
+            "stream": False,
+            "keep_alive": keep_alive,
+            "options": {
+                "temperature": temperature,
+                "top_p": top_p,
+                "repeat_penalty": repeat_penalty
+            }
+        }
 
-        # 1. Try /api/chat with 60s timeout
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                res = await client.post(
-                    f"{target_url}/api/chat",
-                    json={
-                        "model": target_model,
-                        "messages": [
-                            {"role": "system", "content": sys_msg},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "stream": False,
-                        "options": {
-                            "temperature": 0.3,
-                            "top_p": 0.9
-                        }
-                    }
-                )
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                res = await client.post(f"{target_url}/api/chat", json=payload)
                 if res.status_code == 200:
                     data = res.json()
                     content = data.get("message", {}).get("content", "").strip()
                     if content:
                         return content
+                else:
+                    logger.warning(f"Ollama returned HTTP {res.status_code}: {res.text}")
         except Exception as e:
-            logger.warning(f"Ollama chat request failed: {e}")
+            logger.warning(f"Ollama chat_completion request failed: {e}")
 
-        # 2. Fallback: /api/generate
+        # Fallback to /api/generate if /api/chat was unavailable for older versions
         try:
-            full_prompt = f"{sys_msg}\n\nUser Question: {prompt}\nAnswer:"
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            prompt_parts = []
+            for msg in messages:
+                role = msg.get("role", "user").capitalize()
+                prompt_parts.append(f"{role}: {msg.get('content', '')}")
+            full_prompt = "\n\n".join(prompt_parts) + "\n\nAssistant:"
+
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 res = await client.post(
                     f"{target_url}/api/generate",
                     json={
                         "model": target_model,
                         "prompt": full_prompt,
-                        "stream": False,
+                        "stream": False
                     }
                 )
                 if res.status_code == 200:
@@ -126,6 +130,28 @@ class OllamaService:
             logger.warning(f"Ollama generate fallback failed: {e}")
 
         return None
+
+    async def generate_response(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        language: str = "en",
+        model: Optional[str] = None
+    ) -> Optional[str]:
+        """Convenience method for single prompt query."""
+        sys_msg = system_prompt or (
+            "You are Migrant Saathi AI, an empathetic, highly knowledgeable AI assistant dedicated to helping "
+            "migrant workers and government labor officials in India. You provide clear, accurate guidance on "
+            "labor rights, minimum wages, safety regulations, e-Shram, BOCW schemes, and grievance reporting. "
+            f"Always reply clearly and accurately in language '{language}'."
+        )
+
+        messages = [
+            {"role": "system", "content": sys_msg},
+            {"role": "user", "content": prompt}
+        ]
+
+        return await self.chat_completion(messages, model=model)
 
 
 ollama_service = OllamaService()

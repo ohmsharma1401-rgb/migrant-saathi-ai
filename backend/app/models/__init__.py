@@ -7,3 +7,5 @@ from app.models.grievance import Grievance, GrievanceUpdate  # noqa: F401
 from app.models.official import GovernmentOfficial, Notification, AIInteraction, AuditLog  # noqa: F401
 from app.models.attendance import FaceEmbedding, WorksiteGeofence, AttendanceLog  # noqa: F401
 from app.models.risk_and_anomaly import RiskScore, AnomalyRecord  # noqa: F401
+from app.models.conversation import Conversation, ConversationMessage  # noqa: F401
+

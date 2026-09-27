@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database.base import get_db
 from app.core.dependencies import get_current_user
 from app.schemas.worker import NLSkillExtractRequest, NLSkillExtractResponse
 
@@ -256,50 +258,33 @@ def synthesize_nlp_response(text: str, language: str = "en") -> str:
 async def ask_ai(
     payload: AIChatRequest,
     current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
-    from app.services.ollama_service import ollama_service
-    from app.services.watsonx_service import watsonx
+    from app.services.ask_saathi_service import ask_saathi_service
 
     text = payload.message.strip()
+    res = await ask_saathi_service.process_chat(
+        db=db,
+        user_id=str(current_user.id),
+        message=text,
+        language=payload.language or "en"
+    )
 
-    # 1. Primary: Local Ollama LLM Service
-    ollama_reply = await ollama_service.generate_response(text, language=payload.language or "en")
-    if ollama_reply:
-        return AIChatResponse(reply=ollama_reply, language=payload.language or "en", provider="ollama")
-
-    # 2. Secondary: Watsonx Service
-    if watsonx.is_available():
-        prompt = (
-            "You are Migrant Saathi AI, an assistant helping migrant workers in India.\n"
-            f"Answer the worker's query clearly and concisely in language code '{payload.language}'.\n"
-            "Use cautious language ('potentially eligible', 'needs verification', 'reference rates').\n"
-            "Do not make legal conclusions.\n\n"
-            f"Worker Question: {text}\n\n"
-            "Answer:"
-        )
-        try:
-            reply = watsonx.generate(prompt)
-            if reply:
-                return AIChatResponse(reply=reply, language=payload.language or "en", provider="watsonx")
-        except Exception:
-            pass
-
-    # 3. Smart Multilingual Synthesizer Fallback
-    reply = synthesize_nlp_response(text, language=payload.language or "en")
-    return AIChatResponse(reply=reply, language=payload.language or "en", provider="rules")
+    return AIChatResponse(
+        reply=res["answer"],
+        language=payload.language or "en",
+        provider=res.get("classification", "ollama")
+    )
 
 
 @router.get("/status")
 async def ai_status():
     from app.services.ollama_service import ollama_service
-    from app.services.watsonx_service import watsonx
 
     st = await ollama_service.get_status()
     return {
         "ollama_available": st["available"],
         "ollama_model": st["active_model"],
-        "watsonx_available": watsonx.is_available(),
-        "model_id": watsonx.model_id,
-        "active_provider": "ollama" if st["available"] else ("watsonx" if watsonx.is_available() else "rules"),
+        "active_provider": "ollama" if st["available"] else "rules",
         "installed_models": st.get("installed_models", []),
     }
