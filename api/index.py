@@ -498,11 +498,24 @@ class handler(BaseHTTPRequestHandler):
 
         if "news" in path:
             try:
-                import sys
-                backend_dir = os.path.join(os.path.dirname(__file__), "..", "backend")
-                if backend_dir not in sys.path:
-                    sys.path.insert(0, backend_dir)
-                from app.api.news import ARTICLES_DATA, ALERTS_DATA, CATEGORIES_LIST, DISTRICTS_LIST
+                news_json_path = os.path.join(os.path.dirname(__file__), "news_data.json")
+                if os.path.exists(news_json_path):
+                    with open(news_json_path, "r", encoding="utf-8") as f:
+                        raw_data = json.load(f)
+                    articles_raw = raw_data.get("articles", [])
+                    alerts_raw = raw_data.get("alerts", [])
+                    categories_list = raw_data.get("categories", [])
+                    districts_list = raw_data.get("districts", [])
+                else:
+                    import sys
+                    backend_dir = os.path.join(os.path.dirname(__file__), "..", "backend")
+                    if backend_dir not in sys.path:
+                        sys.path.insert(0, backend_dir)
+                    from app.api.news import ARTICLES_DATA, ALERTS_DATA, CATEGORIES_LIST, DISTRICTS_LIST
+                    articles_raw = [a.model_dump() for a in ARTICLES_DATA]
+                    alerts_raw = [al.model_dump() for al in ALERTS_DATA]
+                    categories_list = CATEGORIES_LIST
+                    districts_list = DISTRICTS_LIST
 
                 parsed = urllib.parse.urlparse(path)
                 query_params = urllib.parse.parse_qs(parsed.query)
@@ -511,17 +524,17 @@ class handler(BaseHTTPRequestHandler):
                 dist = query_params.get("district", [None])[0]
                 srch = query_params.get("search", [None])[0]
 
-                filtered = [a.model_dump() for a in ARTICLES_DATA]
+                filtered = list(articles_raw)
                 if cat and cat.lower() not in ("all", ""):
                     cat_lower = cat.lower().replace("-", " ")
-                    filtered = [a for a in filtered if cat_lower in a["category"].lower() or any(cat_lower in t.lower() for t in a["tags"])]
+                    filtered = [a for a in filtered if cat_lower in a.get("category", "").lower() or any(cat_lower in t.lower() for t in a.get("tags", []))]
                 if state and state.lower() not in ("all", "all states", ""):
-                    filtered = [a for a in filtered if a["state"].lower() == state.lower() or a["state"].lower() == "all-india"]
+                    filtered = [a for a in filtered if a.get("state", "").lower() == state.lower() or a.get("state", "").lower() == "all-india"]
                 if dist and dist.lower() not in ("all", "all districts", ""):
-                    filtered = [a for a in filtered if a["district"].lower() == dist.lower() or a["district"].lower() in ("state-wide", "gandhinagar", "all")]
+                    filtered = [a for a in filtered if a.get("district", "").lower() == dist.lower() or a.get("district", "").lower() in ("state-wide", "gandhinagar", "all")]
                 if srch and srch.strip():
                     q = srch.strip().lower()
-                    filtered = [a for a in filtered if q in a["title"].lower() or q in a["summary"].lower() or q in a["content"].lower() or any(q in t.lower() for t in a["tags"])]
+                    filtered = [a for a in filtered if q in a.get("title", "").lower() or q in a.get("summary", "").lower() or q in a.get("content", "").lower() or any(q in t.lower() for t in a.get("tags", []))]
 
                 feat = next((a for a in filtered if a.get("is_featured")), None)
                 if not feat and filtered:
@@ -531,9 +544,9 @@ class handler(BaseHTTPRequestHandler):
                 _json_response(self, 200, {
                     "featured": feat,
                     "articles": remaining,
-                    "alerts": [al.model_dump() for al in ALERTS_DATA],
-                    "categories": CATEGORIES_LIST,
-                    "districts": DISTRICTS_LIST,
+                    "alerts": alerts_raw,
+                    "categories": categories_list,
+                    "districts": districts_list,
                     "total": len(filtered)
                 })
                 return
