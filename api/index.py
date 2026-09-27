@@ -498,24 +498,22 @@ class handler(BaseHTTPRequestHandler):
 
         if "news" in path:
             try:
-                news_json_path = os.path.join(os.path.dirname(__file__), "news_data.json")
-                if os.path.exists(news_json_path):
-                    with open(news_json_path, "r", encoding="utf-8") as f:
-                        raw_data = json.load(f)
-                    articles_raw = raw_data.get("articles", [])
-                    alerts_raw = raw_data.get("alerts", [])
-                    categories_list = raw_data.get("categories", [])
-                    districts_list = raw_data.get("districts", [])
-                else:
-                    import sys
-                    backend_dir = os.path.join(os.path.dirname(__file__), "..", "backend")
-                    if backend_dir not in sys.path:
-                        sys.path.insert(0, backend_dir)
-                    from app.api.news import ARTICLES_DATA, ALERTS_DATA, CATEGORIES_LIST, DISTRICTS_LIST
-                    articles_raw = [a.model_dump() for a in ARTICLES_DATA]
-                    alerts_raw = [al.model_dump() for al in ALERTS_DATA]
-                    categories_list = CATEGORIES_LIST
-                    districts_list = DISTRICTS_LIST
+                try:
+                    from api.news_data import NEWS_DATA
+                except Exception:
+                    try:
+                        from news_data import NEWS_DATA
+                    except Exception:
+                        import sys
+                        api_dir = os.path.dirname(__file__)
+                        if api_dir not in sys.path:
+                            sys.path.insert(0, api_dir)
+                        from news_data import NEWS_DATA
+
+                articles_raw = NEWS_DATA.get("articles", [])
+                alerts_raw = NEWS_DATA.get("alerts", [])
+                categories_list = NEWS_DATA.get("categories", [])
+                districts_list = NEWS_DATA.get("districts", [])
 
                 parsed = urllib.parse.urlparse(path)
                 query_params = urllib.parse.parse_qs(parsed.query)
