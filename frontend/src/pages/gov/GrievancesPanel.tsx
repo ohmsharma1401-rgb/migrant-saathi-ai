@@ -335,17 +335,20 @@ export default function GrievancesPanel() {
     }
 
     // Also fetch live inspector workloads from inspectionService
-    inspectionService.getInspectorsWorkload().then((res) => {
-      if (res?.data && res.data.length > 0) {
-        const mapped = res.data.map((i) => ({
-          id: i.id,
-          name: i.name,
-          badge: i.badge_number,
-          district: i.district
-        }))
-        setInspectors(mapped)
-      }
-    }).catch(() => {})
+    if (typeof inspectionService?.getInspectorsWorkload === 'function') {
+      inspectionService.getInspectorsWorkload().then((res: any) => {
+        const list = res?.data || res
+        if (Array.isArray(list) && list.length > 0) {
+          const mapped = list.map((i: any) => ({
+            id: i.id,
+            name: i.name,
+            badge: i.badge_number || i.badge || 'INS-GJ',
+            district: i.district
+          }))
+          setInspectors(mapped)
+        }
+      }).catch(() => {})
+    }
   }, [])
 
   // Open assign modal and smartly select default inspector by grievance location

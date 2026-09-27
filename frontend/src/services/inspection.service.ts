@@ -357,6 +357,11 @@ export const inspectionService = {
     }
   },
 
+  async getInspectorDashboard() {
+    const data = await this.getDashboard()
+    return { data, ...data }
+  },
+
   async getRoster(statusFilter?: string, priorityFilter?: string, districtFilter?: string): Promise<InspectionCase[]> {
     try {
       const res = await api.get('/inspections/roster', {
@@ -366,6 +371,11 @@ export const inspectionService = {
     } catch {
       return FALLBACK_INSPECTION_CASES
     }
+  },
+
+  async getInspectionRoster(statusFilter?: string, priorityFilter?: string, districtFilter?: string) {
+    const data = await this.getRoster(statusFilter, priorityFilter, districtFilter)
+    return { data }
   },
 
   async getCases(category?: string, priority?: string): Promise<InspectionCase[]> {
@@ -379,6 +389,11 @@ export const inspectionService = {
     }
   },
 
+  async getInspectorCases(category?: string, priority?: string) {
+    const data = await this.getCases(category, priority)
+    return { data }
+  },
+
   async getCaseDetail(caseId: string): Promise<InspectionCase> {
     try {
       const res = await api.get(`/inspections/cases/${caseId}`)
@@ -389,66 +404,82 @@ export const inspectionService = {
     }
   },
 
+  async getInspectionCase(caseId: string) {
+    const data = await this.getCaseDetail(caseId)
+    return { data }
+  },
+
   async startInspection(caseId: string) {
     try {
       const res = await api.post(`/inspections/cases/${caseId}/start`)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Inspection started' }
+      return { data: { message: 'Inspection started' } }
     }
   },
 
   async addFinding(caseId: string, finding: { category: string; severity: string; description: string; rule_violated?: string }) {
     try {
       const res = await api.post(`/inspections/cases/${caseId}/findings`, finding)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Finding recorded', finding }
+      const fallbackCase = FALLBACK_INSPECTION_CASES.find((c) => c.id === caseId) || FALLBACK_INSPECTION_CASES[0]
+      const updatedCase = {
+        ...fallbackCase,
+        findings: [...fallbackCase.findings, { id: `fnd-${Date.now()}`, ...finding, created_at: 'Just now' }]
+      }
+      return { data: updatedCase }
     }
   },
 
   async addEvidence(caseId: string, evidence: { title: string; evidence_type: string; url?: string; notes?: string; geotag?: string }) {
     try {
       const res = await api.post(`/inspections/cases/${caseId}/evidence`, evidence)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Evidence added', evidence }
+      const fallbackCase = FALLBACK_INSPECTION_CASES.find((c) => c.id === caseId) || FALLBACK_INSPECTION_CASES[0]
+      const updatedCase = {
+        ...fallbackCase,
+        evidence: [...fallbackCase.evidence, { id: `ev-${Date.now()}`, ...evidence, uploaded_at: 'Just now' } as any]
+      }
+      return { data: updatedCase }
     }
   },
 
-  async recordWorkerStatement(caseId: string, statement: { statement: string; witness_name?: string; verified_by_worker: boolean }) {
+  async recordWorkerStatement(caseId: string, statement: { statement: string; witness_name?: string; verified_by_worker: boolean; recorded_at?: string }) {
     try {
       const res = await api.post(`/inspections/cases/${caseId}/worker-statement`, statement)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Worker statement recorded' }
+      return { data: { message: 'Worker statement recorded' } }
     }
   },
 
-  async recordEmployerResponse(caseId: string, response: { representative_name: string; designation: string; response_text: string; rectification_timeline_days?: number }) {
+  async recordEmployerResponse(caseId: string, response: { representative_name: string; designation: string; response_text: string; rectification_timeline_days?: number; recorded_at?: string }) {
     try {
       const res = await api.post(`/inspections/cases/${caseId}/employer-response`, response)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Employer response logged' }
+      return { data: { message: 'Employer response logged' } }
     }
   },
 
-  async submitReport(caseId: string, payload: { summary: string; statutory_violations: string[]; penalty_recommended_inr?: number; rectification_days: number; issue_formal_notice: boolean; final_status: string }) {
+  async submitReport(caseId: string, payload: any) {
     try {
       const res = await api.post(`/inspections/cases/${caseId}/report`, payload)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Report submitted successfully', notice_issued: payload.issue_formal_notice }
+      return { data: { message: 'Report submitted successfully' } }
     }
   },
 
-  async escalateCase(caseId: string, payload: { reason: string; urgency: string }) {
+  async escalateCase(caseId: string, reasonOrPayload: any, isUrgent?: boolean) {
     try {
+      const payload = typeof reasonOrPayload === 'string' ? { reason: reasonOrPayload, urgency: isUrgent ? 'high' : 'normal' } : reasonOrPayload
       const res = await api.post(`/inspections/cases/${caseId}/escalate`, payload)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Case escalated to Government Official' }
+      return { data: { message: 'Case escalated to Government Official' } }
     }
   },
 
@@ -458,22 +489,30 @@ export const inspectionService = {
       return res.data
     } catch {
       return [
-        { id: 'ins-101', name: 'Rajendra Solanki', badge_number: 'INS-GJ-0418', district: 'Surat', email: 'solanki.insp@gujarat.gov.in', phone: '+91 98250 88412', active_inspections: 6, completed_this_month: 22, overdue_count: 2, status: 'In Field' },
-        { id: 'ins-102', name: 'Vikram Rathore', badge_number: 'INS-GJ-0294', district: 'Ahmedabad', email: 'rathore.insp@gujarat.gov.in', phone: '+91 94260 77102', active_inspections: 5, completed_this_month: 28, overdue_count: 0, status: 'In Field' },
-        { id: 'ins-103', name: 'Sonal Vaghela', badge_number: 'INS-GJ-0512', district: 'Vadodara', email: 'vaghela.insp@gujarat.gov.in', phone: '+91 98791 22394', active_inspections: 4, completed_this_month: 19, overdue_count: 1, status: 'Active' },
-        { id: 'ins-104', name: 'Kiritbhai Makwana', badge_number: 'INS-GJ-0188', district: 'Rajkot', email: 'makwana.insp@gujarat.gov.in', phone: '+91 99044 55188', active_inspections: 3, completed_this_month: 16, overdue_count: 1, status: 'In Field' },
-        { id: 'ins-105', name: 'Priyanka Desai', badge_number: 'INS-GJ-0365', district: 'Gandhinagar', email: 'desai.insp@gujarat.gov.in', phone: '+91 98242 11983', active_inspections: 2, completed_this_month: 24, overdue_count: 0, status: 'Active' },
-        { id: 'ins-106', name: 'Harish Jadeja', badge_number: 'INS-GJ-0701', district: 'Kutch', email: 'jadeja.insp@gujarat.gov.in', phone: '+91 94080 33419', active_inspections: 4, completed_this_month: 15, overdue_count: 0, status: 'Active' },
+        { id: 'ins-101', name: 'Rajendra Solanki', badge_number: 'INS-GJ-0418', district: 'Surat', email: 'solanki.insp@gujarat.gov.in', phone: '+91 98250 88412', active_inspections: 6, completed_this_month: 22, overdue_count: 2, status: 'On Duty' },
+        { id: 'ins-102', name: 'Anita Deshmukh', badge_number: 'INS-GJ-0209', district: 'Ahmedabad', email: 'deshmukh.insp@gujarat.gov.in', phone: '+91 94260 77102', active_inspections: 5, completed_this_month: 28, overdue_count: 0, status: 'On Duty' },
+        { id: 'ins-103', name: 'Vikram Rathod', badge_number: 'INS-GJ-0334', district: 'Vadodara', email: 'rathod.insp@gujarat.gov.in', phone: '+91 98791 22394', active_inspections: 4, completed_this_month: 19, overdue_count: 1, status: 'On Duty' },
+        { id: 'ins-104', name: 'Pravin Vaghela', badge_number: 'INS-GJ-0512', district: 'Rajkot', email: 'vaghela.insp@gujarat.gov.in', phone: '+91 99044 55188', active_inspections: 3, completed_this_month: 16, overdue_count: 0, status: 'On Duty' },
+        { id: 'ins-105', name: 'Kavita Shah', badge_number: 'INS-GJ-0115', district: 'Gandhinagar', email: 'shah.insp@gujarat.gov.in', phone: '+91 98242 11983', active_inspections: 2, completed_this_month: 24, overdue_count: 0, status: 'On Duty' },
       ]
     }
   },
 
-  async assignCase(payload: { grievance_id: string; inspector_id: string; scheduled_date: string; scheduled_time: string; priority: string; instructions?: string }) {
+  async getInspectorsWorkload() {
+    const data = await this.listInspectors()
+    return { data }
+  },
+
+  async assignCase(payload: any) {
     try {
       const res = await api.post('/inspections/assign', payload)
-      return res.data
+      return { data: res.data }
     } catch {
-      return { message: 'Case assigned to inspector successfully' }
+      return { data: { message: 'Case assigned to inspector successfully' } }
     }
+  },
+
+  async assignGrievanceToInspector(payload: any) {
+    return this.assignCase(payload)
   },
 }
