@@ -33,10 +33,18 @@ const REFERENCE_WAGES = [
   { sector: 'Manufacturing', occupation: 'Machine Operator', minWage: 10000, refWage: 12500 },
 ]
 
+/* Dark-mode-aware badge maps — inline dark: classes override light defaults */
 const RISK_BADGE: Record<string, string> = {
-  Normal:                 'bg-green-100 text-green-800',
-  Monitor:                'bg-blue-100 text-blue-800',
-  'Potential Discrepancy':'bg-amber-100 text-amber-800',
+  Normal:                 'bg-green-100 text-green-800 dark:bg-[#133D30] dark:text-[#6EE7B7]',
+  Monitor:                'bg-blue-100 text-blue-800 dark:bg-[#17324D] dark:text-[#93C5FD]',
+  'Potential Discrepancy':'bg-amber-100 text-amber-800 dark:bg-[#3D3216] dark:text-[#FCD34D]',
+}
+
+const SECTOR_BADGE: Record<string, string> = {
+  Construction:  'bg-blue-100 text-blue-800 dark:bg-[#17324D] dark:text-[#93C5FD]',
+  Textiles:      'bg-purple-100 text-purple-800 dark:bg-[#312347] dark:text-[#D8B4FE]',
+  Diamond:       'bg-amber-100 text-amber-800 dark:bg-[#3D3216] dark:text-[#FCD34D]',
+  Manufacturing: 'bg-green-100 text-green-800 dark:bg-[#133D30] dark:text-[#6EE7B7]',
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -48,55 +56,55 @@ export default function WageMonitoring() {
 
   return (
     <div className="space-y-6 text-slate-900 dark:text-slate-100">
-      {/* Header */}
-      <div>
+      {/* Header — pt-1 ensures title is never clipped below the sticky header */}
+      <div className="pt-1">
         <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
           <TrendingDown className="h-6 w-6 text-teal-600 dark:text-teal-400" />
           Wage Monitoring
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Review reported wages against reference levels to identify cases that may require investigation</p>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-[#A3BDB5] mt-1">Review reported wages against reference levels to identify cases that may require investigation</p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Wage Records',        value: totalRecords.toLocaleString(), icon: <BarChart2    className="h-4 w-4 text-gray-500"  />, bg: 'bg-gray-50',   border: 'border-l-gray-400'  },
-          { label: 'Normal Range',              value: normalCount.toLocaleString(),  icon: <CheckCircle  className="h-4 w-4 text-green-600" />, bg: 'bg-green-50',  border: 'border-l-green-500' },
-          { label: 'Monitor',                   value: monitorCount.toLocaleString(), icon: <TrendingDown className="h-4 w-4 text-blue-500"  />, bg: 'bg-blue-50',   border: 'border-l-blue-500'  },
-          { label: 'Potential Discrepancies',   value: discrepCount.toLocaleString(), icon: <AlertTriangle className="h-4 w-4 text-amber-500"/>, bg: 'bg-amber-50',  border: 'border-l-amber-500' },
+          { label: 'Total Wage Records',      value: totalRecords.toLocaleString(), icon: <BarChart2     className="h-4 w-4 text-gray-500 dark:text-[#A8C7BE]"  />, bg: 'bg-gray-50 dark:bg-[#1A3F37]',  border: 'border-l-gray-400'  },
+          { label: 'Normal Range',            value: normalCount.toLocaleString(),  icon: <CheckCircle   className="h-4 w-4 text-green-600 dark:text-[#4ADE80]" />, bg: 'bg-green-50 dark:bg-[#133D30]', border: 'border-l-green-500' },
+          { label: 'Monitor',                 value: monitorCount.toLocaleString(), icon: <TrendingDown  className="h-4 w-4 text-blue-500 dark:text-[#60A5FA]"  />, bg: 'bg-blue-50 dark:bg-[#17324D]',  border: 'border-l-blue-500'  },
+          { label: 'Potential Discrepancies', value: discrepCount.toLocaleString(), icon: <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-[#FBBF24]" />, bg: 'bg-amber-50 dark:bg-[#332B16]', border: 'border-l-amber-500' },
         ].map((c) => (
-          <div key={c.label} className={`bg-white rounded-xl shadow-sm border border-gray-100 border-l-4 ${c.border} p-4 flex items-center gap-4`}>
+          <div key={c.label} className={`bg-white dark:bg-[#14312A] rounded-xl shadow-sm border border-gray-100 dark:border-[#244E43] border-l-4 ${c.border} p-4 flex items-center gap-4`}>
             <div className={`p-2 rounded-lg ${c.bg}`}>{c.icon}</div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">{c.label}</p>
-              <p className="text-2xl font-bold text-gray-900">{c.value}</p>
+              <p className="text-xs text-gray-500 dark:text-[#A3BDB5] font-medium">{c.label}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{c.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Disclaimer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-3 text-sm text-amber-800">
+      {/* Disclaimer — olive-green semantic in dark mode */}
+      <div className="bg-amber-50 dark:bg-[#2A2A16] border border-amber-200 dark:border-[#4A4520] rounded-xl px-5 py-3 text-sm text-amber-800 dark:text-[#E8D888]">
         <p className="font-semibold">⚠ Important Notice</p>
-        <p className="mt-1 text-xs leading-relaxed">
+        <p className="mt-1 text-xs leading-relaxed text-amber-800 dark:text-[#C8C090]">
           "Potential Discrepancy" indicates the reported wage may be below reference levels. This requires{' '}
-          <strong>official investigation</strong> before any conclusions are drawn. Labels such as "Potential Discrepancy"
-          are not legal determinations. Reference data shown is <strong>DEMO DATA</strong> for illustration purposes only.
+          <strong className="dark:text-[#E8D888]">official investigation</strong> before any conclusions are drawn. Labels such as "Potential Discrepancy"
+          are not legal determinations. Reference data shown is <strong className="dark:text-[#E8D888]">DEMO DATA</strong> for illustration purposes only.
         </p>
       </div>
 
-      {/* Discrepancy Alert Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <h2 className="font-semibold text-gray-800 text-sm">Wage Comparison — Sample Records</h2>
-          <span className="ml-auto text-xs text-gray-400">DEMO DATA</span>
+      {/* ── Wage Comparison Table ── */}
+      <div className="bg-white dark:bg-[#14312A] rounded-xl shadow-sm border border-gray-100 dark:border-[#244E43] overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-[#244E43] flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-[#FBBF24]" />
+          <h2 className="font-semibold text-gray-800 dark:text-white text-sm">Wage Comparison — Sample Records</h2>
+          <span className="ml-auto text-xs text-gray-400 dark:text-[#A3BDB5] font-medium">DEMO DATA</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-gray-500 bg-gray-50 border-b border-gray-100">
+              <tr className="text-left text-xs text-gray-500 dark:text-[#CBDCE1] bg-gray-50 dark:bg-[#1A3F37] border-b border-gray-100 dark:border-[#244E43]">
                 <th className="px-4 py-3 font-semibold">Worker ID</th>
                 <th className="px-4 py-3 font-semibold">Occupation</th>
                 <th className="px-4 py-3 font-semibold">District</th>
@@ -107,26 +115,33 @@ export default function WageMonitoring() {
                 <th className="px-4 py-3 font-semibold">Risk Level</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-[#1E4238]">
               {WAGE_RECORDS.map((r, idx) => (
-                <tr key={r.workerId} className={`hover:bg-indigo-50/20 transition-colors ${idx % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-700">{r.workerId}</td>
-                  <td className="px-4 py-3 text-gray-700">{r.occupation}</td>
-                  <td className="px-4 py-3 text-gray-600">{r.district}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">₹{r.reportedWage.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-gray-600">₹{r.referenceWage.toLocaleString()}</td>
+                <tr
+                  key={r.workerId}
+                  className={`transition-colors hover:bg-indigo-50/20 dark:hover:bg-[#1E463D] ${
+                    idx % 2 === 1
+                      ? 'bg-gray-50/50 dark:bg-[#183B33]'
+                      : 'dark:bg-[#14312A]'
+                  }`}
+                >
+                  <td className="px-4 py-3 font-mono text-xs text-gray-700 dark:text-[#E8F0ED]">{r.workerId}</td>
+                  <td className="px-4 py-3 text-gray-700 dark:text-[#E8F0ED]">{r.occupation}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-[#CBDCE1]">{r.district}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">₹{r.reportedWage.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-[#CBDCE1]">₹{r.referenceWage.toLocaleString()}</td>
                   <td className="px-4 py-3">
                     {r.discrepancyAmt > 0 ? (
-                      <span className="text-amber-700 font-medium">−₹{r.discrepancyAmt.toLocaleString()}</span>
+                      <span className="text-amber-700 dark:text-[#FCD34D] font-medium">−₹{r.discrepancyAmt.toLocaleString()}</span>
                     ) : (
-                      <span className="text-green-600">—</span>
+                      <span className="text-green-600 dark:text-[#4ADE80]">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {r.discrepancyPct > 0 ? (
-                      <span className="text-amber-700 font-medium">−{r.discrepancyPct.toFixed(1)}%</span>
+                      <span className="text-amber-700 dark:text-[#FCD34D] font-medium">−{r.discrepancyPct.toFixed(1)}%</span>
                     ) : (
-                      <span className="text-green-600">—</span>
+                      <span className="text-green-600 dark:text-[#4ADE80]">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -141,12 +156,12 @@ export default function WageMonitoring() {
         </div>
       </div>
 
-      {/* Reference Wage Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-          <BarChart2 className="h-4 w-4 text-indigo-500" />
-          <h2 className="font-semibold text-gray-800 text-sm">Reference Wage Table — Gujarat</h2>
-          <span className="ml-auto text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-0.5">
+      {/* ── Reference Wage Table ── */}
+      <div className="bg-white dark:bg-[#14312A] rounded-xl shadow-sm border border-gray-100 dark:border-[#244E43] overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-[#244E43] flex items-center gap-2">
+          <BarChart2 className="h-4 w-4 text-indigo-500 dark:text-[#818CF8]" />
+          <h2 className="font-semibold text-gray-800 dark:text-white text-sm">Reference Wage Table — Gujarat</h2>
+          <span className="ml-auto text-xs font-medium text-amber-600 dark:text-[#FCD34D] bg-amber-50 dark:bg-[#3D3216] border border-amber-200 dark:border-[#695320] rounded px-2 py-0.5">
             DEMO DATA
           </span>
         </div>
@@ -154,37 +169,34 @@ export default function WageMonitoring() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-gray-500 bg-gray-50 border-b border-gray-100">
+              <tr className="text-left text-xs text-gray-500 dark:text-[#CBDCE1] bg-gray-50 dark:bg-[#1A3F37] border-b border-gray-100 dark:border-[#244E43]">
                 <th className="px-4 py-3 font-semibold">Sector</th>
                 <th className="px-4 py-3 font-semibold">Occupation</th>
                 <th className="px-4 py-3 font-semibold">Min. Wage (₹/mo)</th>
                 <th className="px-4 py-3 font-semibold">Reference Wage (₹/mo)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-[#1E4238]">
               {REFERENCE_WAGES.map((r, idx) => (
-                <tr key={idx} className={`${idx % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
+                <tr key={idx} className={`${idx % 2 === 1 ? 'bg-gray-50/50 dark:bg-[#183B33]' : 'dark:bg-[#14312A]'}`}>
                   <td className="px-4 py-2.5">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      r.sector === 'Construction' ? 'bg-blue-100 text-blue-800' :
-                      r.sector === 'Textiles'     ? 'bg-purple-100 text-purple-800' :
-                      r.sector === 'Diamond'      ? 'bg-amber-100 text-amber-800' :
-                      'bg-green-100 text-green-800'
+                      SECTOR_BADGE[r.sector] || 'bg-green-100 text-green-800 dark:bg-[#133D30] dark:text-[#6EE7B7]'
                     }`}>
                       {r.sector}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-gray-700">{r.occupation}</td>
-                  <td className="px-4 py-2.5 text-gray-700">₹{r.minWage.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 font-medium text-gray-900">₹{r.refWage.toLocaleString()}</td>
+                  <td className="px-4 py-2.5 text-gray-700 dark:text-[#E8F0ED]">{r.occupation}</td>
+                  <td className="px-4 py-2.5 text-gray-700 dark:text-[#CBDCE1]">₹{r.minWage.toLocaleString()}</td>
+                  <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">₹{r.refWage.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
-          <p className="text-[11px] text-gray-400">
+        <div className="px-5 py-3 border-t border-gray-100 dark:border-[#244E43] bg-gray-50 dark:bg-[#1A3F37]">
+          <p className="text-[11px] text-gray-400 dark:text-[#A3BDB5]">
             ⚠ Reference wages are illustrative DEMO DATA and do not represent official Gujarat government minimum wage schedules.
             Always consult official GLCD notifications for enforcement purposes.
           </p>

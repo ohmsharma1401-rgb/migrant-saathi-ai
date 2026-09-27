@@ -124,6 +124,19 @@ html.dark .bg-slate-100\/80 {
   border-color: #265448 !important;
 }
 
+/* 5b. Gray-palette Elevated Surfaces (Government pages) */
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-gray-50\/50,
+html.dark .bg-gray-50\/60,
+html.dark .bg-gray-50\/70,
+html.dark .bg-gray-50\/80,
+html.dark .bg-gray-100\/70,
+html.dark .bg-gray-100\/80 {
+  background-color: #1C4037 !important;
+  border-color: #265448 !important;
+}
+
 html.dark .bg-\[\#F6F7F2\] {
   background-color: #0C1E19 !important;
 }
@@ -274,12 +287,62 @@ html.dark sup {
   color: #A3BDB5 !important;
 }
 
+/* Semantic Text Colors — prevent dark-on-dark illegibility */
+html.dark .text-amber-950,
+html.dark .text-amber-900,
+html.dark .text-amber-600 {
+  color: #FCD34D !important;
+}
+html.dark .text-emerald-950,
+html.dark .text-emerald-900,
+html.dark .text-emerald-800 {
+  color: #6EE7B7 !important;
+}
+html.dark .text-green-800,
+html.dark .text-green-700,
+html.dark .text-green-600 {
+  color: #4ADE80 !important;
+}
+html.dark .text-blue-900,
+html.dark .text-blue-800,
+html.dark .text-blue-700 {
+  color: #93C5FD !important;
+}
+html.dark .text-purple-800 {
+  color: #D8B4FE !important;
+}
+html.dark .text-indigo-900,
+html.dark .text-indigo-800,
+html.dark .text-indigo-700,
+html.dark .text-indigo-600 {
+  color: #A5B4FC !important;
+}
+html.dark .text-orange-800,
+html.dark .text-orange-700 {
+  color: #FDBA74 !important;
+}
+html.dark .text-yellow-800,
+html.dark .text-yellow-700 {
+  color: #FDE68A !important;
+}
+html.dark .text-teal-800 {
+  color: #5EEAD4 !important;
+}
+html.dark .text-red-800 {
+  color: #FCA5A5 !important;
+}
+html.dark .text-sky-700 {
+  color: #7DD3FC !important;
+}
+
 /* 10. Borders & Dividers */
 html.dark .border-slate-200,
 html.dark .border-slate-100,
 html.dark .border-slate-300,
 html.dark .border-gray-100,
 html.dark .border-gray-200,
+html.dark .border-gray-300,
+html.dark .border-amber-200,
 html.dark .border-emerald-100,
 html.dark .border-emerald-200,
 html.dark .border-emerald-900,
@@ -289,7 +352,8 @@ html.dark .border-slate-200\/80,
 html.dark .border-slate-100\/80,
 html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
 html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
-html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]) {
   border-color: #244E43 !important;
 }
 
@@ -297,6 +361,11 @@ html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
 html.dark .hover\:bg-slate-50:hover,
 html.dark .hover\:bg-slate-100:hover,
 html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-gray-200:hover,
+html.dark .hover\:bg-gray-50\/50:hover,
+html.dark .hover\:bg-indigo-50\/20:hover,
 html.dark .hover\:bg-emerald-50\/50:hover,
 html.dark .hover\:bg-emerald-900\/30:hover,
 html.dark .hover\:bg-emerald-900\/40:hover,
@@ -329,6 +398,28 @@ html.dark svg.lucide.text-slate-800 {
   color: #E2EAE7 !important;
 }
 
+/* Recharts & inline SVG fill overrides — dark fills invisible on dark bg */
+html.dark svg rect[fill="#0C2D27"],
+html.dark svg path[fill="#0C2D27"] {
+  fill: #4DB6AC !important;
+}
+
+/* Additional semantic icon colors */
+html.dark svg.lucide.text-orange-600,
+html.dark svg.lucide.text-orange-700 {
+  color: #FDBA74 !important;
+}
+html.dark svg.lucide.text-yellow-600,
+html.dark svg.lucide.text-yellow-700 {
+  color: #FDE68A !important;
+}
+html.dark svg.lucide.text-teal-800 {
+  color: #5EEAD4 !important;
+}
+html.dark svg.lucide.text-sky-600,
+html.dark svg.lucide.text-sky-700 {
+  color: #7DD3FC !important;
+}
 /* Accent & Status Icons */
 html.dark .text-\[\#FF6B53\],
 html.dark .text-coral,
@@ -382,6 +473,11 @@ html.dark .bg-emerald-100 {
   border: 1px solid #23654F !important;
   color: #6EE7B7 !important;
 }
+html.dark .bg-green-100 {
+  background-color: #133D30 !important;
+  border: 1px solid #23654F !important;
+  color: #4ADE80 !important;
+}
 html.dark .bg-amber-100 {
   background-color: #3D3216 !important;
   border: 1px solid #695320 !important;
@@ -407,6 +503,25 @@ html.dark .bg-orange-100 {
   border: 1px solid #6E3823 !important;
   color: #FDBA74 !important;
 }
+html.dark .bg-yellow-100,
+html.dark .bg-yellow-50 {
+  background-color: #3D3516 !important;
+  border: 1px solid #695D20 !important;
+  color: #FDE68A !important;
+}
+html.dark .bg-teal-100 {
+  background-color: #153D35 !important;
+  border: 1px solid #236555 !important;
+  color: #5EEAD4 !important;
+}
+html.dark .bg-sky-50 {
+  background-color: #152D45 !important;
+  border: 1px solid #264D75 !important;
+  color: #7DD3FC !important;
+}
+html.dark .bg-gray-200 {
+  background-color: #244E43 !important;
+}
 html.dark .bg-slate-100.rounded-full,
 html.dark .bg-slate-100.rounded-md {
   background-color: #1F443B !important;
@@ -416,7 +531,8 @@ html.dark .bg-slate-100.rounded-md {
 
 /* 14. Tables */
 html.dark table th {
-  color: #A3BDB5 !important;
+  color: #CBDCE1 !important;
+  background-color: #1A3F37 !important;
   border-bottom: 1px solid #244E43 !important;
 }
 html.dark table td {
