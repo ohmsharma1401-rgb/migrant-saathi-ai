@@ -112,17 +112,11 @@ export default function RoleSelection() {
               alt="Sabka Saath Sabka Vikas"
               className="w-full h-full object-cover object-top rounded-tl-[9.5rem]"
             />
-
-            {/* Floating Verified Badge */}
-            <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl text-[#0C2D27] text-xs font-extrabold shadow-xl flex items-center gap-2.5 border border-white">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>सबका साथ, सबका विकास</span>
-            </div>
           </div>
         </div>
 
         {/* Stats Row */}
-        <div className="relative z-20 grid grid-cols-3 gap-4 pt-6 border-t border-emerald-900/60 max-w-[55%]">
+        <div className="relative z-20 grid grid-cols-2 gap-6 pt-6 border-t border-emerald-900/60 max-w-[45%]">
           <div>
             <b className="text-xl xl:text-2xl font-bold text-white block">12.4L</b>
             <span className="text-[11px] text-emerald-200/60 font-medium leading-tight block">workers connected</span>
@@ -130,10 +124,6 @@ export default function RoleSelection() {
           <div>
             <b className="text-xl xl:text-2xl font-bold text-white block">28</b>
             <span className="text-[11px] text-emerald-200/60 font-medium leading-tight block">states &amp; territories</span>
-          </div>
-          <div>
-            <b className="text-xl xl:text-2xl font-bold text-white block">11</b>
-            <span className="text-[11px] text-emerald-200/60 font-medium leading-tight block">languages supported</span>
           </div>
         </div>
       </div>
