@@ -234,3 +234,35 @@ def test_integration_live_ollama_if_available():
         assert data["classification"] == "in_scope"
         assert len(data["answer"]) > 20
         assert data["answer"] != "Response generated."
+
+
+def test_worker_news_endpoints():
+    """11. Verify Migrant & Worker News endpoints: list, category filter, alerts, and article detail."""
+    with TestClient(app) as client:
+        res = client.get("/api/news")
+        assert res.status_code == 200
+        data = res.json()
+        assert "articles" in data
+        assert "featured" in data
+        assert "alerts" in data
+        assert len(data["articles"]) > 0
+        assert len(data["alerts"]) > 0
+        assert data["featured"] is not None
+
+        # Verify alerts endpoint
+        res_alerts = client.get("/api/news/alerts")
+        assert res_alerts.status_code == 200
+        assert len(res_alerts.json()) >= 4
+
+        # Verify category filter
+        res_cat = client.get("/api/news?category=Labour%20%26%20Wages")
+        assert res_cat.status_code == 200
+        cat_data = res_cat.json()
+        assert cat_data["total"] >= 1
+
+        # Verify article detail
+        feat_id = data["featured"]["id"]
+        res_detail = client.get(f"/api/news/{feat_id}")
+        assert res_detail.status_code == 200
+        assert res_detail.json()["id"] == feat_id
+

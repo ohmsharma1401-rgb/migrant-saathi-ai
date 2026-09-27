@@ -145,6 +145,17 @@ export default function AIAssistant() {
       }
     }
     checkStatus()
+
+    try {
+      const prefill = localStorage.getItem('saathi_prefilled_prompt')
+      if (prefill) {
+        localStorage.removeItem('saathi_prefilled_prompt')
+        setInput(prefill)
+        setTimeout(() => inputRef.current?.focus(), 150)
+      }
+    } catch {
+      // Ignored
+    }
   }, [])
 
   useEffect(() => {

@@ -22,6 +22,7 @@ import {
   Sun,
   Moon,
   Briefcase,
+  Newspaper,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
@@ -72,6 +73,7 @@ export default function WorkerLayout() {
     { to: '/worker/welfare', label: t('nav_welfare'), icon: Heart },
     { to: '/worker/skills', label: t('nav_skills'), icon: Wrench },
     { to: '/worker/wages', label: t('nav_wages'), icon: DollarSign },
+    { to: '/worker/news', label: t('nav_news') || 'Worker News', icon: Newspaper },
     { to: '/worker/ai', label: t('nav_ai'), icon: Bot },
     { to: '/worker/grievances', label: t('nav_grievances'), icon: AlertTriangle, badge: '1' },
     { to: '/worker/profile', label: t('nav_profile'), icon: User },
@@ -85,6 +87,7 @@ export default function WorkerLayout() {
     if (location.pathname.includes('/welfare')) return t('nav_welfare')
     if (location.pathname.includes('/skills')) return t('nav_skills')
     if (location.pathname.includes('/wages')) return t('nav_wages')
+    if (location.pathname.includes('/news')) return 'Migrant & Worker News'
     if (location.pathname.includes('/ai')) return t('nav_ai')
     if (location.pathname.includes('/grievances')) return t('nav_grievances')
     if (location.pathname.includes('/profile')) return t('nav_profile')

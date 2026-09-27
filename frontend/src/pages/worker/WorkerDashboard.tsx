@@ -10,6 +10,7 @@ import {
   QrCode,
   Check,
   ShieldCheck,
+  Newspaper,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useTranslation } from '@/utils/translations'
@@ -251,6 +252,31 @@ export default function WorkerDashboard() {
             <span className="text-xs font-bold text-purple-700 flex items-center gap-1 pt-2">Track status →</span>
           </div>
         </div>
+      </div>
+
+      {/* ── 4. Worker News & Advisories Banner ── */}
+      <div
+        onClick={() => navigate('/worker/news')}
+        className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 flex items-center justify-between gap-4 cursor-pointer hover:border-teal-500/50 hover:shadow-xs transition-all group"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 shrink-0">
+            <Newspaper className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <b className="text-sm font-bold text-slate-900 dark:text-white">Migrant & Worker News</b>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-600 text-white">NEW</span>
+            </div>
+            <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 block">
+              Revised Gujarat minimum wages gazette & outdoor heatwave advisory updated today.
+            </span>
+          </div>
+        </div>
+        <span className="text-xs font-bold text-teal-700 dark:text-teal-300 group-hover:translate-x-0.5 transition-transform flex items-center gap-1 shrink-0">
+          <span>Read updates</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </span>
       </div>
 
       {/* Face Attendance Verification Modal */}

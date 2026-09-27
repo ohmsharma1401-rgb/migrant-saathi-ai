@@ -18,6 +18,7 @@ from app.api.skills import router as skills_router
 from app.api.documents import router as documents_router
 from app.api.whatsapp import router as whatsapp_router
 from app.api.ask_saathi import router as ask_saathi_router
+from app.api.news import router as news_router
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ app.include_router(chatbot_router)
 app.include_router(skills_router)
 app.include_router(documents_router)
 app.include_router(whatsapp_router)
+app.include_router(news_router)
 
 
 # ── Health Check & Root ────────────────────────────────────────────────────────

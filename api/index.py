@@ -496,6 +496,52 @@ class handler(BaseHTTPRequestHandler):
             })
             return
 
+        if "news" in path:
+            try:
+                import sys
+                backend_dir = os.path.join(os.path.dirname(__file__), "..", "backend")
+                if backend_dir not in sys.path:
+                    sys.path.insert(0, backend_dir)
+                from app.api.news import ARTICLES_DATA, ALERTS_DATA, CATEGORIES_LIST, DISTRICTS_LIST
+
+                parsed = urllib.parse.urlparse(path)
+                query_params = urllib.parse.parse_qs(parsed.query)
+                cat = query_params.get("category", [None])[0]
+                state = query_params.get("state", [None])[0]
+                dist = query_params.get("district", [None])[0]
+                srch = query_params.get("search", [None])[0]
+
+                filtered = [a.model_dump() for a in ARTICLES_DATA]
+                if cat and cat.lower() not in ("all", ""):
+                    cat_lower = cat.lower().replace("-", " ")
+                    filtered = [a for a in filtered if cat_lower in a["category"].lower() or any(cat_lower in t.lower() for t in a["tags"])]
+                if state and state.lower() not in ("all", "all states", ""):
+                    filtered = [a for a in filtered if a["state"].lower() == state.lower() or a["state"].lower() == "all-india"]
+                if dist and dist.lower() not in ("all", "all districts", ""):
+                    filtered = [a for a in filtered if a["district"].lower() == dist.lower() or a["district"].lower() in ("state-wide", "gandhinagar", "all")]
+                if srch and srch.strip():
+                    q = srch.strip().lower()
+                    filtered = [a for a in filtered if q in a["title"].lower() or q in a["summary"].lower() or q in a["content"].lower() or any(q in t.lower() for t in a["tags"])]
+
+                feat = next((a for a in filtered if a.get("is_featured")), None)
+                if not feat and filtered:
+                    feat = filtered[0]
+                remaining = [a for a in filtered if a["id"] != (feat["id"] if feat else "")]
+
+                _json_response(self, 200, {
+                    "featured": feat,
+                    "articles": remaining,
+                    "alerts": [al.model_dump() for al in ALERTS_DATA],
+                    "categories": CATEGORIES_LIST,
+                    "districts": DISTRICTS_LIST,
+                    "total": len(filtered)
+                })
+                return
+            except Exception as e:
+                print("News error in api/index.py:", e)
+                _json_response(self, 200, {"featured": None, "articles": [], "alerts": [], "categories": [], "districts": [], "total": 0})
+                return
+
         _json_response(self, 200, {
             "status": "ok",
             "service": "Migrant Saathi AI Serverless API",
