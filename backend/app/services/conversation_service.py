@@ -14,17 +14,18 @@ class ConversationService:
     async def get_or_create_conversation(
         self,
         db: AsyncSession,
-        user_id: str,
+        user_id: Any,
         conversation_id: Optional[str] = None,
         language: str = "en"
     ) -> Conversation:
         """Finds active conversation owned by user or creates a new one."""
+        u_uuid = uuid.UUID(str(user_id)) if not isinstance(user_id, uuid.UUID) else user_id
         if conversation_id:
             try:
                 c_uuid = uuid.UUID(str(conversation_id))
                 stmt = select(Conversation).where(
                     Conversation.id == c_uuid,
-                    Conversation.user_id == user_id,
+                    Conversation.user_id == u_uuid,
                     Conversation.status == "active"
                 )
                 res = await db.execute(stmt)
@@ -37,7 +38,7 @@ class ConversationService:
         # Create new conversation for user
         new_conv = Conversation(
             id=uuid.uuid4(),
-            user_id=user_id,
+            user_id=u_uuid,
             title="Ask Saathi Session",
             language=language,
             status="active"
@@ -50,13 +51,14 @@ class ConversationService:
     async def create_new_conversation(
         self,
         db: AsyncSession,
-        user_id: str,
+        user_id: Any,
         language: str = "en"
     ) -> Conversation:
         """Explicitly starts a brand new conversation context for the worker."""
+        u_uuid = uuid.UUID(str(user_id)) if not isinstance(user_id, uuid.UUID) else user_id
         new_conv = Conversation(
             id=uuid.uuid4(),
-            user_id=user_id,
+            user_id=u_uuid,
             title="Ask Saathi Session",
             language=language,
             status="active"

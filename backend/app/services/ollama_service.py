@@ -45,7 +45,7 @@ class OllamaService:
                 "base_url": base_url,
                 "active_model": active,
                 "installed_models": installed_models,
-                "message": f"Connected to local Ollama NLP LLM ({active})"
+                "message": f"Connected to local Ollama LLM server ({active})"
             }
 
         return {
@@ -54,7 +54,7 @@ class OllamaService:
             "base_url": self.base_urls[0],
             "active_model": self.default_model,
             "installed_models": [],
-            "message": "Ollama server offline or not running at http://127.0.0.1:11434."
+            "message": "Ollama server offline or not running at http://localhost:11434."
         }
 
     async def chat_completion(
@@ -68,12 +68,12 @@ class OllamaService:
         timeout: float = 60.0
     ) -> Optional[str]:
         """
-        Sends structured message history to Ollama POST /api/chat.
-        Returns message.content or None if Ollama is unreachable.
+        Queries Ollama POST http://localhost:11434/api/chat.
+        Correctly parses result["message"]["content"] and validates length.
         """
         status = await self.get_status()
         if not status["available"]:
-            logger.warning("Ollama server is unavailable")
+            logger.warning("[AskSaathi/Ollama] Server is unavailable at http://localhost:11434")
             return None
 
         target_url = status["base_url"]
@@ -91,67 +91,35 @@ class OllamaService:
             }
         }
 
+        user_q = next((m["content"] for m in reversed(messages) if m.get("role") == "user"), "N/A")
+        logger.info(f"[AskSaathi/Ollama] Sending request to {target_url}/api/chat for model '{target_model}'")
+        logger.info(f"[AskSaathi/Ollama] User Question: {user_q}")
+
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
                 res = await client.post(f"{target_url}/api/chat", json=payload)
+                logger.info(f"[AskSaathi/Ollama] HTTP Status: {res.status_code}")
+
                 if res.status_code == 200:
                     data = res.json()
-                    content = data.get("message", {}).get("content", "").strip()
+                    has_message = "message" in data
+                    msg_obj = data.get("message", {})
+                    content = msg_obj.get("content", "").strip()
+
+                    logger.info(f"[AskSaathi/Ollama] Response keys: {list(data.keys())}")
+                    logger.info(f"[AskSaathi/Ollama] message exists: {has_message}, role: {msg_obj.get('role')}")
+                    logger.info(f"[AskSaathi/Ollama] Answer content length: {len(content)}")
+
                     if content:
                         return content
+                    else:
+                        logger.warning("[AskSaathi/Ollama] Empty content returned in result['message']['content']")
                 else:
-                    logger.warning(f"Ollama returned HTTP {res.status_code}: {res.text}")
+                    logger.error(f"[AskSaathi/Ollama] Failed with HTTP {res.status_code}: {res.text}")
         except Exception as e:
-            logger.warning(f"Ollama chat_completion request failed: {e}")
-
-        # Fallback to /api/generate if /api/chat was unavailable for older versions
-        try:
-            prompt_parts = []
-            for msg in messages:
-                role = msg.get("role", "user").capitalize()
-                prompt_parts.append(f"{role}: {msg.get('content', '')}")
-            full_prompt = "\n\n".join(prompt_parts) + "\n\nAssistant:"
-
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                res = await client.post(
-                    f"{target_url}/api/generate",
-                    json={
-                        "model": target_model,
-                        "prompt": full_prompt,
-                        "stream": False
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    content = data.get("response", "").strip()
-                    if content:
-                        return content
-        except Exception as e:
-            logger.warning(f"Ollama generate fallback failed: {e}")
+            logger.error(f"[AskSaathi/Ollama] Exception during chat_completion: {e}", exc_info=True)
 
         return None
-
-    async def generate_response(
-        self,
-        prompt: str,
-        system_prompt: Optional[str] = None,
-        language: str = "en",
-        model: Optional[str] = None
-    ) -> Optional[str]:
-        """Convenience method for single prompt query."""
-        sys_msg = system_prompt or (
-            "You are Migrant Saathi AI, an empathetic, highly knowledgeable AI assistant dedicated to helping "
-            "migrant workers and government labor officials in India. You provide clear, accurate guidance on "
-            "labor rights, minimum wages, safety regulations, e-Shram, BOCW schemes, and grievance reporting. "
-            f"Always reply clearly and accurately in language '{language}'."
-        )
-
-        messages = [
-            {"role": "system", "content": sys_msg},
-            {"role": "user", "content": prompt}
-        ]
-
-        return await self.chat_completion(messages, model=model)
 
 
 ollama_service = OllamaService()

@@ -11,42 +11,25 @@ from app.services.ollama_service import ollama_service
 
 logger = logging.getLogger(__name__)
 
-WITHOUT_KNOWLEDGE_RESPONSES = {
-    "en": (
-        "I can help with migrant worker and labour-related questions, but I don't currently have "
-        "verified information for this specific question in the Migrant Saathi knowledge base. "
-        "Please check with the relevant government department or provide the scheme/document details so I can help explain them."
-    ),
-    "hi": (
-        "मैं प्रवासी श्रमिकों और श्रम संबंधी प्रश्नों में मदद कर सकता हूं, लेकिन वर्तमान में प्रवासी साथी "
-        "ज्ञानकोष में इस विशिष्ट प्रश्न के लिए सत्यापित जानकारी उपलब्ध नहीं है। कृपया संबंधित सरकारी विभाग से संपर्क करें।"
-    ),
-    "gu": (
-        "હું પ્રવાસી શ્રમિકો અને શ્રમ સંબંધિત પ્રશ્નોમાં મદદ કરી શકું છું, પરંતુ હાલમાં પ્રવાસી સાથી "
-        "જ્ઞાનકોશમાં આ ચોક્કસ પ્રશ્ન માટે ચકાસાયેલ માહિતી ઉપલબ્ધ નથી. કૃપા કરીને સંબંધિત સરકારી વિભાગનો સંપર્ક કરો."
-    )
-}
-
-SYSTEM_PROMPT_TEMPLATE = """You are Saathi, the AI assistance layer of Migrant Saathi.
-Migrant Saathi is a platform designed to support migrant workers and workers with employment, labour, wages, welfare schemes, skills, workplace safety, grievances, migration-related worker assistance, and related government services.
+SYSTEM_PROMPT_TEMPLATE = """You are Saathi, the empathetic, expert AI assistance layer of Migrant Saathi platform.
+Migrant Saathi supports migrant workers and daily-wage labourers with employment, job opportunities, minimum wages, welfare schemes (BOCW, PM-SYM, e-Shram, PM-JAY), skills, workplace safety, and grievance reporting in India.
 
 YOUR PRIMARY RESPONSIBILITY:
-Provide clear, useful and trustworthy assistance to migrant workers and workers.
+Provide clear, accurate, and trustworthy guidance to migrant workers.
 
 KNOWLEDGE RULE:
-Use ONLY the verified Migrant Saathi information supplied in the context. Do not invent government information.
-Never invent scheme eligibility, scheme benefits, monetary amounts, deadlines, legal provisions, required documents, or government procedures.
-If the provided knowledge does not contain enough information to answer a worker-related question, clearly say that verified information is not currently available.
+- Use the verified Migrant Saathi knowledge provided below whenever relevant.
+- Do NOT invent unverified government scheme eligibility rules, fake monetary amounts, or fake deadlines.
+- If specific verified scheme rules are missing for a specialized claim, clearly explain general procedures or advise contacting official Labour Helpline 14434.
 
 LANGUAGE RULE:
 Respond clearly and empathetically in language '{language}'. (Supported languages: English, Hindi, Gujarati).
-Preserve names of official schemes (such as BOCW, PM-SYM, e-Shram, PM-JAY) in their official forms.
+Preserve names of official government schemes (BOCW, PM-SYM, e-Shram, PM-JAY) in their standard recognized forms.
 
 ANSWER STYLE:
 - Be clear, concise, and structured.
 - Use simple language suitable for workers.
-- Use bullet points when listing requirements or benefits.
-- Use numbered steps for application procedures.
+- Use bullet points when listing steps, requirements, or wage figures.
 
 {worker_context_clause}
 
@@ -110,27 +93,7 @@ class AskSaathiService:
 
         # 4. Knowledge Retrieval (RAG)
         knowledge_text, sources, knowledge_found = await knowledge_service.retrieve_relevant_knowledge(db, text, lang)
-
-        if not knowledge_found and not knowledge_text:
-            # IN_SCOPE_WITHOUT_KNOWLEDGE fallback
-            no_k_msg = WITHOUT_KNOWLEDGE_RESPONSES.get(lang, WITHOUT_KNOWLEDGE_RESPONSES["en"])
-            await conversation_service.add_message_pair(
-                db=db,
-                conversation_id=conv.id,
-                user_content=text,
-                assistant_content=no_k_msg,
-                classification="in_scope_without_knowledge",
-                sources=[],
-                message_id=message_id
-            )
-            return {
-                "conversation_id": str(conv.id),
-                "message_id": message_id or str(uuid.uuid4()),
-                "classification": "in_scope_without_knowledge",
-                "answer": no_k_msg,
-                "sources": [],
-                "timestamp": str(conv.updated_at)
-            }
+        k_context = knowledge_text if knowledge_found else "General Migrant Saathi worker domain knowledge."
 
         # 5. Worker Context Retrieval
         worker_ctx = await worker_context_service.get_worker_context(db, user_id)
@@ -143,7 +106,7 @@ class AskSaathiService:
         sys_prompt = SYSTEM_PROMPT_TEMPLATE.format(
             language=lang,
             worker_context_clause=worker_clause,
-            knowledge_context=knowledge_text
+            knowledge_context=k_context
         )
 
         ollama_messages = [{"role": "system", "content": sys_prompt}]
@@ -166,6 +129,7 @@ class AskSaathiService:
 
         if not ollama_reply:
             # Handle Ollama Server Unavailable / Timeout cleanly
+            logger.warning("[AskSaathiService] Ollama chat completion returned empty response or server offline")
             err_msg = (
                 "Saathi AI is temporarily unavailable. Please try again in a moment."
                 if lang == "en" else

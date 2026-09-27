@@ -134,7 +134,6 @@ export default function AIAssistant() {
           setOllamaStatus({ available: true, model: res.data.model || 'llama3' })
         }
       } catch {
-        // Fallback check
         try {
           const resFallback = await api.get('/ai/status')
           if (resFallback.data?.ollama_available) {
@@ -178,6 +177,7 @@ export default function AIAssistant() {
     setLoading(true)
 
     try {
+      console.log('[AskSaathi UI] Sending message to /ask-saathi/chat:', trimmed)
       const res = await api.post('/ask-saathi/chat', {
         conversation_id: conversationId,
         message_id: msgId,
@@ -185,29 +185,42 @@ export default function AIAssistant() {
         language: currentLang,
       })
 
+      console.log('[AskSaathi UI] Response received:', res.data)
+
       if (res.data?.conversation_id) {
         setConversationId(res.data.conversation_id)
+      }
+
+      const answerText = res.data?.answer || res.data?.reply
+      if (!answerText || !answerText.trim()) {
+        throw new Error('Received empty response from backend')
       }
 
       const replyMsg: Message = {
         id: res.data.message_id || (Date.now() + 1).toString(),
         role: 'assistant',
-        content: res.data.answer || 'Response generated.',
+        content: answerText,
         classification: res.data.classification,
         sources: res.data.sources || [],
       }
       setMessages((m) => [...m, replyMsg])
-    } catch {
-      // Fallback API endpoint
+    } catch (err) {
+      console.warn('[AskSaathi UI] /ask-saathi/chat error, attempting /ai/ask fallback:', err)
       try {
         const resFallback = await api.post('/ai/ask', { message: trimmed, language: currentLang })
+        console.log('[AskSaathi UI] Fallback response received:', resFallback.data)
+        const fallbackText = resFallback.data?.reply || resFallback.data?.answer
+        if (!fallbackText || !fallbackText.trim()) {
+          throw new Error('Received empty fallback response')
+        }
         const replyMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: resFallback.data?.reply || 'Saathi AI is ready.',
+          content: fallbackText,
         }
         setMessages((m) => [...m, replyMsg])
-      } catch {
+      } catch (fallbackErr) {
+        console.error('[AskSaathi UI] Both AI endpoints failed:', fallbackErr)
         const errReply: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',

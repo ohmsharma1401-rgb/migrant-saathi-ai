@@ -26,12 +26,16 @@ async def get_current_user(
     from app.models.user import User
 
     payload = verify_token(token)
-    user_id: str = payload.get("sub")
-    if user_id:
-        result = await db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
-        if user and user.is_active:
-            return user
+    user_id_str: str = payload.get("sub")
+    if user_id_str:
+        try:
+            u_uuid = uuid.UUID(str(user_id_str))
+            result = await db.execute(select(User).where(User.id == u_uuid))
+            user = result.scalar_one_or_none()
+            if user and user.is_active:
+                return user
+        except Exception:
+            pass
 
     result = await db.execute(select(User).where(User.is_active == True))  # noqa: E712
     user = result.scalars().first()
