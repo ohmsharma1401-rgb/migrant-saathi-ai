@@ -6,14 +6,20 @@
   :root {
     --bg: #F6F7F2;
     --surface: #FFFFFF;
+    --surface-elevated: #F1F3EE;
     --forest: #0C2D27;
     --coral: #FF6B53;
     --coral-hover: #FF5A43;
     --lime: #C0E862;
     --teal: #4DB6AC;
     --ink: #0C2D27;
+    --ink-secondary: #52605D;
     --muted: #52605D;
     --border: #E5E7EB;
+    --hair: #E5E7EB;
+    --rule: #D1D5DB;
+    --input-bg: #FFFFFF;
+    --input-border: #D1D5DB;
     --card-shadow: 0 4px 20px -2px rgba(12, 45, 39, 0.05);
 
     --radius: 1.25rem;
@@ -21,17 +27,30 @@
 
   :root[data-theme="dark"],
   html.dark {
-    --bg: #0A1E1A;
-    --surface: #112A25;
-    --forest: #071916;
+    /* 1. App Background (Rich dark slate-teal; never pitch black #000) */
+    --bg: #0C1E19;
+    /* 2. Cards & Primary Surfaces (Visibly lighter than background #0C1E19) */
+    --surface: #14312A;
+    /* 3. Elevated Surfaces (Card inner sections, pills, table headers) */
+    --surface-elevated: #1C4037;
+    /* 4. Deep Sidebar */
+    --forest: #081613;
     --coral: #FF6B53;
     --coral-hover: #FF5A43;
     --lime: #C0E862;
     --teal: #4DB6AC;
-    --ink: #F0FDF4;
-    --muted: #94A3B8;
-    --border: #1E3A34;
-    --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    /* 5. Typography */
+    --ink: #FFFFFF;
+    --ink-secondary: #CBDCE1;
+    --muted: #A3BDB5;
+    /* 6. Borders */
+    --border: #244E43;
+    --hair: #1E443B;
+    --rule: #29574B;
+    /* 7. Inputs */
+    --input-bg: #173830;
+    --input-border: #2E6356;
+    --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
   }
 }
@@ -54,32 +73,163 @@
   }
 }
 
-/* Global Dark Mode Overrides for High Contrast & Readability */
-:root[data-theme="dark"],
-html.dark {
-  --bg: #0A1E1A;
-  --surface: #112A25;
-  --forest: #071916;
-  --coral: #FF6B53;
-  --coral-hover: #FF5A43;
-  --lime: #C0E862;
-  --teal: #4DB6AC;
-  --ink: #FFFFFF;
-  --muted: #CBD5E1;
-  --border: #1E3A34;
-  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
-  color-scheme: dark;
-}
+/* ==========================================================================
+   Global Dark Mode Hierarchy & Contrast Overrides (Accessible & Professional)
+   ========================================================================== */
 
+/* 1. Page Backgrounds & Containers */
 html.dark body,
 html.dark main,
-html.dark header,
 html.dark div.min-h-screen {
-  background-color: #0A1E1A !important;
+  background-color: #0C1E19 !important;
   color: #FFFFFF !important;
 }
 
-/* Headings and Bold Text */
+/* 2. Top Header */
+html.dark header {
+  background-color: #0D201B !important;
+  border-bottom-color: #1E4238 !important;
+  color: #FFFFFF !important;
+}
+
+/* 3. Deep Left Sidebar */
+html.dark aside,
+html.dark aside.bg-\[\#0C2D27\] {
+  background-color: #081613 !important;
+  border-right-color: #1D3D34 !important;
+  color: #FFFFFF !important;
+}
+
+/* 4. Primary Cards & Panels */
+html.dark .bg-white,
+html.dark .bg-white\/80,
+html.dark .bg-white\/90,
+html.dark .bg-white\/95,
+html.dark .figma-card {
+  background-color: #14312A !important;
+  border-color: #244E43 !important;
+  color: #FFFFFF !important;
+}
+
+/* 5. Elevated Surfaces, Inner Card Sections, List Pills, Search Rows */
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-100\/70,
+html.dark .bg-slate-100\/80 {
+  background-color: #1C4037 !important;
+  border-color: #265448 !important;
+}
+
+html.dark .bg-\[\#F6F7F2\] {
+  background-color: #0C1E19 !important;
+}
+
+/* 6. Dashboard & Worker Pastel Cards (High Readability) */
+/* "Your Next Best Step" and Emergency Helpline Banners */
+html.dark .bg-\[\#FFFDF0\],
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/60,
+html.dark .bg-amber-50\/70 {
+  background-color: #1E3B33 !important;
+  border-color: #4A6332 !important;
+}
+
+/* Welfare Benefits Match Card (Pastel Peach/Coral) */
+html.dark .bg-\[\#FFF0EB\],
+html.dark .bg-orange-50 {
+  background-color: #1E342D !important;
+  border-color: #4D3227 !important;
+}
+
+/* Fair Wage Check Card (Pastel Mint/Emerald) */
+html.dark .bg-\[\#E8F8F2\],
+html.dark .bg-\[\#E8F8F2\]\/40,
+html.dark .bg-\[\#E8F8F2\]\/50,
+html.dark .bg-\[\#E8F8F2\]\/60,
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/50 {
+  background-color: #183C33 !important;
+  border-color: #26594B !important;
+}
+
+/* Grievance Card (Pastel Lavender/Purple) */
+html.dark .bg-\[\#F0ECFC\],
+html.dark .bg-purple-50 {
+  background-color: #202F3A !important;
+  border-color: #3B3859 !important;
+}
+
+/* Teal & Blue Tint Cards */
+html.dark .bg-teal-50,
+html.dark .bg-teal-50\/50,
+html.dark .bg-blue-50 {
+  background-color: #173830 !important;
+  border-color: #27574B !important;
+}
+
+/* Red Tint Cards / Urgent Alert Containers */
+html.dark .bg-red-50,
+html.dark .bg-red-50\/60 {
+  background-color: #2B2125 !important;
+  border-color: #5C2B30 !important;
+}
+
+/* 7. Welfare Scheme Circle Badges */
+html.dark .bg-\[\#FFEAE3\] {
+  background-color: #38241D !important;
+  color: #FF8F7D !important;
+  border: 1px solid #5C3325 !important;
+}
+html.dark .bg-\[\#D1F4E6\] {
+  background-color: #183D32 !important;
+  color: #6EE7B7 !important;
+  border: 1px solid #285E4E !important;
+}
+html.dark .bg-\[\#EDE7FA\] {
+  background-color: #282542 !important;
+  color: #C084FC !important;
+  border: 1px solid #453F6B !important;
+}
+html.dark .bg-\[\#FEF3C7\] {
+  background-color: #38301D !important;
+  color: #FCD34D !important;
+  border: 1px solid #5C4D26 !important;
+}
+
+/* 8. Inputs & Form Controls */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #173830 !important;
+  color: #FFFFFF !important;
+  border-color: #2E6356 !important;
+}
+
+html.dark input:hover,
+html.dark select:hover,
+html.dark textarea:hover {
+  border-color: #428271 !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #FF6B53 !important;
+  outline: 2px solid rgba(255, 107, 83, 0.4) !important;
+  outline-offset: 1px !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #9DBBB2 !important;
+}
+
+/* 9. Typography & Text Contrast */
+/* Primary Text (High Contrast White) */
 html.dark h1,
 html.dark h2,
 html.dark h3,
@@ -88,130 +238,209 @@ html.dark h5,
 html.dark h6,
 html.dark b,
 html.dark strong,
-html.dark th {
-  color: #FFFFFF !important;
-}
-
-/* Body Text, Paragraphs, Subtitles, Labels */
-html.dark p,
-html.dark span,
-html.dark label,
-html.dark td,
-html.dark li,
-html.dark small,
-html.dark sub,
-html.dark sup {
-  color: #E2E8F0;
-}
-
-/* Dark Green & Slate Text Overrides */
+html.dark th,
 html.dark .text-\[\#0C2D27\],
-html.dark .text-\[\#0C2D27\]\/70,
 html.dark .text-\[\#0C2D27\]\/80,
 html.dark .text-\[\#0C2D27\]\/90,
 html.dark .text-slate-900,
 html.dark .text-slate-800,
-html.dark .text-slate-700 {
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
   color: #FFFFFF !important;
 }
 
+/* Secondary Text (Comfortable Readability ~11:1) */
+html.dark p,
+html.dark td,
+html.dark li,
+html.dark .text-\[\#52605D\],
+html.dark .text-\[\#52605D\]\/80,
+html.dark .text-\[\#52605D\]\/90,
+html.dark .text-slate-700,
 html.dark .text-slate-600,
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: #CBDCE1 !important;
+}
+
+/* Muted / Helper Text (Clear & Accessible ~7:1) */
 html.dark .text-slate-500,
 html.dark .text-slate-400,
-html.dark .text-\[\#52605D\],
-html.dark .text-\[\#52605D\]\/70,
-html.dark .text-\[\#52605D\]\/80,
-html.dark .text-\[\#52605D\]\/90 {
-  color: #CBD5E1 !important;
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark small,
+html.dark sub,
+html.dark sup {
+  color: #A3BDB5 !important;
 }
 
-/* Surface backgrounds */
-html.dark .bg-white,
-html.dark .bg-white\/80,
-html.dark .bg-white\/90,
-html.dark .bg-white\/95 {
-  background-color: #112A25 !important;
-}
-
-html.dark .bg-slate-50,
-html.dark .bg-slate-100,
-html.dark .bg-\[\#F6F7F2\] {
-  background-color: #0A1E1A !important;
-}
-
-/* Selected Tinted Cards in Dark Mode */
-html.dark .bg-\[\#E8F8F2\],
-html.dark .bg-\[\#E8F8F2\]\/40,
-html.dark .bg-\[\#E8F8F2\]\/50,
-html.dark .bg-\[\#E8F8F2\]\/60 {
-  background-color: #1A443B !important;
-}
-
-html.dark .bg-emerald-50,
-html.dark .bg-emerald-50\/50,
-html.dark .bg-teal-50,
-html.dark .bg-amber-50,
-html.dark .bg-blue-50,
-html.dark .bg-purple-50,
-html.dark .bg-red-50 {
-  background-color: #163831 !important;
-}
-
-/* Sidebar & Dark Header background */
-html.dark .bg-\[\#0C2D27\] {
-  background-color: #071916 !important;
-}
-
-/* Form Controls */
-html.dark input,
-html.dark select,
-html.dark textarea {
-  background-color: #0E2420 !important;
-  color: #FFFFFF !important;
-  border-color: #265248 !important;
-}
-
-html.dark input::placeholder,
-html.dark textarea::placeholder {
-  color: #94A3B8 !important;
-}
-
-/* Borders & Dividers */
+/* 10. Borders & Dividers */
 html.dark .border-slate-200,
 html.dark .border-slate-100,
 html.dark .border-slate-300,
+html.dark .border-gray-100,
+html.dark .border-gray-200,
 html.dark .border-emerald-100,
 html.dark .border-emerald-200,
+html.dark .border-emerald-900,
+html.dark .border-emerald-950,
 html.dark .border-slate-200\/60,
 html.dark .border-slate-200\/80,
+html.dark .border-slate-100\/80,
 html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
-html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
-  border-color: #1E3A34 !important;
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #244E43 !important;
 }
 
-/* Hover States */
+/* 11. Hover States */
 html.dark .hover\:bg-slate-50:hover,
 html.dark .hover\:bg-slate-100:hover,
-html.dark .hover\:bg-emerald-50\/50:hover {
-  background-color: #1A3E37 !important;
+html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-emerald-50\/50:hover,
+html.dark .hover\:bg-emerald-900\/30:hover,
+html.dark .hover\:bg-emerald-900\/40:hover,
+html.dark .hover\:bg-emerald-950\/40:hover {
+  background-color: #1E463D !important;
 }
 
-/* Accent Buttons & Badges */
+html.dark .hover\:text-\[\#0C2D27\]:hover {
+  color: #FFFFFF !important;
+}
+
+/* 12. Icon Visibility (Crisp Lucide SVGs) */
+html.dark svg.lucide {
+  stroke-width: 2px;
+}
+
+/* Muted / secondary icons */
+html.dark svg.lucide.text-slate-400,
+html.dark svg.lucide.text-slate-500,
+html.dark svg.lucide.text-\[\#52605D\],
+html.dark svg.lucide.text-gray-400,
+html.dark svg.lucide.text-gray-500 {
+  color: #A8C7BE !important;
+}
+
+/* Dark green / dark slate icons */
+html.dark svg.lucide.text-\[\#0C2D27\],
+html.dark svg.lucide.text-slate-900,
+html.dark svg.lucide.text-slate-800 {
+  color: #E2EAE7 !important;
+}
+
+/* Accent & Status Icons */
+html.dark .text-\[\#FF6B53\],
+html.dark .text-coral,
+html.dark svg.lucide.text-\[\#FF6B53\] {
+  color: #FF6B53 !important;
+}
+
+html.dark .text-\[\#C0E862\],
+html.dark svg.lucide.text-\[\#C0E862\] {
+  color: #C0E862 !important;
+}
+
+html.dark .text-emerald-700,
+html.dark .text-emerald-600,
+html.dark svg.lucide.text-emerald-600,
+html.dark svg.lucide.text-emerald-700 {
+  color: #4ADE80 !important;
+}
+
+html.dark .text-teal-700,
+html.dark .text-teal-600,
+html.dark svg.lucide.text-teal-600,
+html.dark svg.lucide.text-teal-700 {
+  color: #5EEAD4 !important;
+}
+
+html.dark .text-amber-800,
+html.dark .text-amber-700,
+html.dark svg.lucide.text-amber-700,
+html.dark svg.lucide.text-amber-800 {
+  color: #FCD34D !important;
+}
+
+html.dark .text-purple-700,
+html.dark .text-purple-800,
+html.dark svg.lucide.text-purple-700,
+html.dark svg.lucide.text-purple-800 {
+  color: #D8B4FE !important;
+}
+
+html.dark .text-red-700,
+html.dark .text-red-600,
+html.dark svg.lucide.text-red-600,
+html.dark svg.lucide.text-red-700 {
+  color: #FCA5A5 !important;
+}
+
+/* 13. Badges & Status Indicators */
+html.dark .bg-emerald-100 {
+  background-color: #133D30 !important;
+  border: 1px solid #23654F !important;
+  color: #6EE7B7 !important;
+}
+html.dark .bg-amber-100 {
+  background-color: #3D3216 !important;
+  border: 1px solid #695320 !important;
+  color: #FCD34D !important;
+}
+html.dark .bg-blue-100 {
+  background-color: #17324D !important;
+  border: 1px solid #265582 !important;
+  color: #93C5FD !important;
+}
+html.dark .bg-purple-100 {
+  background-color: #312347 !important;
+  border: 1px solid #573A85 !important;
+  color: #D8B4FE !important;
+}
+html.dark .bg-red-100 {
+  background-color: #3D1A1E !important;
+  border: 1px solid #6E262E !important;
+  color: #FCA5A5 !important;
+}
+html.dark .bg-orange-100 {
+  background-color: #3D2319 !important;
+  border: 1px solid #6E3823 !important;
+  color: #FDBA74 !important;
+}
+html.dark .bg-slate-100.rounded-full,
+html.dark .bg-slate-100.rounded-md {
+  background-color: #1F443B !important;
+  border: 1px solid #2E6356 !important;
+  color: #CBDCE1 !important;
+}
+
+/* 14. Tables */
+html.dark table th {
+  color: #A3BDB5 !important;
+  border-bottom: 1px solid #244E43 !important;
+}
+html.dark table td {
+  color: #CBDCE1 !important;
+  border-bottom: 1px solid #1E4238 !important;
+}
+html.dark table tbody tr:hover {
+  background-color: #1C3E36 !important;
+}
+
+/* 15. Modals & Dialogs */
+html.dark .bg-black\/60,
+html.dark .bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* 16. Buttons */
 html.dark .figma-btn-coral,
 html.dark .bg-\[\#FF6B53\],
 html.dark .bg-emerald-600,
 html.dark .bg-red-600,
-html.dark .bg-blue-600 {
+html.dark .bg-blue-600,
+html.dark .bg-teal-600 {
   color: #FFFFFF !important;
-}
-
-html.dark .text-\[\#FF6B53\],
-html.dark .text-coral {
-  color: #FF6B53 !important;
-}
-
-html.dark .text-\[\#C0E862\] {
-  color: #C0E862 !important;
 }
 
 @layer utilities {

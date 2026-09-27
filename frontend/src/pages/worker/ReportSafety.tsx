@@ -241,32 +241,32 @@ export default function ReportSafety() {
           <span className="w-4 h-[2px] bg-[#FF6B53]" />
           CONFIDENTIAL REPORTING &amp; GRIEVANCES
         </div>
-        <h1 className="text-3xl font-normal text-[#0C2D27] tracking-tight">
+        <h1 className="text-3xl font-normal text-[#0C2D27] dark:text-white tracking-tight">
           Report Casualties, Discrimination or Hazards
         </h1>
-        <p className="text-xs sm:text-sm text-[#52605D] mt-0.5">
+        <p className="text-xs sm:text-sm text-[#52605D] dark:text-[#CBDCE1] mt-0.5">
           Report workplace accidents, severe injury casualties, caste/gender discrimination, or wage theft with photo and video proof.
         </p>
       </div>
 
       {/* Emergency Helpline Banner */}
-      <div className="p-4 rounded-2xl bg-[#FFFDF0] border border-amber-300 flex items-center justify-between flex-wrap gap-3 shadow-2xs">
+      <div className="p-4 rounded-2xl bg-[#FFFDF0] dark:bg-[#1E3B33] border border-amber-300 dark:border-amber-700/60 flex items-center justify-between flex-wrap gap-3 shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-amber-100 text-amber-800 shrink-0">
-            <PhoneCall className="h-5 w-5 text-amber-700" />
+          <div className="p-2 rounded-xl bg-amber-100 dark:bg-[#3D3216] text-amber-800 dark:text-[#FCD34D] shrink-0 border border-transparent dark:border-[#695320]">
+            <PhoneCall className="h-5 w-5 text-amber-700 dark:text-[#FCD34D]" />
           </div>
           <div>
-            <b className="text-xs font-bold text-[#0C2D27] block">Emergency Helpline for Immediate Medical / Legal Help</b>
-            <span className="text-xs text-[#52605D]">Call 24x7 toll-free helpline: <b>1800 11 2211</b> or National Emergency <b>112</b></span>
+            <b className="text-xs font-bold text-[#0C2D27] dark:text-white block">Emergency Helpline for Immediate Medical / Legal Help</b>
+            <span className="text-xs text-[#52605D] dark:text-[#CBDCE1]">Call 24x7 toll-free helpline: <b className="text-[#0C2D27] dark:text-white">1800 11 2211</b> or National Emergency <b className="text-[#0C2D27] dark:text-white">112</b></span>
           </div>
         </div>
       </div>
 
       {/* ── Form Card ───────────────────────────────────────── */}
-      <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-2xs space-y-6">
+      <div className="rounded-3xl border border-slate-200/80 dark:border-[#244E43] bg-white dark:bg-[#14312A] p-6 shadow-2xs space-y-6">
         {/* Step 1: Category selector */}
         <div className="space-y-3">
-          <label className="block text-xs font-bold text-[#0C2D27]">
+          <label className="block text-xs font-bold text-[#0C2D27] dark:text-white">
             1. Select Incident Type
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -277,19 +277,19 @@ export default function ReportSafety() {
                 onClick={() => setIssueType(type.id)}
                 className={`p-4 rounded-2xl border text-left flex items-start gap-3 transition-all cursor-pointer ${
                   issueType === type.id
-                    ? 'border-[#0C2D27] bg-[#F6F7F2] text-[#0C2D27] shadow-2xs ring-2 ring-[#0C2D27]'
-                    : 'border-slate-200 hover:bg-slate-50 text-[#0C2D27]'
+                    ? 'border-[#0C2D27] dark:border-[#FF6B53] bg-[#F6F7F2] dark:bg-[#1D473D] text-[#0C2D27] dark:text-white shadow-2xs ring-2 ring-[#0C2D27] dark:ring-[#FF6B53]'
+                    : 'border-slate-200 dark:border-[#265448] bg-white dark:bg-[#17372F] hover:bg-slate-50 dark:hover:bg-[#1D4238] text-[#0C2D27] dark:text-white'
                 }`}
               >
                 <span className="text-2xl shrink-0">{type.emoji}</span>
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-bold text-[#0C2D27]">{type.label}</p>
+                    <p className="text-xs font-bold text-[#0C2D27] dark:text-white">{type.label}</p>
                     {type.priority === 'Critical' && (
-                      <span className="px-1.5 py-0.5 rounded-md bg-red-100 text-red-800 text-[9px] font-bold">URGENT</span>
+                      <span className="px-1.5 py-0.5 rounded-md bg-red-100 dark:bg-[#3D1A1E] text-red-800 dark:text-[#FCA5A5] border border-transparent dark:border-[#6E262E] text-[9px] font-bold">URGENT</span>
                     )}
                   </div>
-                  <p className="text-[11px] text-[#52605D] leading-relaxed">{type.desc}</p>
+                  <p className="text-[11px] text-[#52605D] dark:text-[#CBDCE1] leading-relaxed">{type.desc}</p>
                 </div>
               </button>
             ))}
@@ -299,20 +299,20 @@ export default function ReportSafety() {
         {/* Step 2: District & Employer */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           <div>
-            <label className="block text-xs font-bold text-[#0C2D27] mb-1.5">
+            <label className="block text-xs font-bold text-[#0C2D27] dark:text-white mb-1.5">
               Workplace District
             </label>
             <select
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm text-[#0C2D27] focus:outline-none focus:border-[#FF6B53]"
+              className="w-full rounded-2xl border border-slate-200 dark:border-[#2E6356] bg-white dark:bg-[#173830] px-4 py-2.5 text-xs sm:text-sm text-[#0C2D27] dark:text-white focus:outline-none focus:border-[#FF6B53]"
             >
               {DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#0C2D27] mb-1.5">
+            <label className="block text-xs font-bold text-[#0C2D27] dark:text-white mb-1.5">
               Employer / Contractor Name (Optional)
             </label>
             <input
@@ -320,14 +320,14 @@ export default function ReportSafety() {
               value={employer}
               onChange={(e) => setEmployer(e.target.value)}
               placeholder="e.g. Shree Construction Ltd."
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm text-[#0C2D27] placeholder:text-slate-400 focus:outline-none focus:border-[#FF6B53]"
+              className="w-full rounded-2xl border border-slate-200 dark:border-[#2E6356] bg-white dark:bg-[#173830] px-4 py-2.5 text-xs sm:text-sm text-[#0C2D27] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#9DBBB2] focus:outline-none focus:border-[#FF6B53]"
             />
           </div>
         </div>
 
         {/* Step 3: Description textarea */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-[#0C2D27]">
+          <label className="block text-xs font-bold text-[#0C2D27] dark:text-white">
             2. Detailed Description of What Happened
           </label>
           <textarea
@@ -335,16 +335,16 @@ export default function ReportSafety() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe what happened, exact location, date/time, persons involved, injury severity or discrimination details..."
-            className="w-full resize-none rounded-2xl border border-slate-200 bg-[#F6F7F2]/50 px-4 py-3 text-xs sm:text-sm text-[#0C2D27] placeholder:text-slate-400 focus:outline-none focus:border-[#FF6B53]"
+            className="w-full resize-none rounded-2xl border border-slate-200 dark:border-[#2E6356] bg-[#F6F7F2]/50 dark:bg-[#173830] px-4 py-3 text-xs sm:text-sm text-[#0C2D27] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#9DBBB2] focus:outline-none focus:border-[#FF6B53]"
           />
         </div>
 
         {/* Step 4: Upload Proof (Photo / Video Attachment) */}
-        <div className="space-y-3 pt-2 border-t border-slate-100">
+        <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-[#244E43]">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
-              <b className="text-xs font-bold text-[#0C2D27] block">3. Upload Proof / Evidence (Photos &amp; Videos)</b>
-              <p className="text-[11px] text-[#52605D]">
+              <b className="text-xs font-bold text-[#0C2D27] dark:text-white block">3. Upload Proof / Evidence (Photos &amp; Videos)</b>
+              <p className="text-[11px] text-[#52605D] dark:text-[#CBDCE1]">
                 Attach photos or video recordings of injuries, unsafe site hazards, wage slips, or incident proof.
               </p>
             </div>
@@ -372,9 +372,9 @@ export default function ReportSafety() {
           {proofFiles.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
               {proofFiles.map((pf) => (
-                <div key={pf.id} className="relative group rounded-2xl border border-slate-200 bg-slate-50 p-2 overflow-hidden shadow-2xs">
+                <div key={pf.id} className="relative group rounded-2xl border border-slate-200 dark:border-[#244E43] bg-slate-50 dark:bg-[#173830] p-2 overflow-hidden shadow-2xs">
                   {pf.type === 'image' ? (
-                    <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-200">
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-[#1C4037]">
                       <img src={pf.url} alt={pf.name} className="w-full h-full object-cover" />
                       <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-black/60 text-white text-[9px] font-bold flex items-center gap-1">
                         <Camera className="h-3 w-3" /> Photo
@@ -392,23 +392,23 @@ export default function ReportSafety() {
                     </div>
                   )}
 
-                  <div className="pt-2 flex items-center justify-between text-[10px] text-[#0C2D27] font-semibold">
+                  <div className="pt-2 flex items-center justify-between text-[10px] text-[#0C2D27] dark:text-white font-semibold">
                     <span className="truncate max-w-[100px]">{pf.name}</span>
-                    <span className="text-slate-400 font-mono text-[9px]">{pf.size}</span>
+                    <span className="text-slate-400 dark:text-[#A3BDB5] font-mono text-[9px]">{pf.size}</span>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
                     <button
                       type="button"
                       onClick={() => setPreviewMedia(pf)}
-                      className="text-[10px] text-teal-700 font-bold hover:underline flex items-center gap-1"
+                      className="text-[10px] text-teal-700 dark:text-teal-300 font-bold hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <Eye className="h-3 w-3" /> Preview
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRemoveProof(pf.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
+                      className="text-red-500 hover:text-red-400 p-1 cursor-pointer"
                       title="Remove file"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -420,21 +420,21 @@ export default function ReportSafety() {
           ) : (
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-2xl border-2 border-dashed border-slate-200 p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer space-y-1"
+              className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#2E6356] p-6 text-center hover:bg-slate-50 dark:hover:bg-[#183D33] transition-colors cursor-pointer space-y-1"
             >
-              <div className="flex items-center justify-center gap-2 text-slate-400">
+              <div className="flex items-center justify-center gap-2 text-slate-400 dark:text-[#A3BDB5]">
                 <Camera className="h-5 w-5" />
                 <Film className="h-5 w-5" />
               </div>
-              <p className="text-xs font-bold text-[#0C2D27]">Click to select Photos or Videos from your device</p>
-              <p className="text-[11px] text-[#52605D]">Supports JPG, PNG, WEBP, MP4, MOV, WEBM (Max 25MB)</p>
+              <p className="text-xs font-bold text-[#0C2D27] dark:text-white">Click to select Photos or Videos from your device</p>
+              <p className="text-[11px] text-[#52605D] dark:text-[#CBDCE1]">Supports JPG, PNG, WEBP, MP4, MOV, WEBM (Max 25MB)</p>
             </div>
           )}
         </div>
 
         {/* Submit Action */}
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
-          <span className="text-xs text-[#52605D]">
+        <div className="pt-4 border-t border-slate-100 dark:border-[#244E43] flex items-center justify-between gap-4">
+          <span className="text-xs text-[#52605D] dark:text-[#CBDCE1]">
             All reports are encrypted and processed with complete worker privacy.
           </span>
 

@@ -261,30 +261,30 @@ export default function WorkerNews() {
   return (
     <div className="space-y-6 pb-12 max-w-7xl mx-auto">
       {/* ── 1. Page Header ─────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs">
+      <div className="rounded-2xl border border-slate-200 dark:border-[#244E43] bg-white dark:bg-[#14312A] p-5 sm:p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 mb-2.5">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-50 dark:bg-[#122B24] text-teal-700 dark:text-[#5EEAD4] border border-teal-200 dark:border-[#1E483D] mb-2.5">
               <Newspaper className="h-3.5 w-3.5" />
               <span>Official Worker Information Center</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               Migrant & Worker News
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-[#A3BDB5] mt-1 max-w-2xl">
               Stay informed about jobs, wages, welfare schemes, worker rights and important updates.
             </p>
           </div>
 
           {/* Search Bar */}
           <div className="w-full md:w-80 lg:w-96 relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-[#9DBBB2]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search news, wages, schemes, alerts..."
-              className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 transition-all"
+              className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-[#173830] border border-slate-200 dark:border-[#2E6356] rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-[#9DBBB2] focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-[#FF6B53] transition-all"
             />
             {searchQuery && (
               <button
@@ -298,10 +298,10 @@ export default function WorkerNews() {
         </div>
 
         {/* ── 2. Region & Language Filter Bar ──────────────────────────────── */}
-        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-[#244E43] flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
-              <Filter className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+            <div className="flex items-center gap-1.5 text-slate-500 dark:text-[#CBDCE1] font-medium">
+              <Filter className="h-3.5 w-3.5 text-teal-600 dark:text-[#5EEAD4]" />
               <span>Region Filter:</span>
             </div>
 
@@ -311,7 +311,7 @@ export default function WorkerNews() {
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
                 aria-label="Select State"
-                className="appearance-none bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 pr-7 font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
+                className="appearance-none bg-slate-50 dark:bg-[#173830] border border-slate-200 dark:border-[#2E6356] rounded-lg px-3 py-1.5 pr-7 font-medium text-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#FF6B53] cursor-pointer"
               >
                 {STATES.map((st) => (
                   <option key={st} value={st}>
@@ -319,7 +319,7 @@ export default function WorkerNews() {
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+              <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#9DBBB2]">
                 ▾
               </div>
             </div>
@@ -330,7 +330,7 @@ export default function WorkerNews() {
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
                 aria-label="Select District"
-                className="appearance-none bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 pr-7 font-medium text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
+                className="appearance-none bg-slate-50 dark:bg-[#173830] border border-slate-200 dark:border-[#2E6356] rounded-lg px-3 py-1.5 pr-7 font-medium text-slate-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#FF6B53] cursor-pointer"
               >
                 {DISTRICTS.map((dt) => (
                   <option key={dt} value={dt}>
@@ -338,7 +338,7 @@ export default function WorkerNews() {
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+              <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#9DBBB2]">
                 ▾
               </div>
             </div>
@@ -351,7 +351,7 @@ export default function WorkerNews() {
                   setSelectedState('Gujarat')
                   setSearchQuery('')
                 }}
-                className="text-teal-700 dark:text-teal-400 hover:underline font-semibold ml-1 cursor-pointer"
+                className="text-teal-700 dark:text-[#5EEAD4] hover:underline font-semibold ml-1 cursor-pointer"
               >
                 Reset Filters
               </button>
@@ -359,13 +359,13 @@ export default function WorkerNews() {
           </div>
 
           {/* Language Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/60">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#122B24] p-0.5 rounded-lg border border-slate-200 dark:border-[#1E483D]">
             <button
               onClick={() => setLanguage('en')}
               className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
                 language === 'en'
-                  ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-2xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  ? 'bg-white dark:bg-[#1A4237] text-teal-700 dark:text-[#5EEAD4] shadow-2xs'
+                  : 'text-slate-500 dark:text-[#A4CCC2] hover:text-slate-700'
               }`}
             >
               English
@@ -374,8 +374,8 @@ export default function WorkerNews() {
               onClick={() => setLanguage('hi')}
               className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
                 language === 'hi'
-                  ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-2xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  ? 'bg-white dark:bg-[#1A4237] text-teal-700 dark:text-[#5EEAD4] shadow-2xs'
+                  : 'text-slate-500 dark:text-[#A4CCC2] hover:text-slate-700'
               }`}
             >
               हिन्दी
@@ -384,8 +384,8 @@ export default function WorkerNews() {
               onClick={() => setLanguage('gu')}
               className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
                 language === 'gu'
-                  ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-2xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  ? 'bg-white dark:bg-[#1A4237] text-teal-700 dark:text-[#5EEAD4] shadow-2xs'
+                  : 'text-slate-500 dark:text-[#A4CCC2] hover:text-slate-700'
               }`}
             >
               ગુજરાતી
@@ -407,8 +407,8 @@ export default function WorkerNews() {
                 isActive
                   ? 'bg-teal-600 border-teal-600 text-white shadow-2xs'
                   : isAlert
-                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800 hover:bg-amber-100'
-                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-800'
+                  ? 'bg-amber-50 dark:bg-[#3D3216] text-amber-800 dark:text-[#FCD34D] border-amber-200 dark:border-[#695320] hover:bg-amber-100 dark:hover:bg-[#4D3F1C]'
+                  : 'bg-white dark:bg-[#17372F] text-slate-700 dark:text-[#D1E3DD] border-slate-200 dark:border-[#29564B] hover:border-teal-300 dark:hover:border-teal-600'
               }`}
             >
               {isAlert && <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />}
@@ -728,12 +728,12 @@ export default function WorkerNews() {
 
       {/* ── 7. Full Article Reading Modal ────────────────────────────────────── */}
       {activeArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#14312A] border border-slate-200 dark:border-[#244E43] shadow-xl p-6 sm:p-8">
             {/* Close Button */}
             <button
               onClick={() => setActiveArticle(null)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:text-[#A3BDB5] dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-[#183D34] transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -743,10 +743,10 @@ export default function WorkerNews() {
               <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-teal-600 text-white">
                 {activeArticle.category}
               </span>
-              <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-[#1C4037] text-slate-600 dark:text-[#CBDCE1] border border-transparent dark:border-[#2E6356]">
                 {activeArticle.district}, {activeArticle.state}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-[#9DBBB2]">
                 {activeArticle.relative_time}
               </span>
             </div>
@@ -755,14 +755,14 @@ export default function WorkerNews() {
               {activeArticle.title}
             </h2>
 
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-2 mb-4">
-              <span>Source: <strong className="text-teal-700 dark:text-teal-400">{activeArticle.source}</strong></span>
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#A3BDB5] mt-2 mb-4">
+              <span>Source: <strong className="text-teal-700 dark:text-[#5EEAD4]">{activeArticle.source}</strong></span>
               <span>•</span>
               <span>Published: {new Date(activeArticle.published_at).toLocaleDateString()}</span>
             </div>
 
             {/* Article Image */}
-            <div className="h-64 sm:h-80 rounded-xl overflow-hidden mb-6 bg-slate-100 dark:bg-slate-800">
+            <div className="h-64 sm:h-80 rounded-xl overflow-hidden mb-6 bg-slate-100 dark:bg-[#122B24]">
               <img
                 src={activeArticle.image_url}
                 alt={activeArticle.title}
@@ -771,20 +771,20 @@ export default function WorkerNews() {
             </div>
 
             {/* Article Body */}
-            <div className="prose dark:prose-invert max-w-none text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line space-y-4">
+            <div className="prose dark:prose-invert max-w-none text-xs sm:text-sm text-slate-700 dark:text-[#CBDCE1] leading-relaxed whitespace-pre-line space-y-4">
               {activeArticle.content}
             </div>
 
             {/* Key Takeaways Box */}
-            <div className="mt-6 p-4 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-teal-900 dark:text-teal-200 mb-2 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+            <div className="mt-6 p-4 rounded-xl bg-teal-50/70 dark:bg-[#173830] border border-teal-200 dark:border-[#27574B]">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-teal-900 dark:text-[#5EEAD4] mb-2 flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-teal-600 dark:text-[#5EEAD4]" />
                 <span>Important Worker Takeaways</span>
               </h4>
-              <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-200">
+              <ul className="space-y-1.5 text-xs text-slate-700 dark:text-[#CBDCE1]">
                 {activeArticle.key_takeaways.map((point, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-teal-600 dark:text-teal-400 font-bold">•</span>
+                    <span className="text-teal-600 dark:text-[#5EEAD4] font-bold">•</span>
                     <span>{point}</span>
                   </li>
                 ))}
@@ -793,11 +793,11 @@ export default function WorkerNews() {
 
             {/* Action Steps */}
             {activeArticle.action_steps && activeArticle.action_steps.length > 0 && (
-              <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+              <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-[#173830] border border-slate-200 dark:border-[#244E43]">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-white mb-2">
                   Action Steps for You:
                 </h4>
-                <ol className="list-decimal list-inside space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                <ol className="list-decimal list-inside space-y-1 text-xs text-slate-600 dark:text-[#CBDCE1]">
                   {activeArticle.action_steps.map((step, idx) => (
                     <li key={idx}>{step}</li>
                   ))}
@@ -808,7 +808,7 @@ export default function WorkerNews() {
             {/* Official Links */}
             {activeArticle.official_links && activeArticle.official_links.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Related Portals:</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-[#A3BDB5]">Related Portals:</span>
                 {activeArticle.official_links.map((link, idx) => (
                   <button
                     key={idx}
@@ -819,7 +819,7 @@ export default function WorkerNews() {
                         navigate(link.url)
                       }
                     }}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-teal-700 dark:text-teal-400 hover:underline bg-teal-50 dark:bg-teal-950/80 px-2.5 py-1 rounded-lg border border-teal-200 dark:border-teal-800 cursor-pointer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-teal-700 dark:text-[#5EEAD4] hover:underline bg-teal-50 dark:bg-[#183D33] px-2.5 py-1 rounded-lg border border-teal-200 dark:border-[#2E6356] cursor-pointer"
                   >
                     <span>{link.label}</span>
                     <ExternalLink className="h-3 w-3" />
@@ -829,7 +829,7 @@ export default function WorkerNews() {
             )}
 
             {/* Modal Bottom Actions */}
-            <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-6 pt-5 border-t border-slate-200 dark:border-[#244E43] flex flex-wrap items-center justify-between gap-3">
               <button
                 onClick={() => handleAskSaathi(activeArticle)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl shadow-xs transition-colors cursor-pointer"
@@ -840,7 +840,7 @@ export default function WorkerNews() {
 
               <button
                 onClick={() => setActiveArticle(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34] rounded-xl transition-colors cursor-pointer"
               >
                 Close Article
               </button>

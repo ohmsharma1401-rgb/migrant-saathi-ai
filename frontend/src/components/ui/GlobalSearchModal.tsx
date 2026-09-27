@@ -105,10 +105,10 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
         className="fixed inset-0"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden z-10 space-y-0">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-[#14312A] rounded-3xl shadow-2xl border border-slate-200 dark:border-[#244E43] overflow-hidden z-10 space-y-0">
         
         {/* Search Bar Input */}
-        <div className="p-4 border-b border-slate-100 flex items-center gap-3">
+        <div className="p-4 border-b border-slate-100 dark:border-[#244E43] flex items-center gap-3">
           <Search className="h-5 w-5 text-[#FF6B53] shrink-0" />
           <input
             type="text"
@@ -116,19 +116,19 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search workers, companies, schemes, grievances, settings..."
-            className="w-full bg-transparent text-sm font-bold text-[#0C2D27] placeholder:text-slate-400 placeholder:font-normal focus:outline-none"
+            className="w-full bg-transparent text-sm font-bold text-[#0C2D27] dark:text-white placeholder:text-slate-400 dark:placeholder:text-[#9DBBB2] placeholder:font-normal focus:outline-none"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
+              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full"
             >
               <X className="h-4 w-4" />
             </button>
           )}
           <button
             onClick={onClose}
-            className="px-2.5 py-1 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl"
+            className="px-2.5 py-1 text-xs font-bold text-slate-500 dark:text-[#CBDCE1] bg-slate-100 dark:bg-[#1C4037] hover:bg-slate-200 dark:hover:bg-[#265347] rounded-xl cursor-pointer"
           >
             ESC
           </button>
@@ -137,8 +137,8 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
         {/* Results Body */}
         <div className="max-h-96 overflow-y-auto p-3 space-y-2">
           {filtered.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 space-y-1">
-              <p className="text-xs font-bold text-[#0C2D27]">No matching records found for "{query}"</p>
+            <div className="p-8 text-center text-slate-500 dark:text-[#A3BDB5] space-y-1">
+              <p className="text-xs font-bold text-[#0C2D27] dark:text-white">No matching records found for "{query}"</p>
               <p className="text-[11px]">Try searching for "Ramesh", "Shree", "BOCW", "Wage", or "Settings"</p>
             </div>
           ) : (
@@ -148,23 +148,23 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                 <div
                   key={item.id}
                   onClick={() => handleSelect(item.url)}
-                  className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-100 flex items-center justify-between gap-3 cursor-pointer transition-colors"
+                  className="p-3 rounded-2xl bg-slate-50 dark:bg-[#173830] hover:bg-slate-100 dark:hover:bg-[#1E463D] border border-slate-100 dark:border-[#244E43] flex items-center justify-between gap-3 cursor-pointer transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-9 w-9 rounded-xl bg-white border border-slate-200 text-[#0C2D27] flex items-center justify-center shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-white dark:bg-[#1C4037] border border-slate-200 dark:border-[#2E6356] text-[#0C2D27] dark:text-white flex items-center justify-center shrink-0">
                       <Icon className="h-4 w-4 text-[#FF6B53]" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <b className="text-xs font-bold text-[#0C2D27] truncate">{item.title}</b>
-                        <span className="px-1.5 py-0.2 rounded-md bg-slate-200 text-slate-700 text-[9px] font-bold">
+                        <b className="text-xs font-bold text-[#0C2D27] dark:text-white truncate">{item.title}</b>
+                        <span className="px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-[#1F443B] text-slate-700 dark:text-[#A3BDB5] border border-transparent dark:border-[#2E6356] text-[9px] font-bold">
                           {item.category}
                         </span>
                       </div>
-                      <span className="text-[11px] text-slate-500 block truncate">{item.subtitle}</span>
+                      <span className="text-[11px] text-slate-500 dark:text-[#A3BDB5] block truncate">{item.subtitle}</span>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-slate-400 dark:text-[#A3BDB5] shrink-0" />
                 </div>
               )
             })
@@ -172,9 +172,9 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
         </div>
 
         {/* Footer tip */}
-        <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium px-5">
+        <div className="p-3 bg-slate-50 dark:bg-[#102721] border-t border-slate-100 dark:border-[#244E43] flex items-center justify-between text-[11px] text-slate-500 dark:text-[#A3BDB5] font-medium px-5">
           <span>Search index includes live worker directory, government portals &amp; schemes</span>
-          <span className="hidden sm:inline">Press <kbd className="px-1 py-0.5 bg-white rounded border border-slate-200 font-mono text-[9px]">ESC</kbd> to exit</span>
+          <span className="hidden sm:inline">Press <kbd className="px-1 py-0.5 bg-white dark:bg-[#1C4037] rounded border border-slate-200 dark:border-[#2E6356] text-slate-700 dark:text-slate-200 font-mono text-[9px]">ESC</kbd> to exit</span>
         </div>
 
       </div>

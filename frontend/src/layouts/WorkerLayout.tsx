@@ -126,7 +126,7 @@ export default function WorkerLayout() {
           {/* User Profile Card */}
           <div
             onClick={() => navigate('/worker/profile')}
-            className="m-3 p-3 rounded-2xl bg-emerald-950/40 border border-emerald-900/60 flex items-center justify-between cursor-pointer hover:bg-emerald-900/40 transition-colors"
+            className="m-3 p-3 rounded-2xl bg-emerald-950/40 dark:bg-[#122B24] border border-emerald-900/60 dark:border-[#1E483D] flex items-center justify-between cursor-pointer hover:bg-emerald-900/40 dark:hover:bg-[#183D34] transition-colors"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               {avatarPic ? (
@@ -142,10 +142,10 @@ export default function WorkerLayout() {
               )}
               <div className="min-w-0">
                 <b className="text-xs font-bold text-white block truncate">{workerName}</b>
-                <span className="text-[10px] text-emerald-200/70 block truncate">{workerLoc}</span>
+                <span className="text-[10px] text-emerald-200/70 dark:text-[#A4CCC2] block truncate">{workerLoc}</span>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-emerald-200/60 shrink-0" />
+            <ChevronRight className="h-4 w-4 text-emerald-200/60 dark:text-[#A4CCC2] shrink-0" />
           </div>
 
           {/* Navigation items */}
@@ -159,15 +159,15 @@ export default function WorkerLayout() {
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-emerald-900/80 text-white font-bold border-l-4 border-[#FF6B53]'
-                      : 'text-emerald-100/70 hover:bg-emerald-950/40 hover:text-white'
+                      ? 'bg-emerald-900/80 dark:bg-[#1A4237] text-white font-bold border-l-4 border-[#FF6B53]'
+                      : 'text-emerald-100/70 dark:text-[#D1EAE3] hover:bg-emerald-950/40 dark:hover:bg-[#183D34] hover:text-white'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <div className="flex items-center gap-3 truncate">
-                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#FF6B53]' : 'text-emerald-200/60'}`} />
+                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#FF6B53]' : 'text-emerald-200/60 dark:text-[#A4CCC2]'}`} />
                       <span className="truncate">{label}</span>
                     </div>
                     {badge && (
@@ -184,19 +184,19 @@ export default function WorkerLayout() {
 
         {/* Sidebar Footer: Helpline Card & Logout */}
         <div className="p-3 border-t border-emerald-950 space-y-2">
-          <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-900/60 flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-emerald-950/60 dark:bg-[#122B24] border border-emerald-900/60 dark:border-[#1E483D] flex items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-emerald-900/80 flex items-center justify-center shrink-0">
               <PhoneCall className="h-4 w-4 text-[#C0E862]" />
             </div>
             <div>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-200/60 block">24x7 HELPLINE</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-200/60 dark:text-[#A4CCC2] block">24x7 HELPLINE</span>
               <b className="text-xs font-bold text-white block">1800 11 2211</b>
             </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-emerald-200/60 hover:text-white hover:bg-emerald-950/40 transition-colors"
+            className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-emerald-200/60 dark:text-[#A4CCC2] hover:text-white hover:bg-emerald-950/40 dark:hover:bg-[#183D34] transition-colors"
           >
             <span>Switch role / Sign out</span>
             <LogOut className="h-3.5 w-3.5" />
@@ -215,18 +215,18 @@ export default function WorkerLayout() {
       {/* ── Main Content Container ── */}
       <div className="flex flex-1 flex-col md:pl-64 min-h-screen">
         {/* Top Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-[#F6F7F2] border-b border-slate-200/60 px-4 sm:px-8 transition-colors">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-[#F6F7F2] dark:bg-[#0C1E19] border-b border-slate-200/60 dark:border-[#1E3E36] px-4 sm:px-8 transition-colors">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="md:hidden rounded-lg p-1.5 text-[#0C2D27] hover:bg-slate-200/60"
+              className="md:hidden rounded-lg p-1.5 text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-200/60 dark:hover:bg-[#183D34]"
               aria-label="Open navigation menu"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#52605D] block">WORKER WORKSPACE</span>
-              <h1 className="text-base font-bold text-[#0C2D27] leading-tight">{getPageTitle()}</h1>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#52605D] dark:text-[#A3BDB5] block">WORKER WORKSPACE</span>
+              <h1 className="text-base font-bold text-[#0C2D27] dark:text-white leading-tight">{getPageTitle()}</h1>
             </div>
           </div>
 
@@ -234,17 +234,17 @@ export default function WorkerLayout() {
             {/* Search Input Pill */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs text-[#52605D] hover:border-slate-300 shadow-2xs cursor-pointer transition-all"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#132E27] border border-slate-200/80 dark:border-[#265347] text-xs text-[#52605D] dark:text-[#CBDCE1] hover:border-slate-300 dark:hover:border-[#3B7364] shadow-2xs cursor-pointer transition-all"
             >
               <Search className="h-3.5 w-3.5 text-[#FF6B53]" />
-              <span className="text-xs text-slate-400 w-32 md:w-44 text-left">Search anything...</span>
-              <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-mono text-slate-400 bg-slate-100 rounded border">⌘K</kbd>
+              <span className="text-xs text-slate-400 dark:text-[#9DBBB2] w-32 md:w-44 text-left">Search anything...</span>
+              <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-mono text-slate-400 dark:text-[#9DBBB2] bg-slate-100 dark:bg-[#1C4037] rounded border dark:border-[#2E6356]">⌘K</kbd>
             </button>
 
             {/* Dark/Light Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full bg-white border border-slate-200/80 text-[#0C2D27] hover:bg-slate-100 transition-colors cursor-pointer shadow-2xs"
+              className="p-2 rounded-full bg-white dark:bg-[#132E27] border border-slate-200/80 dark:border-[#265347] text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34] transition-colors cursor-pointer shadow-2xs"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? (
@@ -258,31 +258,31 @@ export default function WorkerLayout() {
             <div className="relative">
               <button
                 onClick={() => { setLangOpen(!langOpen); setNotifOpen(false); setProfileOpen(false) }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200/80 text-xs font-bold text-[#0C2D27] hover:bg-slate-100 transition-colors cursor-pointer shadow-2xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#132E27] border border-slate-200/80 dark:border-[#265347] text-xs font-bold text-[#0C2D27] dark:text-white hover:bg-slate-100 dark:hover:bg-[#183D34] transition-colors cursor-pointer shadow-2xs"
                 title="Switch Language"
               >
                 <Globe className="h-3.5 w-3.5 text-[#FF6B53]" />
                 <span>{lang === 'hi' ? 'हिंदी' : lang === 'gu' ? 'ગુજરાતી' : 'English'}</span>
-                <ChevronDown className="h-3 w-3 text-slate-400" />
+                <ChevronDown className="h-3 w-3 text-slate-400 dark:text-[#9DBBB2]" />
               </button>
 
               {langOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl border border-slate-200 shadow-2xl p-2 z-50 animate-in fade-in space-y-1">
+                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-[#14312A] rounded-2xl border border-slate-200 dark:border-[#265347] shadow-2xl p-2 z-50 animate-in fade-in space-y-1">
                   <button
                     onClick={() => { setLanguage('en'); setLangOpen(false) }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${lang === 'en' ? 'bg-[#0C2D27] text-white' : 'text-[#0C2D27] hover:bg-slate-100'}`}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${lang === 'en' ? 'bg-[#0C2D27] dark:bg-[#1E4D40] text-white' : 'text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34]'}`}
                   >
                     English 🇬🇧
                   </button>
                   <button
                     onClick={() => { setLanguage('hi'); setLangOpen(false) }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${lang === 'hi' ? 'bg-[#0C2D27] text-white' : 'text-[#0C2D27] hover:bg-slate-100'}`}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${lang === 'hi' ? 'bg-[#0C2D27] dark:bg-[#1E4D40] text-white' : 'text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34]'}`}
                   >
                     हिंदी (Hindi) 🇮🇳
                   </button>
                   <button
                     onClick={() => { setLanguage('gu'); setLangOpen(false) }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${lang === 'gu' ? 'bg-[#0C2D27] text-white' : 'text-[#0C2D27] hover:bg-slate-100'}`}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${lang === 'gu' ? 'bg-[#0C2D27] dark:bg-[#1E4D40] text-white' : 'text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34]'}`}
                   >
                     ગુજરાતી (Gujarati) 🇮🇳
                   </button>
@@ -294,7 +294,7 @@ export default function WorkerLayout() {
             <div className="relative">
               <button
                 onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false) }}
-                className="p-2 rounded-full bg-white border border-slate-200/80 text-[#0C2D27] hover:bg-slate-100 transition-colors relative cursor-pointer"
+                className="p-2 rounded-full bg-white dark:bg-[#132E27] border border-slate-200/80 dark:border-[#265347] text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34] transition-colors relative cursor-pointer"
                 title="Notifications"
               >
                 <Bell className="h-4 w-4" />
@@ -302,25 +302,25 @@ export default function WorkerLayout() {
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-3xl border border-slate-200 shadow-2xl p-4 z-50 animate-in fade-in space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <b className="text-xs font-bold text-[#0C2D27]">Notifications</b>
-                    <span className="text-[10px] font-bold text-[#FF6B53] bg-orange-50 px-2 py-0.5 rounded-full">2 New</span>
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#14312A] rounded-3xl border border-slate-200 dark:border-[#265347] shadow-2xl p-4 z-50 animate-in fade-in space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#244E43] pb-2">
+                    <b className="text-xs font-bold text-[#0C2D27] dark:text-white">Notifications</b>
+                    <span className="text-[10px] font-bold text-[#FF6B53] bg-orange-50 dark:bg-[#3D2319] border border-transparent dark:border-[#6E3823] px-2 py-0.5 rounded-full">2 New</span>
                   </div>
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {NOTIFICATIONS.map((n) => (
-                      <div key={n.id} className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-0.5 hover:bg-slate-100 transition-colors cursor-pointer">
+                      <div key={n.id} className="p-2.5 rounded-2xl bg-slate-50 dark:bg-[#173830] border border-slate-100 dark:border-[#244E43] space-y-0.5 hover:bg-slate-100 dark:hover:bg-[#1E463D] transition-colors cursor-pointer">
                         <div className="flex items-center justify-between text-xs">
-                          <b className="text-[#0C2D27] font-bold">{n.title}</b>
-                          <span className="text-[10px] text-slate-400">{n.time}</span>
+                          <b className="text-[#0C2D27] dark:text-white font-bold">{n.title}</b>
+                          <span className="text-[10px] text-slate-400 dark:text-[#9DBBB2]">{n.time}</span>
                         </div>
-                        <p className="text-[11px] text-[#52605D]">{n.desc}</p>
+                        <p className="text-[11px] text-[#52605D] dark:text-[#CBDCE1]">{n.desc}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="pt-1 border-t border-slate-100 text-center">
+                  <div className="pt-1 border-t border-slate-100 dark:border-[#244E43] text-center">
                     <button onClick={() => setNotifOpen(false)} className="text-[11px] font-bold text-[#FF6B53] hover:underline">
                       Close Notifications
                     </button>
@@ -349,8 +349,8 @@ export default function WorkerLayout() {
               </div>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-3xl border border-slate-200 shadow-2xl p-4 z-50 animate-in fade-in space-y-3">
-                  <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#14312A] rounded-3xl border border-slate-200 dark:border-[#265347] shadow-2xl p-4 z-50 animate-in fade-in space-y-3">
+                  <div className="flex items-center gap-3 border-b border-slate-100 dark:border-[#244E43] pb-3">
                     {avatarPic ? (
                       <img src={avatarPic} alt={workerName} className="h-10 w-10 rounded-full object-cover border border-emerald-600" />
                     ) : (
@@ -359,32 +359,32 @@ export default function WorkerLayout() {
                       </div>
                     )}
                     <div className="min-w-0">
-                      <b className="text-xs font-bold text-[#0C2D27] block truncate">{workerName}</b>
-                      <span className="text-[10px] text-[#52605D] block truncate">{workerLoc}</span>
+                      <b className="text-xs font-bold text-[#0C2D27] dark:text-white block truncate">{workerName}</b>
+                      <span className="text-[10px] text-[#52605D] dark:text-[#A3BDB5] block truncate">{workerLoc}</span>
                     </div>
                   </div>
 
                   <div className="space-y-1 text-xs font-bold">
                     <button
                       onClick={() => { navigate('/worker/profile'); setProfileOpen(false) }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-[#0C2D27] hover:bg-slate-100 flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34] flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <User className="h-4 w-4 text-[#FF6B53]" />
                       <span>My Profile &amp; Photo</span>
                     </button>
                     <button
                       onClick={() => { navigate('/worker/welfare'); setProfileOpen(false) }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-[#0C2D27] hover:bg-slate-100 flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#0C2D27] dark:text-[#CBDCE1] hover:bg-slate-100 dark:hover:bg-[#183D34] flex items-center gap-2 transition-colors cursor-pointer"
                     >
-                      <Heart className="h-4 w-4 text-emerald-600" />
+                      <Heart className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                       <span>My Welfare Schemes</span>
                     </button>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100">
+                  <div className="pt-2 border-t border-slate-100 dark:border-[#244E43]">
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 flex items-center gap-2 text-xs font-bold transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-[#382025] flex items-center gap-2 text-xs font-bold transition-colors cursor-pointer"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Switch Role / Sign Out</span>
@@ -397,7 +397,7 @@ export default function WorkerLayout() {
         </header>
 
         {/* Main Page View */}
-        <main className="flex-1 p-4 sm:p-8 bg-[#F6F7F2]">
+        <main className="flex-1 p-4 sm:p-8 bg-[#F6F7F2] dark:bg-[#0C1E19]">
           <Outlet />
         </main>
       </div>
