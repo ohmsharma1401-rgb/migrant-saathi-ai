@@ -559,6 +559,54 @@ html.dark .bg-teal-600 {
   color: #FFFFFF !important;
 }
 
+/* 17. Leaflet Map Popups & Controls (Accessible & Dark Mode Compatible) */
+.leaflet-popup-content-wrapper {
+  background: #FFFFFF !important;
+  color: #0C2D27 !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.25) !important;
+  padding: 4px !important;
+  border: 1px solid rgba(229, 231, 235, 0.8) !important;
+}
+.leaflet-popup-tip {
+  background: #FFFFFF !important;
+}
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  line-height: 1.45 !important;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  top: 10px !important;
+  right: 10px !important;
+  color: #52605D !important;
+  font-size: 16px !important;
+  padding: 4px !important;
+}
+
+html.dark .leaflet-popup-content-wrapper {
+  background: #14312A !important;
+  color: #FFFFFF !important;
+  border: 1px solid #244E43 !important;
+  box-shadow: 0 16px 36px -5px rgba(0, 0, 0, 0.65) !important;
+}
+html.dark .leaflet-popup-tip {
+  background: #14312A !important;
+}
+html.dark .leaflet-popup-content b,
+html.dark .leaflet-popup-content strong {
+  color: #FFFFFF !important;
+}
+html.dark .leaflet-popup-content p,
+html.dark .leaflet-popup-content span {
+  color: #CBDCE1 !important;
+}
+html.dark .leaflet-container a.leaflet-popup-close-button {
+  color: #CBDCE1 !important;
+}
+html.dark .leaflet-container a.leaflet-popup-close-button:hover {
+  color: #FF6B53 !important;
+}
+
 @layer utilities {
   .figma-card {
     background: var(--surface);
