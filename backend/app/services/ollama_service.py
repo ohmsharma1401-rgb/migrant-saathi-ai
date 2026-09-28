@@ -12,7 +12,7 @@ class OllamaService:
             os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
             "http://localhost:11434",
         ]
-        self.default_model = os.getenv("OLLAMA_MODEL", "llama3")
+        self.default_model = os.getenv("OLLAMA_MODEL", "")
 
     async def _get_working_base_url_and_models(self) -> Tuple[Optional[str], List[str]]:
         """Finds active Ollama server URL and installed model list."""
@@ -29,15 +29,35 @@ class OllamaService:
         return None, []
 
     async def get_status(self) -> Dict[str, Any]:
-        """Checks if local Ollama server is running and returns installed models."""
+        """Checks if local Ollama server is running and returns installed models, preferring fast optimal models."""
         base_url, installed_models = await self._get_working_base_url_and_models()
         if base_url:
-            active = self.default_model
-            matched = [m for m in installed_models if active in m or m.startswith(active)]
-            if matched:
-                active = matched[0]
-            elif installed_models:
-                active = installed_models[0]
+            # Model preference order for fast, high-quality CPU inference
+            preferred_order = ["llama3.2:latest", "llama3.2", "qwen2.5:7b", "llama3:latest", "llama3"]
+            active = None
+
+            # 1. Respect explicit env var override if set
+            env_model = os.getenv("OLLAMA_MODEL", self.default_model).strip()
+            if env_model:
+                matched_env = [m for m in installed_models if env_model == m or env_model in m or m.startswith(env_model)]
+                if matched_env:
+                    active = matched_env[0]
+                else:
+                    active = env_model
+
+            # 2. Pick best available model from installed models
+            if not active:
+                for pref in preferred_order:
+                    for m in installed_models:
+                        if m == pref or m.startswith(pref) or pref in m:
+                            active = m
+                            break
+                    if active:
+                        break
+
+            # 3. Fallback to first installed or default
+            if not active:
+                active = installed_models[0] if installed_models else "llama3.2:latest"
 
             return {
                 "available": True,
@@ -48,11 +68,12 @@ class OllamaService:
                 "message": f"Connected to local Ollama LLM server ({active})"
             }
 
+        fallback_model = self.default_model or "llama3.2:latest"
         return {
             "available": False,
             "status": "offline",
             "base_url": self.base_urls[0],
-            "active_model": self.default_model,
+            "active_model": fallback_model,
             "installed_models": [],
             "message": "Ollama server offline or not running at http://localhost:11434."
         }
@@ -61,11 +82,12 @@ class OllamaService:
         self,
         messages: List[Dict[str, str]],
         model: Optional[str] = None,
-        temperature: float = 0.7,
+        temperature: float = 0.35,
         top_p: float = 0.9,
-        repeat_penalty: float = 1.1,
-        keep_alive: str = "30m",
-        timeout: float = 60.0
+        repeat_penalty: float = 1.15,
+        num_predict: int = 450,
+        keep_alive: str = "60m",
+        timeout: float = 90.0
     ) -> Optional[str]:
         """
         Queries Ollama POST http://localhost:11434/api/chat.
@@ -87,7 +109,8 @@ class OllamaService:
             "options": {
                 "temperature": temperature,
                 "top_p": top_p,
-                "repeat_penalty": repeat_penalty
+                "repeat_penalty": repeat_penalty,
+                "num_predict": num_predict
             }
         }
 

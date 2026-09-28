@@ -21,33 +21,38 @@ OUT_OF_SCOPE_RESPONSES: Dict[str, str] = {
 
 # Explicit out-of-scope patterns (coding, sports, trivia, jokes, weather, recipes, etc.)
 OUT_OF_SCOPE_PATTERNS = [
-    r"\bpython\b", r"\bjava\b", r"\bjavascript\b", r"\bcode\b", r"\bcoding\b", r"\bprogram\b",
-    r"\bprogramming\b", r"\bscript\b", r"\bfunction\b", r"\bclass\b", r"\bhtml\b", r"\bcss\b",
-    r"\bcricket\b", r"\bfootball\b", r"\bmatch\b", r"\bipl\b", r"\bscore\b", r"\bworld cup\b",
+    r"\bpython\b", r"\bjava\b", r"\bjavascript\b", r"\bcode\b", r"\bcoding\b",
+    r"\bprogramming\b", r"\bscript\b", r"\bhtml\b", r"\bcss\b", r"\brust\b", r"\bc\+\+\b",
+    r"\bcricket\b", r"\bfootball\b", r"\bipl\b", r"\bworld cup\b",
     r"\bjoke\b", r"\bjokes\b", r"\blove letter\b", r"\bpoem\b", r"\bmovie\b", r"\bcinema\b",
-    r"\bcapital of\b", r"\bquantum\b", r"\bphysics\b", r"\bchemistry\b", r"\bmath\b", r"\balgebra\b",
-    r"\bweather\b", r"\brecipe\b", r"\bcook\b", r"\bcooking\b", r"\bdish\b", r"\brust\b", r"\bc\+\+\b",
+    r"\bcapital of\b", r"\bquantum\b", r"\bphysics\b", r"\bchemistry\b", r"\balgebra\b",
+    r"\bweather\b", r"\brecipe\b", r"\bcook\b", r"\bcooking\b", r"\bdish\b",
     r"\bwho won\b", r"\btell me a story\b", r"\bsong\b", r"\blyrics\b"
 ]
 
-# Core worker / migrant / labor domain keywords (including common follow-up question keywords)
+# Core worker / migrant / labor domain keywords (including common follow-up and assistance keywords)
 IN_SCOPE_KEYWORDS = [
     # English keywords
     "worker", "workers", "migrant", "labour", "labor", "labourer", "laborer", "employee",
-    "wage", "wages", "salary", "pay", "paid", "unpaid", "contractor", "employer", "boss",
+    "wage", "wages", "salary", "pay", "paid", "unpaid", "pending", "due", "deduct", "cut",
+    "contractor", "thekedar", "employer", "boss", "supervisor", "sardar",
     "job", "jobs", "employment", "hiring", "work", "workplace", "site", "factory",
     "scheme", "schemes", "welfare", "bocw", "pm-sym", "pmsym", "eshram", "e-shram", "pmjay",
     "pm-jay", "aaby", "nfsa", "pension", "insurance", "grant", "subsidy", "benefit", "benefits",
     "eligible", "eligibility", "documents", "required", "apply", "procedure", "process",
-    "safety", "hazard", "unsafe", "accident", "injury", "grievance", "complaint", "inspect",
+    "safety", "hazard", "unsafe", "accident", "injury", "hurt", "danger", "grievance", "complaint", "inspect",
     "inspector", "helpline", "14434", "registration", "register", "card", "document",
-    "aadhaar", "uan", "skill", "skills", "training", "mason", "painter", "carpenter", "plumber",
-    "electrician", "driver", "welder", "helper", "gujarat", "surat", "ahmedabad", "rajkot",
-    "workplus", "geofence", "attendance", "shift", "overtime",
+    "aadhaar", "uan", "skill", "skills", "training", "trade", "mason", "painter", "carpenter", "plumber",
+    "electrician", "driver", "welder", "helper", "loader", "guard", "tailor", "gujarat", "surat", "ahmedabad", "rajkot",
+    "workplus", "geofence", "attendance", "shift", "overtime", "hours",
+    "hello", "hi", "hey", "namaste", "namaskar", "saathi", "help", "assist", "guidance", "rights", "legal",
+    "shelter", "room", "rent", "food", "ration", "canteen", "travel", "train", "ticket", "bus",
+    "hospital", "doctor", "health", "medical", "police", "threat", "harass", "abuse", "cheated", "fired",
     # Hindi / Gujarati transliterated or native terms
     "मजदूर", "मजदूरी", "वेतन", "पगार", "ठेकेदार", "मालिक", "योजना", "पात्र", "शिकायत", "सुरक्षा",
-    "पेंशन", "बीमा", "कार्ड", "श्रम", "रोजगार", "દરો", "કોન્ટ્રાક્ટર", "યોજના",
-    "ફરિયાદ", "શ્રમ", "રોજગાર", "કડિયા", "સહાય"
+    "पेंशन", "बीमा", "कार्ड", "श्रम", "रोजगार", "नमस्ते", "नमस्कार", "मदद", "सहायता", "साथी",
+    "काम", "नौकरी", "रुपया", "पैसा", "अस्पताल", "दवा", "राशन", "कमरा", "हक",
+    "દરો", "કોન્ટ્રાક્ટર", "યોજના", "ફરિયાદ", "શ્રમ", "રોજગાર", "કડિયા", "સહાય", "મદદ", "પૈસા", "નોકરી"
 ]
 
 
@@ -77,18 +82,21 @@ class DomainClassifier:
             r"need (a )?job", r"find work", r"looking for work", r"came from", r"moved from",
             r"how (can|do) i (apply|register)", r"what documents", r"which schemes?",
             r"who is eligible", r"what can i do", r"how to apply", r"what benefits",
-            r"how much (salary|wage|pay)", r"report", r"help me"
+            r"how much (salary|wage|pay)", r"report", r"help me", r"can you help",
+            r"what is", r"how to", r"where to", r"where can", r"my right", r"rights",
+            r"problem", r"issue", r"trouble", r"advice", r"suggest"
         ]
         has_contextual_signal = any(re.search(pat, q) for pat in contextual_worker_patterns)
 
         if has_in_scope_keyword or has_contextual_signal:
             return "in_scope", ""
 
-        # 4. Default for short queries or follow-ups (3 words or fewer without explicit out-of-scope trigger)
-        if len(q.split()) <= 3:
+        # 4. Default for conversational or short queries (greetings, follow-ups, general queries)
+        # As long as it did NOT hit explicit OUT_OF_SCOPE patterns above, allow worker to receive guidance
+        if len(q.split()) <= 15:
             return "in_scope", ""
 
-        # Otherwise, query is unrelated trivia/general question -> OUT_OF_SCOPE
+        # Otherwise, query is long unrelated text -> OUT_OF_SCOPE
         return "out_of_scope", OUT_OF_SCOPE_RESPONSES[lang]
 
 

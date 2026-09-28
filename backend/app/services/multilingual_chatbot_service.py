@@ -22,52 +22,34 @@ class MultilingualChatbotService:
 
     async def generate_with_ollama(self, prompt: str, language: str = "hi") -> Optional[str]:
         """Queries local Ollama NLP model if active."""
-        sys_prompt = f"You are Migrant Saathi AI, an AI assistant dedicated to helping migrant workers in India. Respond concisely, empathetically, and accurately in language '{language}'. Focus on labor rights, wages, safety, housing, and government welfare benefits."
         try:
-            async with httpx.AsyncClient(timeout=3.5) as client:
-                res = await client.post(
-                    f"{self.ollama_base_url}/api/chat",
-                    json={
-                        "model": self.ollama_model,
-                        "messages": [
-                            {"role": "system", "content": sys_prompt},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "stream": False
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    msg = data.get("message", {}).get("content", "").strip()
-                    if msg:
-                        return msg
+            from app.services.ollama_service import ollama_service
+            sys_prompt = (
+                f"You are Migrant Saathi AI, an empathetic AI assistant dedicated to helping migrant workers in India. "
+                f"Respond clearly, concisely, and practically in language '{language}'. Focus on worker rights, wages, safety, "
+                f"welfare schemes, and official Labour Helpline 14434."
+            )
+            messages = [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": prompt}
+            ]
+            return await ollama_service.chat_completion(messages=messages, timeout=60.0)
         except Exception:
-            pass
-        return None
+            return None
 
     async def get_ollama_status(self) -> Dict[str, Any]:
         """Checks if local Ollama server is active and returns installed models."""
         try:
-            async with httpx.AsyncClient(timeout=1.5) as client:
-                res = await client.get(f"{self.ollama_base_url}/api/tags")
-                if res.status_code == 200:
-                    models = [m.get("name") for m in res.json().get("models", [])]
-                    return {
-                        "status": "online",
-                        "available": True,
-                        "base_url": self.ollama_base_url,
-                        "active_model": self.ollama_model,
-                        "installed_models": models
-                    }
+            from app.services.ollama_service import ollama_service
+            return await ollama_service.get_status()
         except Exception:
-            pass
-        return {
-            "status": "offline",
-            "available": False,
-            "base_url": self.ollama_base_url,
-            "active_model": self.ollama_model,
-            "note": "Using high-precision rule-based multilingual NLP fallback"
-        }
+            return {
+                "status": "offline",
+                "available": False,
+                "base_url": self.ollama_base_url,
+                "active_model": self.ollama_model,
+                "note": "Using high-precision rule-based multilingual NLP fallback"
+            }
 
     def transcribe_audio_base64(self, audio_base64: str) -> str:
         """Transcribes audio base64 input using OpenAI Whisper speech-to-text model."""
