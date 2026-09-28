@@ -144,7 +144,7 @@ export default function InspectorManagement() {
       const updatedInspectors = rawInspectors.map((insp) => {
         const assignedCount = tasksList.filter(
           (t) =>
-            t.assigned_inspector_name.toLowerCase().includes(insp.name.toLowerCase()) ||
+            (t.assigned_inspector_name || '').toLowerCase().includes((insp.name || '').toLowerCase()) ||
             t.assigned_inspector_id === insp.id
         ).length
         return {
@@ -239,33 +239,39 @@ export default function InspectorManagement() {
     }, 1200)
   }
 
-  const filteredInspectors = inspectors.filter((insp) => {
-    const matchesDistrict = districtFilter === 'All' || insp.district.toLowerCase() === districtFilter.toLowerCase()
+  const safeInspectors = Array.isArray(inspectors) ? inspectors : []
+  const filteredInspectors = safeInspectors.filter((insp) => {
+    const matchesDistrict = districtFilter === 'All' || (insp.district || '').toLowerCase() === districtFilter.toLowerCase()
+    const q = search.toLowerCase()
     const matchesSearch =
       search === '' ||
-      insp.name.toLowerCase().includes(search.toLowerCase()) ||
-      insp.badge_number.toLowerCase().includes(search.toLowerCase()) ||
-      insp.district.toLowerCase().includes(search.toLowerCase())
+      (insp.name || '').toLowerCase().includes(q) ||
+      (insp.badge_number || '').toLowerCase().includes(q) ||
+      (insp.district || '').toLowerCase().includes(q)
     return matchesDistrict && matchesSearch
   })
 
-  const filteredTasks = assignedTasks.filter((task) => {
+  const safeTasks = Array.isArray(assignedTasks) ? assignedTasks : []
+  const filteredTasks = safeTasks.filter((task) => {
+    const inspFilter = (selectedInspectorFilter || '').toLowerCase()
     const matchesInspector =
       !selectedInspectorFilter ||
-      task.assigned_inspector_name.toLowerCase().includes(selectedInspectorFilter.toLowerCase()) ||
+      (task.assigned_inspector_name || '').toLowerCase().includes(inspFilter) ||
       task.assigned_inspector_id === selectedInspectorFilter
-    const matchesDistrict = districtFilter === 'All' || task.location_district.toLowerCase() === districtFilter.toLowerCase()
+    const matchesDistrict = districtFilter === 'All' || (task.location_district || '').toLowerCase() === districtFilter.toLowerCase()
+    const q = search.toLowerCase()
     const matchesSearch =
       search === '' ||
-      task.case_code.toLowerCase().includes(search.toLowerCase()) ||
-      task.worker_name.toLowerCase().includes(search.toLowerCase()) ||
-      task.assigned_inspector_name.toLowerCase().includes(search.toLowerCase()) ||
-      task.workplace_site.toLowerCase().includes(search.toLowerCase())
+      (task.case_code || '').toLowerCase().includes(q) ||
+      (task.worker_name || '').toLowerCase().includes(q) ||
+      (task.assigned_inspector_name || '').toLowerCase().includes(q) ||
+      (task.workplace_site || '').toLowerCase().includes(q)
     return matchesInspector && matchesDistrict && matchesSearch
   })
 
   // Escalated cases from field inspectors
-  const escalatedCases = cases.filter((c) => c.escalated_to_official || c.status === 'Escalated')
+  const safeCases = Array.isArray(cases) ? cases : []
+  const escalatedCases = safeCases.filter((c) => c.escalated_to_official || c.status === 'Escalated')
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

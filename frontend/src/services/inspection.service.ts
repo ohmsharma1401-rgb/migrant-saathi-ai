@@ -339,19 +339,103 @@ export const FALLBACK_INSPECTION_CASES: InspectionCase[] = [
   },
 ]
 
+function getAssignedGrievancesFromStorage(): InspectionCase[] {
+  const result: InspectionCase[] = []
+  try {
+    if (typeof window === 'undefined') return result
+    const savedStr = localStorage.getItem('saathi-assigned-grievances')
+    if (!savedStr) return result
+    const assignmentsMap: Record<string, any> = JSON.parse(savedStr)
+    Object.entries(assignmentsMap).forEach(([gId, assignInfo]) => {
+      if (!assignInfo) return
+      const assignedCase: InspectionCase = {
+        id: gId,
+        case_code: assignInfo.case_code || gId,
+        worker_id: assignInfo.worker_id || `MS-GJ-${Math.abs(gId.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0) % 90000 + 10000)}`,
+        worker_name: assignInfo.worker || assignInfo.worker_name || 'Assigned Worker',
+        worker_phone: assignInfo.phone || assignInfo.worker_phone || '+91 98250 12345',
+        worker_occupation: assignInfo.occupation || assignInfo.worker_occupation || 'Contract Labourer',
+        worker_domicile: assignInfo.domicile || assignInfo.worker_domicile || 'Gujarat',
+        employer_id: assignInfo.employer_id || 'emp-gen-01',
+        employer_name: assignInfo.employer || assignInfo.employer_name || 'Designated Employer / Contractor',
+        workplace_site: assignInfo.site || assignInfo.location || 'Assigned Beat Worksite',
+        location_district: assignInfo.district || assignInfo.location_district || 'Surat',
+        complaint_category: assignInfo.category || assignInfo.complaint_category || 'Grievance',
+        complaint_description: assignInfo.description || assignInfo.notes || 'Worker grievance assigned by Government Official for on-site inquiry.',
+        reported_wage: assignInfo.reported_wage || 9500,
+        reference_wage: assignInfo.reference_wage || 12000,
+        wage_disparity: assignInfo.wage_disparity || 2500,
+        priority: (assignInfo.priority || 'High') as any,
+        status: assignInfo.status === 'Resolved' ? 'Verified' : (assignInfo.status === 'Under Review' ? 'In Progress' : (assignInfo.status || 'Scheduled')),
+        scheduled_date: assignInfo.timeline || assignInfo.scheduled_date || 'Today, 28 Sep 2026',
+        scheduled_time: assignInfo.scheduled_time || '10:30 AM',
+        assigned_inspector_id: assignInfo.inspectorId || assignInfo.assigned_inspector_id || 'ins-101',
+        assigned_inspector_name: assignInfo.inspector || assignInfo.assigned_inspector_name || 'Rajendra Solanki',
+        assigned_inspector_badge: assignInfo.inspectorBadge || assignInfo.assigned_inspector_badge || 'INS-GJ-0418',
+        findings: assignInfo.findings || [],
+        evidence: assignInfo.evidence || [],
+        worker_statement: assignInfo.worker_statement || null,
+        employer_response: assignInfo.employer_response || null,
+        inspection_notes: assignInfo.notes ? [assignInfo.notes] : ['Assigned by Government Official console.'],
+        recommended_action: assignInfo.recommended_action || null,
+        statutory_notice_issued: Boolean(assignInfo.statutory_notice_issued),
+        escalated_to_official: Boolean(assignInfo.escalated_to_official),
+        created_at: assignInfo.assignedAt || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      result.push(assignedCase)
+    })
+  } catch (err) {
+    console.warn('Error reading saathi-assigned-grievances:', err)
+  }
+  return result
+}
+
+function mergeAssignedCases(baseList: any): InspectionCase[] {
+  const base: InspectionCase[] = Array.isArray(baseList)
+    ? [...baseList]
+    : Array.isArray(baseList?.data)
+    ? [...baseList.data]
+    : Array.isArray(baseList?.cases)
+    ? [...baseList.cases]
+    : [...FALLBACK_INSPECTION_CASES]
+
+  const storageCases = getAssignedGrievancesFromStorage()
+  storageCases.forEach((st) => {
+    const idx = base.findIndex((c) => c.id === st.id || c.case_code === st.case_code)
+    if (idx >= 0) {
+      base[idx] = { ...base[idx], ...st }
+    } else {
+      base.unshift(st)
+    }
+  })
+
+  return base
+}
+
 export const inspectionService = {
   async getDashboard(): Promise<InspectionDashboardMetrics> {
     try {
       const res = await api.get('/inspections/dashboard')
-      return res.data
+      const allCases = await this.getCases()
+      const todayCases = allCases.filter((c) => c.scheduled_date.includes('Today') || c.status === 'Scheduled')
+      return {
+        today_inspections: Math.max(res?.data?.today_inspections || 0, todayCases.length),
+        assigned_cases: Math.max(res?.data?.assigned_cases || 0, allCases.length),
+        high_priority_cases: allCases.filter((c) => ['High', 'Critical'].includes(c.priority)).length,
+        overdue_inspections: allCases.filter((c) => c.status === 'Overdue').length,
+        pending_reports: allCases.filter((c) => ['In Progress', 'Overdue'].includes(c.status)).length,
+        today_roster: todayCases,
+      }
     } catch {
-      const todayCases = FALLBACK_INSPECTION_CASES.filter((c) => c.scheduled_date.includes('Today'))
+      const allCases = await this.getCases()
+      const todayCases = allCases.filter((c) => c.scheduled_date.includes('Today') || c.status === 'Scheduled')
       return {
         today_inspections: todayCases.length,
-        assigned_cases: FALLBACK_INSPECTION_CASES.length,
-        high_priority_cases: FALLBACK_INSPECTION_CASES.filter((c) => ['High', 'Critical'].includes(c.priority)).length,
-        overdue_inspections: FALLBACK_INSPECTION_CASES.filter((c) => c.status === 'Overdue').length,
-        pending_reports: FALLBACK_INSPECTION_CASES.filter((c) => ['In Progress', 'Overdue'].includes(c.status)).length,
+        assigned_cases: allCases.length,
+        high_priority_cases: allCases.filter((c) => ['High', 'Critical'].includes(c.priority)).length,
+        overdue_inspections: allCases.filter((c) => c.status === 'Overdue').length,
+        pending_reports: allCases.filter((c) => ['In Progress', 'Overdue'].includes(c.status)).length,
         today_roster: todayCases,
       }
     }
@@ -367,9 +451,29 @@ export const inspectionService = {
       const res = await api.get('/inspections/roster', {
         params: { status_filter: statusFilter, priority_filter: priorityFilter, district_filter: districtFilter },
       })
-      return res.data
+      let list = mergeAssignedCases(res.data)
+      if (statusFilter && statusFilter !== 'All') {
+        list = list.filter((c) => c.status.toLowerCase() === statusFilter.toLowerCase())
+      }
+      if (priorityFilter && priorityFilter !== 'All') {
+        list = list.filter((c) => c.priority.toLowerCase() === priorityFilter.toLowerCase())
+      }
+      if (districtFilter && districtFilter !== 'All') {
+        list = list.filter((c) => c.location_district.toLowerCase() === districtFilter.toLowerCase())
+      }
+      return list
     } catch {
-      return FALLBACK_INSPECTION_CASES
+      let list = mergeAssignedCases(FALLBACK_INSPECTION_CASES)
+      if (statusFilter && statusFilter !== 'All') {
+        list = list.filter((c) => c.status.toLowerCase() === statusFilter.toLowerCase())
+      }
+      if (priorityFilter && priorityFilter !== 'All') {
+        list = list.filter((c) => c.priority.toLowerCase() === priorityFilter.toLowerCase())
+      }
+      if (districtFilter && districtFilter !== 'All') {
+        list = list.filter((c) => c.location_district.toLowerCase() === districtFilter.toLowerCase())
+      }
+      return list
     }
   },
 
@@ -383,9 +487,25 @@ export const inspectionService = {
       const res = await api.get('/inspections/cases', {
         params: { category, priority },
       })
-      return res.data
+      const merged = mergeAssignedCases(res.data)
+      let filtered = merged
+      if (category && category !== 'All') {
+        filtered = filtered.filter((c) => c.complaint_category.toLowerCase() === category.toLowerCase())
+      }
+      if (priority && priority !== 'All') {
+        filtered = filtered.filter((c) => c.priority.toLowerCase() === priority.toLowerCase())
+      }
+      return filtered
     } catch {
-      return FALLBACK_INSPECTION_CASES
+      const merged = mergeAssignedCases(FALLBACK_INSPECTION_CASES)
+      let filtered = merged
+      if (category && category !== 'All') {
+        filtered = filtered.filter((c) => c.complaint_category.toLowerCase() === category.toLowerCase())
+      }
+      if (priority && priority !== 'All') {
+        filtered = filtered.filter((c) => c.priority.toLowerCase() === priority.toLowerCase())
+      }
+      return filtered
     }
   },
 
@@ -395,12 +515,15 @@ export const inspectionService = {
   },
 
   async getCaseDetail(caseId: string): Promise<InspectionCase> {
+    const allCases = await this.getCases()
+    const match = allCases.find((c) => c.id === caseId || c.case_code === caseId)
+    if (match) return match
+
     try {
       const res = await api.get(`/inspections/cases/${caseId}`)
       return res.data
     } catch {
-      const match = FALLBACK_INSPECTION_CASES.find((c) => c.id === caseId || c.case_code === caseId)
-      return match || FALLBACK_INSPECTION_CASES[0]
+      return FALLBACK_INSPECTION_CASES[0]
     }
   },
 
@@ -504,6 +627,32 @@ export const inspectionService = {
   },
 
   async assignCase(payload: any) {
+    const gId = payload.grievance_id || payload.case_code || payload.id || `CASE-GJ-${Date.now().toString().slice(-4)}`
+    try {
+      if (typeof window !== 'undefined') {
+        const savedStr = localStorage.getItem('saathi-assigned-grievances')
+        const assignmentsMap = savedStr ? JSON.parse(savedStr) : {}
+        assignmentsMap[gId] = {
+          id: gId,
+          case_code: gId,
+          worker: payload.worker_name || payload.worker || 'Assigned Worker',
+          phone: payload.worker_phone,
+          employer: payload.employer_name || payload.employer || 'Designated Employer / Worksite',
+          site: payload.workplace_site || payload.site || payload.location || 'Gujarat Industrial Belt',
+          district: payload.location_district || payload.district || 'Surat',
+          category: payload.complaint_category || payload.category || 'Grievance Inspection',
+          priority: payload.priority || 'High',
+          status: 'Scheduled',
+          inspector: payload.inspector_name || payload.inspector || 'Rajendra Solanki',
+          inspectorBadge: payload.inspector_badge || payload.inspectorBadge || 'INS-GJ-0418',
+          timeline: payload.scheduled_date || 'Scheduled Within 24h',
+          notes: payload.instructions || payload.notes || 'Assigned via Government Official console.',
+          assignedAt: new Date().toISOString()
+        }
+        localStorage.setItem('saathi-assigned-grievances', JSON.stringify(assignmentsMap))
+      }
+    } catch {}
+
     try {
       const res = await api.post('/inspections/assign', payload)
       return { data: res.data }

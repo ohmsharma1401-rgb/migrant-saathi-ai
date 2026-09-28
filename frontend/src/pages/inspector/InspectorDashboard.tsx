@@ -53,7 +53,8 @@ export default function InspectorDashboard() {
 
   function handleCaseUpdated(updated: InspectionCase) {
     if (!metrics) return
-    const updatedRoster = metrics.today_roster.map((item) =>
+    const currentRoster = Array.isArray(metrics.today_roster) ? metrics.today_roster : []
+    const updatedRoster = currentRoster.map((item) =>
       item.id === updated.id ? updated : item
     )
     setMetrics({

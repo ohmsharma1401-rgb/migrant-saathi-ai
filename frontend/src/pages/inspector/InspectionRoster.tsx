@@ -34,9 +34,10 @@ export default function InspectionRoster() {
     setLoading(true)
     try {
       const res = await inspectionService.getInspectionRoster()
-      setCases(res.data)
+      const rawList = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []
+      setCases(rawList)
     } catch {
-      // Service provides fallback
+      setCases([])
     } finally {
       setLoading(false)
     }
@@ -48,17 +49,19 @@ export default function InspectionRoster() {
   }
 
   function handleCaseUpdated(updated: InspectionCase) {
-    setCases((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+    setCases((prev) => (Array.isArray(prev) ? prev.map((item) => (item.id === updated.id ? updated : item)) : [updated]))
   }
 
-  const filteredCases = cases.filter((c) => {
-    const matchesStatus = statusFilter === 'All' || c.status.toLowerCase() === statusFilter.toLowerCase()
+  const safeCases = Array.isArray(cases) ? cases : []
+  const filteredCases = safeCases.filter((c) => {
+    const matchesStatus = statusFilter === 'All' || (c.status || '').toLowerCase() === statusFilter.toLowerCase()
+    const q = searchQuery.toLowerCase()
     const matchesSearch =
       searchQuery === '' ||
-      c.worker_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.employer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.case_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.workplace_site.toLowerCase().includes(searchQuery.toLowerCase())
+      (c.worker_name || '').toLowerCase().includes(q) ||
+      (c.employer_name || '').toLowerCase().includes(q) ||
+      (c.case_code || '').toLowerCase().includes(q) ||
+      (c.workplace_site || '').toLowerCase().includes(q)
     return matchesStatus && matchesSearch
   })
 

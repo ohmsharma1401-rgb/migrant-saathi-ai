@@ -35,23 +35,26 @@ export default function InspectorEvidence() {
   async function loadEvidence() {
     try {
       const res = await inspectionService.getInspectorCases()
-      setCases(res.data)
+      const rawList = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []
+      setCases(rawList)
       const flattened: { caseCode: string; workerName: string; item: EvidenceItem }[] = []
-      res.data.forEach((c) => {
-        c.evidence.forEach((ev) => {
+      rawList.forEach((c) => {
+        const evList = Array.isArray(c.evidence) ? c.evidence : []
+        evList.forEach((ev) => {
           flattened.push({
-            caseCode: c.case_code,
-            workerName: c.worker_name,
+            caseCode: c.case_code || c.id,
+            workerName: c.worker_name || 'Worker',
             item: ev
           })
         })
       })
       setEvidenceList(flattened)
-      if (res.data.length > 0) {
-        setSelectedCaseId(res.data[0].id)
+      if (rawList.length > 0) {
+        setSelectedCaseId(rawList[0].id)
       }
     } catch {
-      // Fallback
+      setCases([])
+      setEvidenceList([])
     }
   }
 
@@ -88,13 +91,15 @@ export default function InspectorEvidence() {
     setUploadOpen(false)
   }
 
-  const filteredEvidence = evidenceList.filter((entry) => {
-    const matchesType = filterType === 'All' || entry.item.evidence_type.toLowerCase() === filterType.toLowerCase()
+  const safeList = Array.isArray(evidenceList) ? evidenceList : []
+  const q = searchQuery.toLowerCase()
+  const filteredEvidence = safeList.filter((entry) => {
+    const matchesType = filterType === 'All' || (entry.item?.evidence_type || '').toLowerCase() === filterType.toLowerCase()
     const matchesSearch =
       searchQuery === '' ||
-      entry.item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entry.caseCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entry.workerName.toLowerCase().includes(searchQuery.toLowerCase())
+      (entry.item?.title || '').toLowerCase().includes(q) ||
+      (entry.caseCode || '').toLowerCase().includes(q) ||
+      (entry.workerName || '').toLowerCase().includes(q)
     return matchesType && matchesSearch
   })
 

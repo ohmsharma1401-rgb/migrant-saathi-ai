@@ -29,26 +29,28 @@ export default function InspectorReports() {
     setLoading(true)
     try {
       const res = await inspectionService.getInspectorCases()
-      // Filter or display reports that have findings, recommended actions, or verified status
-      setCases(res.data)
-      if (res.data.length > 0) {
-        setSelectedReport(res.data[0])
+      const rawList = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []
+      setCases(rawList)
+      if (rawList.length > 0) {
+        setSelectedReport(rawList[0])
       }
     } catch {
-      // Fallback
+      setCases([])
     } finally {
       setLoading(false)
     }
   }
 
-  const reports = cases.filter((c) =>
-    c.recommended_action || c.statutory_notice_issued || c.findings.length > 0 || c.status === 'Verified' || c.status === 'Escalated'
+  const safeCases = Array.isArray(cases) ? cases : []
+  const reports = safeCases.filter((c) =>
+    c.recommended_action || c.statutory_notice_issued || (c.findings && c.findings.length > 0) || c.status === 'Verified' || c.status === 'Escalated'
   )
 
+  const q = searchQuery.toLowerCase()
   const filteredReports = reports.filter((r) =>
-    r.case_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.worker_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.employer_name.toLowerCase().includes(searchQuery.toLowerCase())
+    (r.case_code || '').toLowerCase().includes(q) ||
+    (r.worker_name || '').toLowerCase().includes(q) ||
+    (r.employer_name || '').toLowerCase().includes(q)
   )
 
   function handlePrint() {

@@ -37,9 +37,10 @@ export default function InspectorCases() {
     setLoading(true)
     try {
       const res = await inspectionService.getInspectorCases()
-      setCases(res.data)
+      const rawList = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []
+      setCases(rawList)
     } catch {
-      // Fallback in service
+      setCases([])
     } finally {
       setLoading(false)
     }
@@ -51,22 +52,24 @@ export default function InspectorCases() {
   }
 
   function handleCaseUpdated(updated: InspectionCase) {
-    setCases((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+    setCases((prev) => (Array.isArray(prev) ? prev.map((item) => (item.id === updated.id ? updated : item)) : [updated]))
   }
 
-  const filteredCases = cases.filter((c) => {
+  const safeCases = Array.isArray(cases) ? cases : []
+  const filteredCases = safeCases.filter((c) => {
     const matchesCategory =
-      categoryFilter === 'All' || c.complaint_category.toLowerCase() === categoryFilter.toLowerCase()
+      categoryFilter === 'All' || (c.complaint_category || '').toLowerCase() === categoryFilter.toLowerCase()
     const matchesPriority =
-      priorityFilter === 'All' || c.priority.toLowerCase() === priorityFilter.toLowerCase()
+      priorityFilter === 'All' || (c.priority || '').toLowerCase() === priorityFilter.toLowerCase()
     const matchesStatus =
-      statusFilter === 'All' || c.status.toLowerCase() === statusFilter.toLowerCase()
+      statusFilter === 'All' || (c.status || '').toLowerCase() === statusFilter.toLowerCase()
+    const q = searchQuery.toLowerCase()
     const matchesSearch =
       searchQuery === '' ||
-      c.worker_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.employer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.case_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.worker_id.toLowerCase().includes(searchQuery.toLowerCase())
+      (c.worker_name || '').toLowerCase().includes(q) ||
+      (c.employer_name || '').toLowerCase().includes(q) ||
+      (c.case_code || '').toLowerCase().includes(q) ||
+      (c.worker_id || '').toLowerCase().includes(q)
     return matchesCategory && matchesPriority && matchesStatus && matchesSearch
   })
 
